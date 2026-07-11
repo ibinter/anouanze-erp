@@ -33,12 +33,21 @@ export class DonateursService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { _count: { select: { dons: true } } },
+        include: {
+          _count: { select: { dons: true } },
+          dons: { select: { montant: true } },
+        },
       }),
       this.prisma.donateur.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    const enriched = data.map((d: any) => ({
+      ...d,
+      totalDons: d.dons.reduce((s: number, don: any) => s + Number(don.montant ?? 0), 0),
+      dons: undefined,
+    }));
+
+    return { data: enriched, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
   async findOne(id: string, organisationId: string) {

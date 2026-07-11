@@ -15,6 +15,7 @@ interface Projet {
   dateFin?: string;
   budgetPrevisionnel?: number;
   budgetRealise?: number;
+  budgetTotal?: number;
   secteurs?: string[];
   budget?: number;
   depenses?: number;
@@ -27,10 +28,13 @@ interface ProjetsResponse {
 
 const STATUTS = [
   { value: '', label: 'Tous les statuts' },
-  { value: 'PLANIFIE', label: 'Planifié' },
+  { value: 'BROUILLON', label: 'Brouillon' },
+  { value: 'SOUMIS', label: 'Soumis' },
+  { value: 'APPROUVE', label: 'Approuvé' },
   { value: 'EN_COURS', label: 'En cours' },
-  { value: 'TERMINE', label: 'Terminé' },
   { value: 'SUSPENDU', label: 'Suspendu' },
+  { value: 'CLOTURE', label: 'Clôturé' },
+  { value: 'ANNULE', label: 'Annulé' },
 ];
 
 const SECTEURS = [
@@ -43,14 +47,13 @@ const SECTEURS = [
 ];
 
 const STATUT_MAP: Record<string, { label: string; cls: string }> = {
-  PLANIFIE: { label: 'Planifié', cls: 'badge badge-neutral' },
-  planifie: { label: 'Planifié', cls: 'badge badge-neutral' },
+  BROUILLON: { label: 'Brouillon', cls: 'badge badge-neutral' },
+  SOUMIS: { label: 'Soumis', cls: 'badge' },
+  APPROUVE: { label: 'Approuvé', cls: 'badge badge-neutral' },
   EN_COURS: { label: 'En cours', cls: 'badge badge-success' },
-  en_cours: { label: 'En cours', cls: 'badge badge-success' },
-  TERMINE: { label: 'Terminé', cls: 'badge badge-warning' },
-  termine: { label: 'Terminé', cls: 'badge badge-warning' },
-  SUSPENDU: { label: 'Suspendu', cls: 'badge badge-error' },
-  suspendu: { label: 'Suspendu', cls: 'badge badge-error' },
+  SUSPENDU: { label: 'Suspendu', cls: 'badge badge-warning' },
+  CLOTURE: { label: 'Clôturé', cls: 'badge badge-neutral' },
+  ANNULE: { label: 'Annulé', cls: 'badge badge-error' },
 };
 
 function StatutBadge({ statut }: { statut: string }) {
@@ -59,7 +62,7 @@ function StatutBadge({ statut }: { statut: string }) {
 }
 
 function ProjetCard({ projet }: { projet: Projet }) {
-  const budgetPrev = projet.budgetPrevisionnel ?? projet.budget ?? 0;
+  const budgetPrev = projet.budgetPrevisionnel ?? projet.budgetTotal ?? projet.budget ?? 0;
   const budgetReal = projet.budgetRealise ?? projet.depenses ?? 0;
   const pct = budgetPrev > 0
     ? Math.min(100, Math.round((budgetReal / budgetPrev) * 100))
@@ -140,9 +143,9 @@ export default function ProjetsPage() {
   });
 
   const projets = data?.data ?? [];
-  const enCours = projets.filter((p) => p.statut === 'EN_COURS' || p.statut === 'en_cours').length;
-  const termines = projets.filter((p) => p.statut === 'TERMINE' || p.statut === 'termine').length;
-  const budgetTotal = projets.reduce((s, p) => s + (p.budgetPrevisionnel ?? p.budget ?? 0), 0);
+  const enCours = projets.filter((p) => p.statut === 'EN_COURS').length;
+  const termines = projets.filter((p) => p.statut === 'CLOTURE').length;
+  const budgetTotal = projets.reduce((s, p) => s + (p.budgetPrevisionnel ?? p.budgetTotal ?? p.budget ?? 0), 0);
 
   return (
     <div className="p-6 space-y-6">

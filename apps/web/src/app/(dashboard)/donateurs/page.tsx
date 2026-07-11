@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Search, Plus, Heart, TrendingUp, Calendar, Eye } from 'lucide-react';
+import { Search, Plus, Heart, TrendingUp, Calendar, Eye, X } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { SlideOver } from '@/components/ui/SlideOver';
 import { Pagination } from '@/components/ui/Pagination';
@@ -12,6 +12,7 @@ import { formatMontant, formatDate } from '@/lib/utils';
 interface Donateur {
   id: string;
   nom: string;
+  prenom?: string;
   type: string;
   email: string;
   telephone: string;
@@ -22,24 +23,195 @@ interface Donateur {
 interface Don {
   id: string;
   montant: number;
-  typePaiement: string;
+  type: string;
   dateDon: string;
   statut: string;
   numeroRecu?: string;
 }
 
-const TYPE_DON_COLOR: Record<string, string> = {
-  VIREMENT: 'badge-success',
-  ESPECES: 'badge-neutral',
-  CHEQUE: 'badge',
-  MOBILE_MONEY: 'badge-warning',
+const TYPE_LABEL: Record<string, string> = {
+  NUMERAIRE: 'Numéraire',
+  EN_NATURE: 'En nature',
+  COMPETENCES: 'Compétences',
+  FONCIER: 'Foncier',
 };
+
+function NouveauDonateurModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({ nom: '', prenom: '', type: 'PHYSIQUE', email: '', telephone: '', pays: 'CI' });
+  const [error, setError] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => api.post('/donateurs', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donateurs'] });
+      queryClient.invalidateQueries({ queryKey: ['donateurs-stats'] });
+      onClose();
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur lors de la création'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.nom.trim()) { setError('Le nom est obligatoire'); return; }
+    setError('');
+    mutation.mutate({
+      nom: form.nom.trim(),
+      prenom: form.prenom.trim() || undefined,
+      type: form.type,
+      email: form.email.trim() || undefined,
+      telephone: form.telephone.trim() || undefined,
+      pays: form.pays || undefined,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
+        <div className="flex items-center justify-between p-5 border-b border-neutral-100">
+          <h2 className="text-lg font-semibold text-neutral-800">Nouveau donateur</h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-neutral-100 text-neutral-500"><X className="w-5 h-5" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">Type</label>
+            <select className="input w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+              <option value="PHYSIQUE">Personne physique</option>
+              <option value="MORAL">Personne morale / Organisation</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">
+                {form.type === 'PHYSIQUE' ? 'Nom *' : 'Raison sociale *'}
+              </label>
+              <input className="input w-full" placeholder={form.type === 'PHYSIQUE' ? 'Koné' : 'ONG Partenaire'} value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} required />
+            </div>
+            {form.type === 'PHYSIQUE' && (
+              <div>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Prénom</label>
+                <input className="input w-full" placeholder="Aminata" value={form.prenom} onChange={(e) => setForm({ ...form, prenom: e.target.value })} />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">Email</label>
+            <input className="input w-full" type="email" placeholder="email@exemple.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Téléphone</label>
+              <input className="input w-full" placeholder="+225 07 00 00 00" value={form.telephone} onChange={(e) => setForm({ ...form, telephone: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Pays</label>
+              <input className="input w-full" placeholder="CI" value={form.pays} onChange={(e) => setForm({ ...form, pays: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">Annuler</button>
+            <button type="submit" className="btn-primary" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Enregistrement…' : 'Créer le donateur'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function NouveauDonModal({ donateur, onClose }: { donateur: Donateur; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({ type: 'NUMERAIRE', montant: '', dateDon: new Date().toISOString().split('T')[0], descriptionNature: '' });
+  const [error, setError] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => api.post(`/donateurs/${donateur.id}/dons`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['donateur-dons', donateur.id] });
+      queryClient.invalidateQueries({ queryKey: ['donateurs'] });
+      queryClient.invalidateQueries({ queryKey: ['donateurs-stats'] });
+      onClose();
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur lors de l\'enregistrement'),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (form.type === 'NUMERAIRE' && !form.montant) { setError('Le montant est obligatoire'); return; }
+    setError('');
+    mutation.mutate({
+      type: form.type,
+      montant: form.montant ? Number(form.montant) : undefined,
+      dateDon: form.dateDon,
+      descriptionNature: form.descriptionNature.trim() || undefined,
+      statut: 'PAYE',
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between p-5 border-b border-neutral-100">
+          <h2 className="text-lg font-semibold text-neutral-800">Enregistrer un don</h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-neutral-100 text-neutral-500"><X className="w-5 h-5" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-sm text-neutral-500">Donateur : <strong className="text-neutral-800">{donateur.prenom ? `${donateur.prenom} ` : ''}{donateur.nom}</strong></p>
+          {error && <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">Type de don</label>
+            <select className="input w-full" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+              <option value="NUMERAIRE">Numéraire</option>
+              <option value="EN_NATURE">En nature</option>
+              <option value="COMPETENCES">Compétences / Bénévolat</option>
+              <option value="FONCIER">Foncier</option>
+            </select>
+          </div>
+
+          {form.type === 'NUMERAIRE' ? (
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Montant (XOF) *</label>
+              <input className="input w-full" type="number" min="0" placeholder="100000" value={form.montant} onChange={(e) => setForm({ ...form, montant: e.target.value })} required />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Description</label>
+              <input className="input w-full" placeholder="Ex: 50 sacs de ciment 50kg" value={form.descriptionNature} onChange={(e) => setForm({ ...form, descriptionNature: e.target.value })} />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">Date du don</label>
+            <input className="input w-full" type="date" value={form.dateDon} onChange={(e) => setForm({ ...form, dateDon: e.target.value })} required />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">Annuler</button>
+            <button type="submit" className="btn-primary" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Enregistrement…' : 'Enregistrer le don'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function DonateursPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Donateur | null>(null);
+  const [showNewDonateur, setShowNewDonateur] = useState(false);
+  const [donForModal, setDonForModal] = useState<Donateur | null>(null);
   const limit = 10;
 
   const { data, isLoading } = useQuery({
@@ -74,7 +246,7 @@ export default function DonateursPage() {
   const dons: Don[] = donsData?.data ?? donsData ?? [];
 
   const columns: Column<Donateur>[] = [
-    { key: 'nom', header: 'Nom / Raison sociale', render: (r) => <span className="font-medium text-neutral-800">{r.nom}</span> },
+    { key: 'nom', header: 'Nom / Raison sociale', render: (r) => <span className="font-medium text-neutral-800">{r.prenom ? `${r.prenom} ` : ''}{r.nom}</span> },
     {
       key: 'type', header: 'Type', width: '100px',
       render: (r) => <span className={`badge ${r.type === 'PHYSIQUE' ? 'badge-neutral' : 'badge'}`}>{r.type === 'PHYSIQUE' ? 'Physique' : 'Moral'}</span>,
@@ -99,7 +271,10 @@ export default function DonateursPage() {
           >
             <Eye className="w-3 h-3" /> Historique
           </button>
-          <button className="flex items-center gap-1 text-xs text-accent-400 hover:underline font-medium">
+          <button
+            onClick={() => setDonForModal(r)}
+            className="flex items-center gap-1 text-xs text-accent-400 hover:underline font-medium"
+          >
             <Plus className="w-3 h-3" /> Don
           </button>
         </div>
@@ -109,12 +284,15 @@ export default function DonateursPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {showNewDonateur && <NouveauDonateurModal onClose={() => setShowNewDonateur(false)} />}
+      {donForModal && <NouveauDonModal donateur={donForModal} onClose={() => setDonForModal(null)} />}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">Donateurs</h1>
           <p className="text-sm text-neutral-500 mt-1">Suivi des donateurs et contributions</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
+        <button onClick={() => setShowNewDonateur(true)} className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Nouveau donateur
         </button>
@@ -185,7 +363,7 @@ export default function DonateursPage() {
       <SlideOver
         open={!!selected}
         onClose={() => setSelected(null)}
-        title={selected ? `Dons — ${selected.nom}` : ''}
+        title={selected ? `Dons — ${selected.prenom ? selected.prenom + ' ' : ''}${selected.nom}` : ''}
       >
         {selected && (
           <div className="space-y-4">
@@ -198,7 +376,10 @@ export default function DonateursPage() {
             </div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-neutral-700">{(selected as any)._count?.dons ?? 0} don(s)</p>
-              <button className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+              <button
+                onClick={() => { setDonForModal(selected); setSelected(null); }}
+                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+              >
                 <Plus className="w-3 h-3" /> Nouveau don
               </button>
             </div>
@@ -210,16 +391,18 @@ export default function DonateursPage() {
               {dons.map((don) => (
                 <div key={don.id} className="border border-neutral-100 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-neutral-800">{formatMontant(don.montant)}</span>
-                    <span className={`badge ${TYPE_DON_COLOR[don.typePaiement] ?? 'badge-neutral'}`}>{don.typePaiement}</span>
+                    <span className="font-semibold text-neutral-800">
+                      {don.montant ? formatMontant(don.montant) : TYPE_LABEL[don.type] ?? don.type}
+                    </span>
+                    <span className="badge badge-neutral text-xs">{TYPE_LABEL[don.type] ?? don.type}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-neutral-500">
                     <span>{formatDate(don.dateDon)}</span>
                     {don.numeroRecu && <span className="font-mono">{don.numeroRecu}</span>}
                   </div>
                   <div>
-                    {don.statut === 'RECU'
-                      ? <span className="badge badge-success text-xs">Reçu émis</span>
+                    {don.statut === 'PAYE'
+                      ? <span className="badge badge-success text-xs">Reçu</span>
                       : <span className="badge badge-warning text-xs">En attente</span>}
                   </div>
                 </div>
