@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, TrendingUp, Landmark } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -30,7 +30,30 @@ interface Mouvement {
 export default function TresoreriePage() {
   const [selectedCompteId, setSelectedCompteId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '' });
+  const [form, setForm] = useState({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '', compteId: '' });
+  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+
+  const createMouvement = useMutation({
+    mutationFn: (f: typeof form) => {
+      const compteId = f.compteId || selectedCompte?.id;
+      const montant = Number(f.montant);
+      return api.post(`/tresorerie/comptes/${compteId}/mouvements`, {
+        libelle: f.libelle,
+        date: f.date,
+        debit: f.type === 'debit' ? montant : undefined,
+        credit: f.type === 'credit' ? montant : undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tresorerie-mouvements'] });
+      queryClient.invalidateQueries({ queryKey: ['tresorerie-comptes'] });
+      setModalOpen(false);
+      setForm({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '', compteId: '' });
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data: comptesData, isLoading: comptesLoading } = useQuery({
     queryKey: ['tresorerie-comptes'],
@@ -165,15 +188,22 @@ export default function TresoreriePage() {
         title="Nouveau mouvement"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalOpen(false)}>Enregistrer</button>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createMouvement.isPending || !form.libelle || !form.montant}
+              onClick={() => createMouvement.mutate(form)}
+            >
+              {createMouvement.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
           </>
         }
       >
         <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div>
             <label className="label">Compte</label>
-            <select className="input w-full">
+            <select className="input w-full" value={form.compteId || selectedCompte?.id || ''} onChange={(e) => setForm((p) => ({ ...p, compteId: e.target.value }))}>
               {comptes.map((c) => <option key={c.id} value={c.id}>{c.nom} ({c.banque})</option>)}
             </select>
           </div>

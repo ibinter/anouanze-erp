@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Package, AlertTriangle, Search, ArrowDownCircle, ArrowUpCircle, Bell } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -33,7 +33,22 @@ export default function StocksPage() {
   const [page, setPage] = useState(1);
   const [mouvModal, setMouvModal] = useState<{ article: Article; type: MouvType } | null>(null);
   const [form, setForm] = useState({ quantite: 1, motif: '' });
+  const [mouvError, setMouvError] = useState('');
   const limit = 20;
+  const queryClient = useQueryClient();
+
+  const mouvementMutation = useMutation({
+    mutationFn: ({ article, type, quantite, motif }: { article: Article; type: MouvType; quantite: number; motif: string }) =>
+      api.post(`/stocks/${article.id}/${type}`, { quantite, motif: motif || undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stocks'] });
+      queryClient.invalidateQueries({ queryKey: ['stocks-alertes'] });
+      setMouvModal(null);
+      setForm({ quantite: 1, motif: '' });
+      setMouvError('');
+    },
+    onError: (err: any) => setMouvError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['stocks', page, search],
@@ -169,12 +184,19 @@ export default function StocksPage() {
         description={mouvModal?.article.designation}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setMouvModal(null)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setMouvModal(null)}>Confirmer</button>
+            <button className="btn-secondary" onClick={() => { setMouvModal(null); setMouvError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={mouvementMutation.isPending || form.quantite < 1}
+              onClick={() => mouvModal && mouvementMutation.mutate({ article: mouvModal.article, type: mouvModal.type, quantite: form.quantite, motif: form.motif })}
+            >
+              {mouvementMutation.isPending ? 'Enregistrement…' : 'Confirmer'}
+            </button>
           </>
         }
       >
         <div className="space-y-4">
+          {mouvError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{mouvError}</p>}
           <div className="space-y-1">
             <label className="label">Quantité</label>
             <input

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Search, Globe } from 'lucide-react';
+import { Search, Globe, Plus } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { formatMontant } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -34,9 +35,35 @@ const TYPE_COLORS: Record<string, string> = {
   PRIVE: 'badge-neutral',
 };
 
+const BAILLEUR_TYPES = ['MULTILATERAL', 'BILATERAL', 'FONDATION', 'PRIVE'];
+const FORM_INIT = { nom: '', sigle: '', type: 'BILATERAL', pays: '', contactNom: '', contactEmail: '' };
+
 export default function BailleursPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Bailleur | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(FORM_INIT);
+  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+
+  const createBailleur = useMutation({
+    mutationFn: (data: typeof FORM_INIT) =>
+      api.post('/bailleurs', {
+        nom: data.nom,
+        sigle: data.sigle || undefined,
+        type: data.type,
+        pays: data.pays || undefined,
+        contactNom: data.contactNom || undefined,
+        contactEmail: data.contactEmail || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bailleurs'] });
+      setModalOpen(false);
+      setForm(FORM_INIT);
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['bailleurs', search],
@@ -102,9 +129,14 @@ export default function BailleursPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-800">Bailleurs de fonds</h1>
-        <p className="text-sm text-neutral-500 mt-1">Partenaires financiers et conventions de financement</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-800">Bailleurs de fonds</h1>
+          <p className="text-sm text-neutral-500 mt-1">Partenaires financiers et conventions de financement</p>
+        </div>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+          <Plus className="w-4 h-4" /> Nouveau bailleur
+        </button>
       </div>
 
       <div className="relative max-w-sm">
@@ -175,6 +207,56 @@ export default function BailleursPage() {
           </div>
         </div>
       )}
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title="Nouveau bailleur"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createBailleur.isPending || !form.nom}
+              onClick={() => createBailleur.mutate(form)}
+            >
+              {createBailleur.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="label">Nom *</label>
+              <input type="text" className="input w-full" placeholder="Nom du bailleur" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Sigle</label>
+              <input type="text" className="input w-full" placeholder="Ex: UE, BM…" value={form.sigle} onChange={(e) => setForm((p) => ({ ...p, sigle: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Type</label>
+              <select className="input w-full" value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
+                {BAILLEUR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Pays / Région</label>
+              <input type="text" className="input w-full" placeholder="France, UE…" value={form.pays} onChange={(e) => setForm((p) => ({ ...p, pays: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Contact (nom)</label>
+              <input type="text" className="input w-full" placeholder="Prénom Nom" value={form.contactNom} onChange={(e) => setForm((p) => ({ ...p, contactNom: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Email contact</label>
+              <input type="email" className="input w-full" placeholder="contact@bailleur.org" value={form.contactEmail} onChange={(e) => setForm((p) => ({ ...p, contactEmail: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

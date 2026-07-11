@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, Search, Users, UserCheck, FolderOpen } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -26,7 +26,26 @@ export default function BeneficiairesPage() {
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ nom: '', prenom: '', genre: 'F', telephone: '' });
+  const [error, setError] = useState('');
   const limit = 10;
+  const queryClient = useQueryClient();
+
+  const createBeneficiaire = useMutation({
+    mutationFn: (data: typeof form) =>
+      api.post('/beneficiaires', {
+        nom: data.nom,
+        prenom: data.prenom,
+        genre: data.genre,
+        telephone: data.telephone || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['beneficiaires'] });
+      setModalOpen(false);
+      setForm({ nom: '', prenom: '', genre: 'F', telephone: '' });
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['beneficiaires', page, search],
@@ -153,12 +172,19 @@ export default function BeneficiairesPage() {
         title="Nouveau bénéficiaire"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalOpen(false)}>Enregistrer</button>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createBeneficiaire.isPending || !form.nom || !form.prenom}
+              onClick={() => createBeneficiaire.mutate(form)}
+            >
+              {createBeneficiaire.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
           </>
         }
       >
         <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Prénom</label>

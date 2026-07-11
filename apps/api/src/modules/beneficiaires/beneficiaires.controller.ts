@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { BeneficiairesService } from './beneficiaires.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,6 +26,12 @@ export class BeneficiairesController {
       limit: limit ? Number(limit) : undefined,
       search,
     });
+  }
+
+  @ApiOperation({ summary: 'Créer un bénéficiaire' })
+  @Post()
+  create(@Request() req: any, @Body() dto: any) {
+    return this.beneficiairesService.create(req.user.organisationId, dto);
   }
 
   @ApiOperation({ summary: 'Détail d\'un bénéficiaire' })

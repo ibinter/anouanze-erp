@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { CalendarDays, Plus, MapPin, Users, List, LayoutGrid } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -49,6 +49,27 @@ export default function EvenementsPage() {
   const [vue, setVue] = useState<'liste' | 'calendrier'>('calendrier');
   const [modalNouvel, setModalNouvel] = useState(false);
   const [form, setForm] = useState(FORM_INIT);
+  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (data: typeof FORM_INIT) =>
+      api.post('/evenements', {
+        titre: data.titre,
+        type: data.type,
+        dateDebut: data.date,
+        lieu: data.lieu || undefined,
+        capacite: data.capacite,
+        description: data.description || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evenements'] });
+      setModalNouvel(false);
+      setForm(FORM_INIT);
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur lors de la création'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['evenements'],
@@ -205,12 +226,19 @@ export default function EvenementsPage() {
         size="lg"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalNouvel(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalNouvel(false)}>Créer</button>
+            <button className="btn-secondary" onClick={() => { setModalNouvel(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createMutation.isPending || !form.titre || !form.date}
+              onClick={() => createMutation.mutate(form)}
+            >
+              {createMutation.isPending ? 'Création…' : 'Créer'}
+            </button>
           </>
         }
       >
         <div className="space-y-3">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div className="space-y-1">
             <label className="label">Titre</label>
             <input type="text" className="input" placeholder="Titre de l'événement" value={form.titre} onChange={(e) => setForm((f) => ({ ...f, titre: e.target.value }))} />

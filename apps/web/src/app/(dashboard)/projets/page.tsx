@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatDate, formatMontant, cn } from '@/lib/utils';
 import { Search, FolderOpen, CheckCircle2, TrendingUp, ArrowRight } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 
 interface Projet {
   id: string;
@@ -123,10 +124,35 @@ function ProjetCard({ projet }: { projet: Projet }) {
   );
 }
 
+const PROJET_INIT = { nom: '', description: '', statut: 'EN_COURS' as string, dateDebut: '', dateFin: '', budgetTotal: '' };
+
 export default function ProjetsPage() {
   const [search, setSearch] = useState('');
   const [statut, setStatut] = useState('');
   const [secteur, setSecteur] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(PROJET_INIT);
+  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+
+  const createProjet = useMutation({
+    mutationFn: (data: typeof PROJET_INIT) =>
+      api.post('/projets', {
+        nom: data.nom,
+        description: data.description || undefined,
+        statut: data.statut || undefined,
+        dateDebut: data.dateDebut || undefined,
+        dateFin: data.dateFin || undefined,
+        budgetTotal: data.budgetTotal ? Number(data.budgetTotal) : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projets'] });
+      setModalOpen(false);
+      setForm(PROJET_INIT);
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery<ProjetsResponse>({
     queryKey: ['projets', search, statut, secteur],
@@ -154,7 +180,7 @@ export default function ProjetsPage() {
           <h1 className="text-2xl font-bold text-neutral-800">Projets &amp; Programmes</h1>
           <p className="text-sm text-neutral-500 mt-1">Suivi des projets de l&apos;organisation</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
+        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
           <FolderOpen className="w-4 h-4" />
           Nouveau projet
         </button>
@@ -240,6 +266,57 @@ export default function ProjetsPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title="Nouveau projet"
+        size="lg"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createProjet.isPending || !form.nom}
+              onClick={() => createProjet.mutate(form)}
+            >
+              {createProjet.isPending ? 'Création…' : 'Créer le projet'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div>
+            <label className="label">Nom du projet *</label>
+            <input type="text" className="input w-full" placeholder="Titre du projet" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+          </div>
+          <div>
+            <label className="label">Description</label>
+            <textarea className="input w-full min-h-[80px] resize-none" placeholder="Objectifs et description…" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Statut</label>
+              <select className="input w-full" value={form.statut} onChange={(e) => setForm((p) => ({ ...p, statut: e.target.value }))}>
+                {STATUTS.filter((s) => s.value).map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Budget prévisionnel (XOF)</label>
+              <input type="number" className="input w-full" placeholder="0" value={form.budgetTotal} onChange={(e) => setForm((p) => ({ ...p, budgetTotal: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Date de début</label>
+              <input type="date" className="input w-full" value={form.dateDebut} onChange={(e) => setForm((p) => ({ ...p, dateDebut: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Date de fin</label>
+              <input type="date" className="input w-full" value={form.dateFin} onChange={(e) => setForm((p) => ({ ...p, dateFin: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

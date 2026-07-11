@@ -32,6 +32,12 @@ export class BeneficiairesService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
+  async create(organisationId: string, dto: any) {
+    return this.prisma.beneficiaire.create({
+      data: { ...dto, organisationId },
+    });
+  }
+
   findOne(id: string) {
     return this.prisma.beneficiaire.findUnique({ where: { id } });
   }

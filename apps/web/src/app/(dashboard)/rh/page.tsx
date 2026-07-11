@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Users, UserCheck, Clock, Banknote, Check, X } from 'lucide-react';
+import { Users, UserCheck, Clock, Banknote, Check, X, Plus } from 'lucide-react';
 import { Tabs } from '@/components/ui/Tabs';
+import { Modal } from '@/components/ui/Modal';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatMontant, formatDate } from '@/lib/utils';
@@ -63,9 +64,38 @@ const CONTRAT_COLORS: Record<string, string> = {
   CONSULTANT: 'badge',
 };
 
+const EMPLOYE_INIT = { nom: '', prenom: '', poste: '', departement: '', typeContrat: 'CDI', salaireBase: '', dateEmbauche: '' };
+const VOLONTAIRE_INIT = { nom: '', prenom: '', competences: '', dateDebut: '' };
+
 function EmployesTab() {
   const [page, setPage] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(EMPLOYE_INIT);
+  const [error, setError] = useState('');
   const limit = 10;
+  const queryClient = useQueryClient();
+
+  const createEmploye = useMutation({
+    mutationFn: (data: typeof EMPLOYE_INIT) =>
+      api.post('/rh/employes', {
+        nom: data.nom,
+        prenom: data.prenom,
+        poste: data.poste || undefined,
+        departement: data.departement || undefined,
+        typeContrat: data.typeContrat || undefined,
+        salaireBase: data.salaireBase ? Number(data.salaireBase) : undefined,
+        dateEmbauche: data.dateEmbauche || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rh-employes'] });
+      queryClient.invalidateQueries({ queryKey: ['rh-employes-all'] });
+      queryClient.invalidateQueries({ queryKey: ['rh-stats'] });
+      setModalOpen(false);
+      setForm(EMPLOYE_INIT);
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['rh-employes', page],
@@ -113,8 +143,68 @@ function EmployesTab() {
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+          <Plus className="w-4 h-4" /> Nouvel employé
+        </button>
+      </div>
       <DataTable columns={columns as Column<Employe & Record<string, unknown>>[]} data={employes as (Employe & Record<string, unknown>)[]} isLoading={isLoading} />
       {total > limit && <Pagination total={total} page={page} limit={limit} onChange={setPage} />}
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title="Nouvel employé"
+        size="lg"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createEmploye.isPending || !form.nom || !form.prenom}
+              onClick={() => createEmploye.mutate(form)}
+            >
+              {createEmploye.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Prénom *</label>
+              <input type="text" className="input w-full" value={form.prenom} onChange={(e) => setForm((p) => ({ ...p, prenom: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Nom *</label>
+              <input type="text" className="input w-full" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Poste</label>
+              <input type="text" className="input w-full" placeholder="Coordinateur…" value={form.poste} onChange={(e) => setForm((p) => ({ ...p, poste: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Département</label>
+              <input type="text" className="input w-full" placeholder="Programmes…" value={form.departement} onChange={(e) => setForm((p) => ({ ...p, departement: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Type de contrat</label>
+              <select className="input w-full" value={form.typeContrat} onChange={(e) => setForm((p) => ({ ...p, typeContrat: e.target.value }))}>
+                {['CDI', 'CDD', 'STAGE', 'CONSULTANT'].map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Salaire de base (XOF)</label>
+              <input type="number" className="input w-full" placeholder="0" value={form.salaireBase} onChange={(e) => setForm((p) => ({ ...p, salaireBase: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Date d'embauche</label>
+              <input type="date" className="input w-full" value={form.dateEmbauche} onChange={(e) => setForm((p) => ({ ...p, dateEmbauche: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
@@ -246,7 +336,29 @@ function CongesTab({ employes }: { employes: Employe[] }) {
 
 function VolontairesTab() {
   const [page, setPage] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState(VOLONTAIRE_INIT);
+  const [error, setError] = useState('');
   const limit = 10;
+  const queryClient = useQueryClient();
+
+  const createVolontaire = useMutation({
+    mutationFn: (data: typeof VOLONTAIRE_INIT) =>
+      api.post('/rh/volontaires', {
+        nom: data.nom,
+        prenom: data.prenom,
+        competences: data.competences || undefined,
+        dateDebut: data.dateDebut || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rh-volontaires'] });
+      queryClient.invalidateQueries({ queryKey: ['rh-stats'] });
+      setModalOpen(false);
+      setForm(VOLONTAIRE_INIT);
+      setError('');
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['rh-volontaires', page],
@@ -284,8 +396,53 @@ function VolontairesTab() {
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+          <Plus className="w-4 h-4" /> Nouveau volontaire
+        </button>
+      </div>
       <DataTable columns={columns as Column<Volontaire & Record<string, unknown>>[]} data={volontaires as (Volontaire & Record<string, unknown>)[]} isLoading={isLoading} />
       {total > limit && <Pagination total={total} page={page} limit={limit} onChange={setPage} />}
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title="Nouveau volontaire"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createVolontaire.isPending || !form.nom || !form.prenom}
+              onClick={() => createVolontaire.mutate(form)}
+            >
+              {createVolontaire.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Prénom *</label>
+              <input type="text" className="input w-full" value={form.prenom} onChange={(e) => setForm((p) => ({ ...p, prenom: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Nom *</label>
+              <input type="text" className="input w-full" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Compétences</label>
+              <input type="text" className="input w-full" placeholder="Ex: Formation, Informatique…" value={form.competences} onChange={(e) => setForm((p) => ({ ...p, competences: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Date de début</label>
+              <input type="date" className="input w-full" value={form.dateDebut} onChange={(e) => setForm((p) => ({ ...p, dateDebut: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ShoppingCart, Plus, Clock, Package, CheckCircle } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -59,7 +59,33 @@ export default function AchatsPage() {
   const [pageFrn, setPageFrn] = useState(1);
   const [filtreStatut, setFiltreStatut] = useState('');
   const [articles, setArticles] = useState([{ designation: '', quantite: 1, prixUnit: 0 }]);
+  const [cmdForm, setCmdForm] = useState({ fournisseurId: '', dateCommande: new Date().toISOString().split('T')[0], notes: '' });
+  const [cmdError, setCmdError] = useState('');
   const limit = 10;
+  const queryClient = useQueryClient();
+
+  const createCommande = useMutation({
+    mutationFn: () => {
+      const montantTotal = articles.reduce((s, a) => s + a.quantite * a.prixUnit, 0);
+      const numero = `CMD-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
+      return api.post('/achats/commandes', {
+        fournisseurId: cmdForm.fournisseurId,
+        numero,
+        dateCommande: cmdForm.dateCommande,
+        montantTotal,
+        notes: cmdForm.notes || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['achats-commandes'] });
+      queryClient.invalidateQueries({ queryKey: ['achats-stats'] });
+      setModalNvCmd(false);
+      setArticles([{ designation: '', quantite: 1, prixUnit: 0 }]);
+      setCmdForm({ fournisseurId: '', dateCommande: new Date().toISOString().split('T')[0], notes: '' });
+      setCmdError('');
+    },
+    onError: (err: any) => setCmdError(err?.response?.data?.message ?? 'Erreur'),
+  });
 
   const { data: cmdData, isLoading: cmdLoading } = useQuery({
     queryKey: ['achats-commandes', pageCmd, filtreStatut],
@@ -213,22 +239,29 @@ export default function AchatsPage() {
         size="xl"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalNvCmd(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalNvCmd(false)}>Enregistrer</button>
+            <button className="btn-secondary" onClick={() => { setModalNvCmd(false); setCmdError(''); }}>Annuler</button>
+            <button
+              className="btn-primary"
+              disabled={createCommande.isPending || !cmdForm.fournisseurId}
+              onClick={() => createCommande.mutate()}
+            >
+              {createCommande.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
           </>
         }
       >
         <div className="space-y-4">
+          {cmdError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{cmdError}</p>}
           <div className="space-y-1">
-            <label className="label">Fournisseur</label>
-            <select className="input">
+            <label className="label">Fournisseur *</label>
+            <select className="input" value={cmdForm.fournisseurId} onChange={(e) => setCmdForm((p) => ({ ...p, fournisseurId: e.target.value }))}>
               <option value="">Sélectionner un fournisseur</option>
               {fournisseurs.map((f) => <option key={f.id} value={f.id}>{f.nom}</option>)}
             </select>
           </div>
           <div className="space-y-1">
             <label className="label">Date commande</label>
-            <input type="date" className="input" defaultValue={new Date().toISOString().split('T')[0]} />
+            <input type="date" className="input" value={cmdForm.dateCommande} onChange={(e) => setCmdForm((p) => ({ ...p, dateCommande: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
