@@ -10,8 +10,6 @@ RUN npm ci --workspace=@anouanze/web --include-workspace-root
 # ── build ─────────────────────────────────────────────────────────────────────
 FROM deps AS builder
 COPY apps/web ./apps/web
-# Deduplicate react/react-dom to prevent dual-instance errors during static generation
-RUN npm dedupe
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
