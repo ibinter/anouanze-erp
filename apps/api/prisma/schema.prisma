@@ -1,0 +1,978 @@
+// ANOUANZÊ ERP — Schéma Prisma
+// Base de données: PostgreSQL 16
+// Norme comptable: SYCEBNL (OHADA)
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ÉNUMÉRATIONS
+// ============================================================
+
+enum TypeOrganisation {
+  ASSOCIATION
+  ONG_NATIONALE
+  ONG_INTERNATIONALE
+  FONDATION
+  COOPERATIVE
+  MUTUELLE
+  CONFESSIONNELLE
+  RESEAU_FEDERATION
+  COMMUNAUTAIRE
+  PROGRAMME_DEVELOPPEMENT
+}
+
+enum StatutMembre {
+  ACTIF
+  INACTIF
+  SUSPENDU
+  HONNEUR
+  FONDATEUR
+}
+
+enum TypeCotisation {
+  MENSUELLE
+  TRIMESTRIELLE
+  SEMESTRIELLE
+  ANNUELLE
+  UNIQUE
+}
+
+enum StatutPaiement {
+  EN_ATTENTE
+  PAYE
+  PARTIEL
+  EN_RETARD
+  ANNULE
+}
+
+enum TypeProjet {
+  PROJET
+  PROGRAMME
+  ACTIVITE
+}
+
+enum StatutProjet {
+  BROUILLON
+  SOUMIS
+  APPROUVE
+  EN_COURS
+  SUSPENDU
+  CLOTURE
+  ANNULE
+}
+
+enum TypeJournal {
+  JOURNAL_GENERAL
+  JOURNAL_ACHATS
+  JOURNAL_VENTES
+  JOURNAL_TRESORERIE
+  JOURNAL_OPERATIONS_DIVERSES
+  JOURNAL_PAIE
+}
+
+enum TypeCompte {
+  CLASSE_1  // Fonds propres et emprunts
+  CLASSE_2  // Immobilisations
+  CLASSE_3  // Stocks
+  CLASSE_4  // Tiers
+  CLASSE_5  // Trésorerie
+  CLASSE_6  // Charges
+  CLASSE_7  // Produits
+  CLASSE_8  // Comptes spéciaux
+  CLASSE_9  // Comptes analytiques
+}
+
+enum TypeContrat {
+  CDI
+  CDD
+  STAGE
+  CONSULTANT
+  VOLONTAIRE
+  BENEVOLE
+}
+
+enum StatutDocument {
+  BROUILLON
+  EN_ATTENTE_VALIDATION
+  VALIDE
+  REJETE
+  ARCHIVE
+  EXPIRE
+}
+
+enum TypeDon {
+  NUMERAIRE
+  EN_NATURE
+  COMPETENCES
+  FONCIER
+}
+
+enum RoleUtilisateur {
+  SUPER_ADMIN
+  ADMIN_ORGANISATION
+  DIRECTEUR
+  COMPTABLE
+  GESTIONNAIRE_PROJET
+  CHARGE_RH
+  AUDITEUR
+  MEMBRE
+  DONATEUR
+  BAILLEUR
+  LECTEUR
+}
+
+enum Devise {
+  XOF  // Franc CFA BCEAO
+  XAF  // Franc CFA BEAC
+  USD
+  EUR
+  GBP
+  CAD
+  CHF
+  GHS  // Cedi Ghana
+  NGN  // Naira Nigeria
+  KES  // Shilling Kenya
+}
+
+// ============================================================
+// ORGANISATION (entité racine — multi-tenant)
+// ============================================================
+
+model Organisation {
+  id                String            @id @default(uuid())
+  slug              String            @unique
+  nom               String
+  sigle             String?
+  type              TypeOrganisation
+  dateCreation      DateTime?
+  numeroRecepisse   String?
+  numeroImmatriculation String?
+  mission           String?
+  vision            String?
+  valeurs           String?
+  siege             String?
+  adresseComplete   Json?             // {rue, ville, pays, codePostal}
+  telephone         String?
+  email             String?
+  siteWeb           String?
+  logo              String?           // URL du logo
+  couleurPrimaire   String?           @default("#146C43")
+  couleurSecondaire String?           @default("#F28C25")
+  secteurs          String[]          // ["sante", "education", "environnement"]
+  paysPrincipal     String?           @default("CI")
+  paysIntervention  String[]
+  deviseDefaut      Devise            @default(XOF)
+  languesActives    String[]          @default(["fr"])
+  exerciceComptableDebut Int          @default(1)   // mois (1=janvier)
+  exerciceComptableFin   Int          @default(12)  // mois
+  actif             Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  utilisateurs      UtilisateurOrganisation[]
+  membres           Membre[]
+  donateurs         Donateur[]
+  bailleurs         Bailleur[]
+  projets           Projet[]
+  employes          Employe[]
+  volontaires       Volontaire[]
+  comptes           CompteComptable[]
+  journaux          Journal[]
+  ecritures         EcritureComptable[]
+  budgets           Budget[]
+  comptesBancaires  CompteBancaire[]
+  fournisseurs      Fournisseur[]
+  stocks            Stock[]
+  immobilisations   Immobilisation[]
+  documents         Document[]
+  evenements        Evenement[]
+  parametres        ParametreOrganisation[]
+  logsAudit         LogAudit[]
+
+  @@map("organisations")
+}
+
+// ============================================================
+// UTILISATEURS & RÔLES
+// ============================================================
+
+model Utilisateur {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  motDePasseHash String
+  nom            String
+  prenom         String
+  telephone      String?
+  avatar         String?
+  langue         String    @default("fr")
+  actif          Boolean   @default(true)
+  emailVerifie   Boolean   @default(false)
+  deuxFacteurs   Boolean   @default(false)
+  deuxFacteursSecret String?
+  dernierLogin   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  organisations  UtilisateurOrganisation[]
+  sessions       Session[]
+  logsAudit      LogAudit[]
+  documents      Document[]  @relation("DocumentCree")
+
+  @@map("utilisateurs")
+}
+
+model UtilisateurOrganisation {
+  id             String          @id @default(uuid())
+  utilisateurId  String
+  organisationId String
+  role           RoleUtilisateur @default(LECTEUR)
+  permissions    String[]        // permissions granulaires supplémentaires
+  actif          Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+
+  utilisateur    Utilisateur     @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([utilisateurId, organisationId])
+  @@map("utilisateur_organisations")
+}
+
+model Session {
+  id             String      @id @default(uuid())
+  utilisateurId  String
+  token          String      @unique
+  refreshToken   String?     @unique
+  ipAdresse      String?
+  userAgent      String?
+  expiresAt      DateTime
+  createdAt      DateTime    @default(now())
+
+  utilisateur    Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ============================================================
+// MEMBRES & ADHÉSIONS
+// ============================================================
+
+model Membre {
+  id             String        @id @default(uuid())
+  organisationId String
+  numero         String?       // numéro de membre
+  nom            String
+  prenom         String?
+  dateNaissance  DateTime?
+  genre          String?
+  nationalite    String?
+  telephone      String?
+  email          String?
+  adresse        Json?
+  photo          String?
+  statutMembre   StatutMembre  @default(ACTIF)
+  dateAdhesion   DateTime      @default(now())
+  dateExpiration DateTime?
+  fonctions      String[]      // rôles dans l'organisation
+  competences    String[]
+  groupes        String[]
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  cotisations    Cotisation[]
+
+  @@unique([organisationId, numero])
+  @@map("membres")
+}
+
+model Cotisation {
+  id             String         @id @default(uuid())
+  membreId       String
+  periode        String         // ex: "2026-01" pour janvier 2026
+  montant        Decimal        @db.Decimal(15, 2)
+  typeCotisation TypeCotisation
+  statut         StatutPaiement @default(EN_ATTENTE)
+  dateEcheance   DateTime
+  datePaiement   DateTime?
+  modePaiement   String?
+  reference      String?
+  notes          String?
+  createdAt      DateTime       @default(now())
+
+  membre         Membre         @relation(fields: [membreId], references: [id], onDelete: Cascade)
+
+  @@map("cotisations")
+}
+
+// ============================================================
+// DONATEURS & DONS
+// ============================================================
+
+model Donateur {
+  id             String    @id @default(uuid())
+  organisationId String
+  type           String    @default("PHYSIQUE")  // PHYSIQUE, MORAL
+  nom            String
+  prenom         String?
+  email          String?
+  telephone      String?
+  adresse        Json?
+  pays           String?
+  notes          String?
+  anonymous      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  dons           Don[]
+
+  @@map("donateurs")
+}
+
+model Don {
+  id             String        @id @default(uuid())
+  donateurId     String
+  type           TypeDon       @default(NUMERAIRE)
+  montant        Decimal?      @db.Decimal(15, 2)
+  devise         Devise        @default(XOF)
+  descriptionNature String?   // si don en nature
+  valeurEstimee  Decimal?      @db.Decimal(15, 2)
+  dateDon        DateTime
+  statut         StatutPaiement @default(PAYE)
+  projetId       String?
+  recu           Boolean       @default(false)
+  numeroRecu     String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  donateur       Donateur      @relation(fields: [donateurId], references: [id], onDelete: Cascade)
+  projet         Projet?       @relation(fields: [projetId], references: [id])
+
+  @@map("dons")
+}
+
+// ============================================================
+// BAILLEURS DE FONDS
+// ============================================================
+
+model Bailleur {
+  id             String    @id @default(uuid())
+  organisationId String
+  nom            String
+  sigle          String?
+  type           String?   // BILATERAL, MULTILATERAL, PRIVE, FONDATION
+  pays           String?
+  siteWeb        String?
+  contactNom     String?
+  contactEmail   String?
+  contactTel     String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  conventions    Convention[]
+
+  @@map("bailleurs")
+}
+
+model Convention {
+  id               String        @id @default(uuid())
+  bailleurId       String
+  projetId         String?
+  reference        String
+  titre            String
+  montantTotal     Decimal       @db.Decimal(15, 2)
+  devise           Devise        @default(XOF)
+  dateSignature    DateTime
+  dateDebut        DateTime
+  dateFin          DateTime
+  statut           String        @default("ACTIVE")
+  conditions       String?
+  rapportsPrevus   Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  bailleur         Bailleur      @relation(fields: [bailleurId], references: [id], onDelete: Cascade)
+  projet           Projet?       @relation(fields: [projetId], references: [id])
+  decaissements    Decaissement[]
+
+  @@map("conventions")
+}
+
+model Decaissement {
+  id            String      @id @default(uuid())
+  conventionId  String
+  montant       Decimal     @db.Decimal(15, 2)
+  devise        Devise      @default(XOF)
+  dateReception DateTime
+  reference     String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+
+  convention    Convention  @relation(fields: [conventionId], references: [id], onDelete: Cascade)
+
+  @@map("decaissements")
+}
+
+// ============================================================
+// PROJETS & PROGRAMMES
+// ============================================================
+
+model Projet {
+  id             String        @id @default(uuid())
+  organisationId String
+  code           String?
+  nom            String
+  description    String?
+  type           TypeProjet    @default(PROJET)
+  statut         StatutProjet  @default(BROUILLON)
+  projetParentId String?
+  dateDebut      DateTime?
+  dateFin        DateTime?
+  budgetTotal    Decimal?      @db.Decimal(15, 2)
+  devise         Devise        @default(XOF)
+  zones          String[]
+  secteurs       String[]
+  objectifs      String?
+  indicateurs    Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  projetParent   Projet?       @relation("SousProjet", fields: [projetParentId], references: [id])
+  sousProjets    Projet[]      @relation("SousProjet")
+  activites      Activite[]
+  beneficiaires  ProjetBeneficiaire[]
+  dons           Don[]
+  conventions    Convention[]
+  budgets        Budget[]
+  ecritures      EcritureComptable[]
+
+  @@unique([organisationId, code])
+  @@map("projets")
+}
+
+model Activite {
+  id             String    @id @default(uuid())
+  projetId       String
+  nom            String
+  description    String?
+  statut         String    @default("PLANIFIEE")
+  dateDebut      DateTime?
+  dateFin        DateTime?
+  lieu           String?
+  responsableId  String?
+  budget         Decimal?  @db.Decimal(15, 2)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  projet         Projet    @relation(fields: [projetId], references: [id], onDelete: Cascade)
+
+  @@map("activites")
+}
+
+// ============================================================
+// BÉNÉFICIAIRES
+// ============================================================
+
+model Beneficiaire {
+  id             String    @id @default(uuid())
+  organisationId String
+  code           String?
+  nom            String
+  prenom         String?
+  dateNaissance  DateTime?
+  genre          String?
+  telephone      String?
+  adresse        Json?
+  vulnerabilites String[]
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  projets        ProjetBeneficiaire[]
+
+  @@map("beneficiaires")
+}
+
+model ProjetBeneficiaire {
+  projetId       String
+  beneficiaireId String
+  dateEntree     DateTime  @default(now())
+  dateSortie     DateTime?
+  statut         String    @default("ACTIF")
+  services       String[]
+  notes          String?
+
+  projet         Projet        @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  beneficiaire   Beneficiaire  @relation(fields: [beneficiaireId], references: [id], onDelete: Cascade)
+
+  @@id([projetId, beneficiaireId])
+  @@map("projet_beneficiaires")
+}
+
+// ============================================================
+// RESSOURCES HUMAINES
+// ============================================================
+
+model Employe {
+  id             String      @id @default(uuid())
+  organisationId String
+  matricule      String?
+  nom            String
+  prenom         String
+  dateNaissance  DateTime?
+  genre          String?
+  nationalite    String?
+  telephone      String?
+  email          String?
+  adresse        Json?
+  photo          String?
+  poste          String
+  departement    String?
+  typeContrat    TypeContrat @default(CDI)
+  dateEmbauche   DateTime
+  dateFinContrat DateTime?
+  salaireBase    Decimal?    @db.Decimal(15, 2)
+  devise         Devise      @default(XOF)
+  actif          Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  fiches         FichePaie[]
+  conges         Conge[]
+
+  @@unique([organisationId, matricule])
+  @@map("employes")
+}
+
+model FichePaie {
+  id             String    @id @default(uuid())
+  employeId      String
+  periode        String    // "2026-01"
+  salaireBase    Decimal   @db.Decimal(15, 2)
+  primes         Decimal   @db.Decimal(15, 2)  @default(0)
+  deductions     Decimal   @db.Decimal(15, 2)  @default(0)
+  salaireBrut    Decimal   @db.Decimal(15, 2)
+  cotisationsSociales Decimal @db.Decimal(15, 2) @default(0)
+  impots         Decimal   @db.Decimal(15, 2)  @default(0)
+  salaireNet     Decimal   @db.Decimal(15, 2)
+  datePaiement   DateTime?
+  statut         String    @default("BROUILLON")
+  createdAt      DateTime  @default(now())
+
+  employe        Employe   @relation(fields: [employeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeId, periode])
+  @@map("fiches_paie")
+}
+
+model Conge {
+  id             String    @id @default(uuid())
+  employeId      String
+  type           String    // ANNUEL, MALADIE, MATERNITE, etc.
+  dateDebut      DateTime
+  dateFin        DateTime
+  nombreJours    Int
+  statut         String    @default("EN_ATTENTE")
+  motif          String?
+  createdAt      DateTime  @default(now())
+
+  employe        Employe   @relation(fields: [employeId], references: [id], onDelete: Cascade)
+
+  @@map("conges")
+}
+
+model Volontaire {
+  id             String    @id @default(uuid())
+  organisationId String
+  nom            String
+  prenom         String?
+  telephone      String?
+  email          String?
+  competences    String[]
+  disponibilites Json?
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@map("volontaires")
+}
+
+// ============================================================
+// COMPTABILITÉ SYCEBNL
+// ============================================================
+
+model CompteComptable {
+  id             String    @id @default(uuid())
+  organisationId String
+  numero         String
+  nom            String
+  typeCompte     TypeCompte
+  sens           String    @default("DEBITEUR")  // DEBITEUR, CREDITEUR
+  compteParentId String?
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organisation   Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  compteParent   CompteComptable? @relation("PlanComptable", fields: [compteParentId], references: [id])
+  sousComptes    CompteComptable[] @relation("PlanComptable")
+  lignesEcriture LigneEcriture[]
+
+  @@unique([organisationId, numero])
+  @@map("comptes_comptables")
+}
+
+model Journal {
+  id             String    @id @default(uuid())
+  organisationId String
+  code           String
+  nom            String
+  type           TypeJournal
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organisation   Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  ecritures      EcritureComptable[]
+
+  @@unique([organisationId, code])
+  @@map("journaux")
+}
+
+model EcritureComptable {
+  id             String    @id @default(uuid())
+  organisationId String
+  journalId      String
+  projetId       String?
+  numero         String
+  libelle        String
+  dateEcriture   DateTime
+  dateValeur     DateTime?
+  exercice       Int
+  periode        String    // "2026-01"
+  totalDebit     Decimal   @db.Decimal(15, 2)
+  totalCredit    Decimal   @db.Decimal(15, 2)
+  valide         Boolean   @default(false)
+  dateValidation DateTime?
+  pieceJointe    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  journal        Journal         @relation(fields: [journalId], references: [id])
+  projet         Projet?         @relation(fields: [projetId], references: [id])
+  lignes         LigneEcriture[]
+
+  @@unique([organisationId, journalId, numero])
+  @@map("ecritures_comptables")
+}
+
+model LigneEcriture {
+  id              String            @id @default(uuid())
+  ecritureId      String
+  compteId        String
+  libelle         String?
+  debit           Decimal           @db.Decimal(15, 2) @default(0)
+  credit          Decimal           @db.Decimal(15, 2) @default(0)
+  ordre           Int
+
+  ecriture        EcritureComptable @relation(fields: [ecritureId], references: [id], onDelete: Cascade)
+  compte          CompteComptable   @relation(fields: [compteId], references: [id])
+
+  @@map("lignes_ecritures")
+}
+
+// ============================================================
+// BUDGET
+// ============================================================
+
+model Budget {
+  id             String    @id @default(uuid())
+  organisationId String
+  projetId       String?
+  exercice       Int
+  nom            String
+  statut         String    @default("BROUILLON")
+  dateApprobation DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  projet         Projet?       @relation(fields: [projetId], references: [id])
+  lignes         LigneBudget[]
+
+  @@map("budgets")
+}
+
+model LigneBudget {
+  id             String    @id @default(uuid())
+  budgetId       String
+  categorie      String
+  description    String?
+  montantPrevu   Decimal   @db.Decimal(15, 2)
+  montantRealise Decimal   @db.Decimal(15, 2) @default(0)
+  devise         Devise    @default(XOF)
+  createdAt      DateTime  @default(now())
+
+  budget         Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@map("lignes_budget")
+}
+
+// ============================================================
+// TRÉSORERIE
+// ============================================================
+
+model CompteBancaire {
+  id             String    @id @default(uuid())
+  organisationId String
+  nom            String
+  banque         String
+  numeroCompte   String
+  iban           String?
+  devise         Devise    @default(XOF)
+  soldeInitial   Decimal   @db.Decimal(15, 2) @default(0)
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  mouvements     MouvementBancaire[]
+
+  @@map("comptes_bancaires")
+}
+
+model MouvementBancaire {
+  id             String    @id @default(uuid())
+  compteId       String
+  date           DateTime
+  libelle        String
+  debit          Decimal   @db.Decimal(15, 2) @default(0)
+  credit         Decimal   @db.Decimal(15, 2) @default(0)
+  reference      String?
+  rapproche      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  compte         CompteBancaire @relation(fields: [compteId], references: [id], onDelete: Cascade)
+
+  @@map("mouvements_bancaires")
+}
+
+// ============================================================
+// ACHATS & FOURNISSEURS
+// ============================================================
+
+model Fournisseur {
+  id             String    @id @default(uuid())
+  organisationId String
+  nom            String
+  numeroFiscal   String?
+  telephone      String?
+  email          String?
+  adresse        Json?
+  pays           String?
+  actif          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  commandes      CommandeAchat[]
+
+  @@map("fournisseurs")
+}
+
+model CommandeAchat {
+  id             String    @id @default(uuid())
+  fournisseurId  String
+  numero         String
+  dateCommande   DateTime
+  dateLivraison  DateTime?
+  statut         String    @default("BROUILLON")
+  montantTotal   Decimal   @db.Decimal(15, 2)
+  devise         Devise    @default(XOF)
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  fournisseur    Fournisseur @relation(fields: [fournisseurId], references: [id], onDelete: Cascade)
+
+  @@map("commandes_achat")
+}
+
+// ============================================================
+// STOCKS
+// ============================================================
+
+model Stock {
+  id             String    @id @default(uuid())
+  organisationId String
+  reference      String
+  designation    String
+  categorie      String?
+  unite          String?
+  stockActuel    Decimal   @db.Decimal(15, 4) @default(0)
+  stockMinimum   Decimal   @db.Decimal(15, 4) @default(0)
+  prixUnitaire   Decimal?  @db.Decimal(15, 2)
+  localisation   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  mouvements     MouvementStock[]
+
+  @@unique([organisationId, reference])
+  @@map("stocks")
+}
+
+model MouvementStock {
+  id             String    @id @default(uuid())
+  stockId        String
+  type           String    // ENTREE, SORTIE, AJUSTEMENT
+  quantite       Decimal   @db.Decimal(15, 4)
+  dateOperation  DateTime
+  motif          String?
+  reference      String?
+  createdAt      DateTime  @default(now())
+
+  stock          Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("mouvements_stock")
+}
+
+// ============================================================
+// IMMOBILISATIONS
+// ============================================================
+
+model Immobilisation {
+  id             String    @id @default(uuid())
+  organisationId String
+  reference      String
+  designation    String
+  categorie      String    // TERRAIN, BATIMENT, MATERIEL, VEHICULE, INFORMATIQUE
+  dateAcquisition DateTime
+  valeurAcquisition Decimal @db.Decimal(15, 2)
+  dureeVie       Int?      // en mois
+  tauxAmortissement Decimal? @db.Decimal(5, 2)
+  valeurResiduelle Decimal? @db.Decimal(15, 2)
+  localisation   String?
+  statut         String    @default("EN_SERVICE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, reference])
+  @@map("immobilisations")
+}
+
+// ============================================================
+// GESTION DOCUMENTAIRE (GED)
+// ============================================================
+
+model Document {
+  id             String          @id @default(uuid())
+  organisationId String
+  nom            String
+  description    String?
+  categorie      String?
+  tags           String[]
+  statut         StatutDocument  @default(VALIDE)
+  fichierUrl     String
+  fichierNom     String
+  fichierTaille  Int?
+  mimeType       String?
+  version        Int             @default(1)
+  documentParentId String?
+  dateExpiration DateTime?
+  createurId     String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  createur       Utilisateur     @relation("DocumentCree", fields: [createurId], references: [id])
+  versions       Document[]      @relation("VersionDocument")
+  parent         Document?       @relation("VersionDocument", fields: [documentParentId], references: [id])
+
+  @@map("documents")
+}
+
+// ============================================================
+// ÉVÉNEMENTS & FORMATIONS
+// ============================================================
+
+model Evenement {
+  id             String    @id @default(uuid())
+  organisationId String
+  titre          String
+  description    String?
+  type           String    // AG, REUNION, FORMATION, ATELIER, CONFERENCE
+  dateDebut      DateTime
+  dateFin        DateTime?
+  lieu           String?
+  lienVisio      String?
+  capaciteMax    Int?
+  inscription    Boolean   @default(false)
+  statut         String    @default("PLANIFIE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@map("evenements")
+}
+
+// ============================================================
+// AUDIT & TRAÇABILITÉ
+// ============================================================
+
+model LogAudit {
+  id             String    @id @default(uuid())
+  organisationId String?
+  utilisateurId  String?
+  action         String    // CREATE, UPDATE, DELETE, LOGIN, etc.
+  ressource      String    // nom de la table/entité
+  ressourceId    String?
+  avant          Json?     // état avant modification
+  apres          Json?     // état après modification
+  ipAdresse      String?
+  userAgent      String?
+  createdAt      DateTime  @default(now())
+
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  utilisateur    Utilisateur?  @relation(fields: [utilisateurId], references: [id])
+
+  @@map("logs_audit")
+}
+
+// ============================================================
+// PARAMÈTRES ORGANISATION
+// ============================================================
+
+model ParametreOrganisation {
+  id             String    @id @default(uuid())
+  organisationId String
+  cle            String
+  valeur         String
+  description    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, cle])
+  @@map("parametres_organisation")
+}
