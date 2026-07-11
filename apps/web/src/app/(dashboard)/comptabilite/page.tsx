@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, ChevronRight, ChevronDown } from 'lucide-react';
 import { Tabs } from '@/components/ui/Tabs';
@@ -227,7 +227,7 @@ function Balance() {
 interface LigneEcriture { compte: string; libelle: string; debit: string; credit: string; }
 
 function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [journal, setJournal] = useState('BQ');
+  const [journalId, setJournalId] = useState('');
   const [libelle, setLibelle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [lignes, setLignes] = useState<LigneEcriture[]>([
@@ -235,16 +235,65 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
     { compte: '', libelle: '', debit: '', credit: '' },
   ]);
   const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+
+  const { data: journauxData } = useQuery({
+    queryKey: ['comptabilite-journaux'],
+    queryFn: async () => { const { data } = await api.get('/comptabilite/journaux'); return data; },
+    enabled: open,
+  });
+  const journaux: { id: string; code: string; libelle: string }[] = journauxData ?? [];
+
+  const { data: planData } = useQuery({
+    queryKey: ['comptabilite-plan'],
+    queryFn: async () => { const { data } = await api.get('/comptabilite/plan-comptable'); return data; },
+    enabled: open,
+  });
+  const compteMap: Record<string, string> = {};
+  (planData ?? []).forEach((c: { id?: string; numero: string }) => { if (c.id) compteMap[c.numero] = c.id; });
 
   const totalDebit = lignes.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0);
   const totalCredit = lignes.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0);
   const equilibre = Math.abs(totalDebit - totalCredit) < 0.01;
 
+  const mutation = useMutation({
+    mutationFn: () => {
+      const now = new Date(date);
+      const exercice = now.getFullYear();
+      const periode = `${exercice}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      return api.post('/comptabilite/ecritures', {
+        journalId,
+        libelle,
+        dateEcriture: date,
+        exercice,
+        periode,
+        lignes: lignes.map((l) => ({
+          compteId: compteMap[l.compte] ?? l.compte,
+          libelle: l.libelle || undefined,
+          debit: parseFloat(l.debit) || 0,
+          credit: parseFloat(l.credit) || 0,
+        })),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comptabilite-ecritures'] });
+      queryClient.invalidateQueries({ queryKey: ['comptabilite-balance'] });
+      setLibelle(''); setJournalId(''); setDate(new Date().toISOString().slice(0, 10));
+      setLignes([{ compte: '', libelle: '', debit: '', credit: '' }, { compte: '', libelle: '', debit: '', credit: '' }]);
+      setError('');
+      onClose();
+    },
+    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+  });
+
   const handleSubmit = () => {
     if (!libelle.trim()) { setError('Le libellé est requis.'); return; }
-    if (!equilibre) { setError('L\'écriture n\'est pas équilibrée (débit ≠ crédit).'); return; }
+    if (!journalId) { setError('Sélectionnez un journal.'); return; }
+    if (!equilibre) { setError("L'écriture n'est pas équilibrée (débit ≠ crédit)."); return; }
+    const missing = lignes.find((l) => l.compte && !compteMap[l.compte]);
+    if (missing) { setError(`Compte introuvable : ${missing.compte}`); return; }
     setError('');
-    onClose();
+    mutation.mutate();
   };
 
   return (
@@ -252,7 +301,9 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
       footer={
         <>
           <button className="btn-secondary" onClick={onClose}>Annuler</button>
-          <button className="btn-primary" onClick={handleSubmit}>Enregistrer</button>
+          <button className="btn-primary" disabled={mutation.isPending} onClick={handleSubmit}>
+            {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
         </>
       }
     >
@@ -260,13 +311,11 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="label">Journal</label>
-            <select className="input w-full" value={journal} onChange={(e) => setJournal(e.target.value)}>
-              <option value="BQ">BQ – Banque</option>
-              <option value="CA">CA – Caisse</option>
-              <option value="AC">AC – Achats</option>
-              <option value="VT">VT – Ventes</option>
-              <option value="PA">PA – Paie</option>
-              <option value="OD">OD – Opérations diverses</option>
+            <select className="input w-full" value={journalId} onChange={(e) => setJournalId(e.target.value)}>
+              <option value="">— Choisir —</option>
+              {journaux.map((j) => (
+                <option key={j.id} value={j.id}>{j.code} – {j.libelle}</option>
+              ))}
             </select>
           </div>
           <div>

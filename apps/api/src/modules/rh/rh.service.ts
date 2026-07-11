@@ -242,7 +242,7 @@ export class RhService {
     const now = new Date();
     const debutMois = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [totalEmployes, enConge, totalVolontaires, fiches] = await Promise.all([
+    const [totalEmployes, enConge, totalVolontaires, employes] = await Promise.all([
       this.prisma.employe.count({ where: { organisationId, actif: true } }),
       this.prisma.conge.count({
         where: {
@@ -253,17 +253,13 @@ export class RhService {
         },
       }),
       this.prisma.volontaire.count({ where: { organisationId, actif: true } }),
-      this.prisma.fichePaie.findMany({
-        where: {
-          employe: { organisationId },
-          periode: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
-          statut: 'VALIDE',
-        },
-        select: { salaireNet: true },
+      this.prisma.employe.findMany({
+        where: { organisationId, actif: true },
+        select: { salaireBase: true },
       }),
     ]);
 
-    const masseSalariale = fiches.reduce((sum, f) => sum + Number(f.salaireNet), 0);
+    const masseSalariale = employes.reduce((sum, e) => sum + Number(e.salaireBase ?? 0), 0);
 
     return { totalEmployes, enConge, totalVolontaires, masseSalariale };
   }
