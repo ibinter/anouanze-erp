@@ -19,12 +19,18 @@ export const metadata: Metadata = {
   description:
     "L'ERP des associations, ONG et organisations à but non lucratif. Conforme SYCEBNL, adapté aux réalités africaines.",
   keywords: ['ERP', 'ONG', 'association', 'SYCEBNL', 'OHADA', 'Afrique', 'gestion'],
-  authors: [{ name: 'IBIG SARL', url: 'https://ibigsoft.com' }],
-  creator: 'IBIG SARL',
+  authors: [{ name: 'IBIG SOFT (Intermark Business International Group)', url: 'https://ibigsoft.com' }],
+  creator: 'IBIG SOFT (Intermark Business International Group)',
   robots: 'index, follow',
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ANOUANZÊ ERP',
   },
 };
 

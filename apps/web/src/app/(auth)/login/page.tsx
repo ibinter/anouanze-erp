@@ -68,7 +68,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-10 pt-6 border-t border-primary-500 text-xs text-primary-200">
-            Édité par IBIG Soft — IBIG SARL<br />
+            Édité par IBIG Soft — IBIG SOFT (Intermark Business International Group)<br />
             <span className="italic">&ldquo;L&apos;excellence est notre passion&rdquo;</span>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-neutral-400 mt-6">
-            © {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP
+            © {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP
           </p>
         </div>
       </div>

@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400 mt-6">
-          © {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP
+          © {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP
         </p>
       </div>
     </main>

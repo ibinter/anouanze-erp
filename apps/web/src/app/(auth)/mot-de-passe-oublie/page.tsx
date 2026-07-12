@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
         </p>
 
         <p className="text-center text-xs text-neutral-400 mt-4">
-          © {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP
+          © {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP
         </p>
       </div>
     </main>
