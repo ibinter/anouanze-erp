@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import HeroSlider from '@/components/sara/HeroSlider';
 import SaraChat from '@/components/sara/SaraChat';
 import InfoBar from '@/components/landing/InfoBar';
+import OpenSaraButton from '@/components/landing/OpenSaraButton';
 import WhatsAppButton from '@/components/landing/WhatsAppButton';
 import CookieBanner from '@/components/landing/CookieBanner';
 import PWABanner from '@/components/landing/PWABanner';
@@ -326,12 +327,9 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => (document.querySelector('[aria-label="Ouvrir SARA"]') as HTMLButtonElement)?.click()}
-                className="inline-flex items-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
-              >
+              <OpenSaraButton className="inline-flex items-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-6 py-3 rounded-xl transition-colors">
                 🤖 Parler à SARA maintenant
-              </button>
+              </OpenSaraButton>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
               <div className="bg-primary-700/50 rounded-xl p-4 mb-4">
@@ -620,12 +618,9 @@ export default function LandingPage() {
               <Link href="/contact" className="inline-flex items-center gap-2 border border-primary-200 text-primary-600 hover:bg-primary-50 font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm">
                 📧 Nous contacter
               </Link>
-              <button
-                onClick={() => (document.querySelector('[aria-label="Ouvrir SARA"]') as HTMLButtonElement)?.click()}
-                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
-              >
+              <OpenSaraButton className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm">
                 🤖 Poser la question à SARA
-              </button>
+              </OpenSaraButton>
             </div>
           </div>
         </div>
