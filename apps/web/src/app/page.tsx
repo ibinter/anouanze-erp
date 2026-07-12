@@ -514,9 +514,8 @@ export default function LandingPage() {
               <ul className="space-y-3 text-sm">
                 <li><a href="#fonctionnalites" className="hover:text-white transition-colors">Modules</a></li>
                 <li><a href="#tarifs" className="hover:text-white transition-colors">Tarifs</a></li>
+                <li><Link href="/demo" className="hover:text-white transition-colors">Démonstration</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Connexion</Link></li>
-                <li><Link href="/cgu" className="hover:text-white transition-colors">CGU</Link></li>
-                <li><Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
@@ -526,7 +525,7 @@ export default function LandingPage() {
               <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Légal</h4>
               <ul className="space-y-3 text-sm">
                 <li><Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link></li>
-                <li><Link href="/confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link></li>
+                <li><Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link></li>
                 <li><Link href="/cgu" className="hover:text-white transition-colors">CGU</Link></li>
                 <li><Link href="/cookies" className="hover:text-white transition-colors">Politique cookies</Link></li>
               </ul>
@@ -546,9 +545,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">IBIG SOFT (Intermark Business International Group)</strong> — L'excellence est notre passion. Tous droits réservés.</p>
-            <p>ANOUANZÊ ERP est édité par <strong className="text-neutral-300">IBIG SOFT (Intermark Business International Group)</strong>, société enregistrée en Côte d'Ivoire.</p>
+          <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-500">
+            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">IBIG SOFT</strong> — Tous droits réservés.</p>
+            <p>ANOUANZÊ ERP est un produit de <strong className="text-neutral-300">IBIG SOFT</strong> · Abidjan, Côte d'Ivoire.</p>
           </div>
         </div>
       </footer>
