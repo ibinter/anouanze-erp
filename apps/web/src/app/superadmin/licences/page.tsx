@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface Licence {
   id: string;
   organisation: string;
-  plan: 'Starter' | 'Pro' | 'Enterprise';
+  plan: 'Essentiel' | 'Starter' | 'Pro' | 'Enterprise';
   statut: 'ACTIVE' | 'ESSAI' | 'SUSPENDUE' | 'EXPIREE';
   debut: string;
   fin: string;
@@ -16,13 +16,14 @@ interface Licence {
 }
 
 const LICENCES: Licence[] = [
-  { id: 'L001', organisation: 'ONG Espoir CI', plan: 'Pro', statut: 'ACTIVE', debut: '2026-02-01', fin: '2027-01-31', mrr: 65000, renouvellementAuto: true, maxUsers: 15, usersActifs: 8 },
-  { id: 'L002', organisation: 'Association YMCA Abidjan', plan: 'Starter', statut: 'ACTIVE', debut: '2026-04-01', fin: '2026-12-31', mrr: 25000, renouvellementAuto: false, maxUsers: 3, usersActifs: 3 },
-  { id: 'L003', organisation: 'Réseau Femmes Leaders Mali', plan: 'Pro', statut: 'ACTIVE', debut: '2026-04-15', fin: '2027-03-15', mrr: 65000, renouvellementAuto: true, maxUsers: 15, usersActifs: 12 },
-  { id: 'L004', organisation: 'CARITAS Bouaké', plan: 'Enterprise', statut: 'ACTIVE', debut: '2025-07-01', fin: '2027-06-30', mrr: 180000, renouvellementAuto: true, maxUsers: 999, usersActifs: 28 },
-  { id: 'L005', organisation: 'Fondation Santé 2030', plan: 'Starter', statut: 'ESSAI', debut: '2026-07-10', fin: '2026-07-17', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 2 },
-  { id: 'L006', organisation: 'AVSF Burkina Faso', plan: 'Pro', statut: 'ACTIVE', debut: '2026-05-01', fin: '2027-02-28', mrr: 65000, renouvellementAuto: true, maxUsers: 15, usersActifs: 6 },
-  { id: 'L007', organisation: 'ONG JADES Niger', plan: 'Starter', statut: 'SUSPENDUE', debut: '2026-01-20', fin: '2026-06-30', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 1 },
+  { id: 'L001', organisation: 'ONG Espoir CI', plan: 'Pro', statut: 'ACTIVE', debut: '2026-02-01', fin: '2027-01-31', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 8 },
+  { id: 'L002', organisation: 'Association YMCA Abidjan', plan: 'Starter', statut: 'ACTIVE', debut: '2026-04-01', fin: '2026-12-31', mrr: 29900, renouvellementAuto: false, maxUsers: 8, usersActifs: 3 },
+  { id: 'L003', organisation: 'Réseau Femmes Leaders Mali', plan: 'Pro', statut: 'ACTIVE', debut: '2026-04-15', fin: '2027-03-15', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 12 },
+  { id: 'L004', organisation: 'CARITAS Bouaké', plan: 'Enterprise', statut: 'ACTIVE', debut: '2025-07-01', fin: '2027-06-30', mrr: 200000, renouvellementAuto: true, maxUsers: 999, usersActifs: 28 },
+  { id: 'L005', organisation: 'Fondation Santé 2030', plan: 'Essentiel', statut: 'ESSAI', debut: '2026-07-10', fin: '2026-07-24', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 2 },
+  { id: 'L006', organisation: 'AVSF Burkina Faso', plan: 'Pro', statut: 'ACTIVE', debut: '2026-05-01', fin: '2027-02-28', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 6 },
+  { id: 'L007', organisation: 'ONG JADES Niger', plan: 'Essentiel', statut: 'SUSPENDUE', debut: '2026-01-20', fin: '2026-06-30', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 1 },
+  { id: 'L008', organisation: 'Groupement Femmes Rurales BF', plan: 'Essentiel', statut: 'ACTIVE', debut: '2026-06-01', fin: '2027-05-31', mrr: 12900, renouvellementAuto: true, maxUsers: 3, usersActifs: 2 },
 ];
 
 const STATUT_COLORS: Record<string, string> = {
@@ -33,7 +34,8 @@ const STATUT_COLORS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  Starter: 'text-neutral-400',
+  Essentiel: 'text-neutral-400',
+  Starter: 'text-cyan-400',
   Pro: 'text-blue-400',
   Enterprise: 'text-yellow-400',
 };

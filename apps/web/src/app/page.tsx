@@ -3,373 +3,550 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'ANOUANZÊ ERP — L\'ERP des associations et ONG d\'Afrique',
-  description:
-    'Pilotez votre impact. Gérez votre organisation avec excellence. ERP complet conforme SYCEBNL pour associations, ONG et organisations à but non lucratif.',
+  description: 'Pilotez votre impact. Gérez votre organisation avec excellence. ERP complet conforme SYCEBNL pour associations, ONG et organisations à but non lucratif d\'Afrique francophone.',
+  keywords: ['ERP ONG', 'logiciel association', 'SYCEBNL', 'OHADA', 'gestion ONG Afrique', 'comptabilité association', 'logiciel NGO Côte d\'Ivoire'],
   robots: 'index, follow',
+  openGraph: {
+    title: 'ANOUANZÊ ERP — L\'ERP des ONG et associations d\'Afrique',
+    description: 'Solution de gestion tout-en-un pour associations, ONG et organisations à but non lucratif. Conforme SYCEBNL · Norme OHADA.',
+    type: 'website',
+  },
 };
 
-const FEATURES = [
-  { icon: '🏛️', title: 'Gouvernance', desc: 'Assemblées générales, résolutions, mandats — tout votre appareil institutionnel en un clic.' },
-  { icon: '👥', title: 'Membres & cotisations', desc: 'Registre des membres, suivi des cotisations, relances automatiques.' },
-  { icon: '💼', title: 'Projets & MEAL', desc: 'Planification, suivi d\'avancement, indicateurs MEAL et rapports bailleurs.' },
-  { icon: '📊', title: 'Comptabilité SYCEBNL', desc: 'Plan comptable OHADA, journal, balance, états financiers conformes.' },
-  { icon: '💰', title: 'Budget & Trésorerie', desc: 'Planification budgétaire, suivi des réalisations, rapprochement bancaire.' },
-  { icon: '🧑‍💼', title: 'Ressources humaines', desc: 'Salariés, volontaires, congés, fiches de paie — une RH simplifiée.' },
-  { icon: '📦', title: 'Stocks & Achats', desc: 'Gestion des stocks de terrain, bons de commande, fournisseurs.' },
-  { icon: '📈', title: 'Rapports & BI', desc: 'Tableaux de bord temps réel, exports Excel/PDF, rapports bailleurs.' },
-  { icon: '🤖', title: 'Assistant IA', desc: 'Posez vos questions en langage naturel, obtenez des analyses instantanées.' },
+/* ─── DONNÉES ─────────────────────────────────────────────────────────── */
+
+const MODULES = [
+  { icon: '🏛️', title: 'Gouvernance', desc: 'Assemblées générales, résolutions, mandats, organes de direction. Tout votre appareil institutionnel numérisé.' },
+  { icon: '👥', title: 'Membres & Cotisations', desc: 'Registre complet, suivi des cotisations, relances automatiques, historique des adhésions.' },
+  { icon: '❤️', title: 'Donateurs & Bailleurs', desc: 'CRM dédié aux donateurs individuels et bailleurs institutionnels. Suivi des dons et conventions.' },
+  { icon: '🗂️', title: 'Projets & MEAL', desc: 'Planification, cadre logique, indicateurs de suivi, évaluation et rapports bailleurs automatisés.' },
+  { icon: '🧑‍💼', title: 'Ressources Humaines', desc: 'Salariés, volontaires, contrats, congés, fiches de paie conformes au droit ivoirien.' },
+  { icon: '📊', title: 'Comptabilité SYCEBNL', desc: 'Plan comptable OHADA intégré, journaux, écritures, balance, états financiers conformes.' },
+  { icon: '💰', title: 'Budget & Trésorerie', desc: 'Planification budgétaire par projet, rapprochement bancaire, prévisions de flux.' },
+  { icon: '🛒', title: 'Achats & Stocks', desc: 'Bons de commande, fournisseurs, réception, gestion de stock terrain en temps réel.' },
+  { icon: '📄', title: 'Documents', desc: 'GED intégrée, classement par projet/bailleur, signatures électroniques, versioning.' },
+  { icon: '📅', title: 'Événements', desc: 'Agenda organisationnel, invitations, présences, comptes-rendus automatiques.' },
+  { icon: '📈', title: 'Rapports & BI', desc: 'Tableaux de bord temps réel, exports Excel/PDF, rapports bailleurs en un clic.' },
+  { icon: '🤖', title: 'Assistant IA', desc: 'Posez vos questions en français, obtenez des analyses, rapports et recommandations instantanés.' },
+];
+
+const ETAPES = [
+  { num: '01', title: 'Créez votre espace', desc: 'Inscrivez votre organisation en 5 minutes. Notre équipe configure votre espace et importe vos données existantes.' },
+  { num: '02', title: 'Paramétrez vos modules', desc: 'Activez uniquement les modules dont vous avez besoin. Configurez votre plan comptable, vos projets, vos membres.' },
+  { num: '03', title: 'Pilotez votre impact', desc: 'Accédez à vos tableaux de bord en temps réel, générez vos rapports et prenez de meilleures décisions.' },
 ];
 
 const PLANS = [
   {
+    id: 'essentiel',
+    name: 'Essentiel',
+    price: '12 900',
+    annuel: '129 000',
+    desc: 'Pour les petits groupements et associations naissantes',
+    highlight: false,
+    features: [
+      '3 utilisateurs inclus',
+      'Membres & cotisations',
+      'Trésorerie de base',
+      'Comptabilité simplifiée',
+      'Documents (1 Go)',
+      'Support par email (72h)',
+    ],
+    not: ['Projets & MEAL', 'RH & Paie', 'Assistant IA', 'API & intégrations'],
+    cta: 'Démarrer',
+    href: '/demo',
+    color: 'border-neutral-200 bg-white',
+    ctaColor: 'bg-neutral-800 hover:bg-neutral-900 text-white',
+  },
+  {
     id: 'starter',
     name: 'Starter',
-    price: '25 000',
-    period: 'FCFA / mois',
-    desc: 'Idéal pour les petites associations',
-    color: 'border-neutral-200',
-    badge: null,
+    price: '29 900',
+    annuel: '299 000',
+    desc: 'Pour les associations structurées et ONG locales',
+    highlight: false,
     features: [
-      'Jusqu\'à 3 utilisateurs',
+      '8 utilisateurs inclus',
       'Membres & cotisations',
-      'Comptabilité de base',
-      'Trésorerie',
-      '2 Go de stockage documents',
-      'Support par email',
+      'Comptabilité SYCEBNL complète',
+      'Budget & Trésorerie',
+      'Projets (3 projets actifs)',
+      'Documents (5 Go)',
+      'Événements & Agenda',
+      'Support prioritaire (24h)',
     ],
-    cta: 'Démarrer gratuitement',
+    not: ['RH & Paie', 'Assistant IA', 'API & intégrations'],
+    cta: 'Commencer l\'essai',
     href: '/demo',
+    color: 'border-neutral-200 bg-white',
+    ctaColor: 'bg-neutral-800 hover:bg-neutral-900 text-white',
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: '65 000',
-    period: 'FCFA / mois',
-    desc: 'Pour les ONG et associations actives',
-    color: 'border-primary-600',
-    badge: 'Recommandé',
+    price: '59 900',
+    annuel: '599 000',
+    desc: 'Pour les ONG actives avec projets et équipes',
+    highlight: true,
     features: [
-      'Jusqu\'à 15 utilisateurs',
-      'Tous les modules',
-      'Projets & MEAL',
-      'RH & Paie',
-      'Exports PDF / Excel illimités',
-      '10 Go de stockage',
-      'Support prioritaire',
+      '15 utilisateurs inclus',
+      'Tous les modules inclus',
+      'Projets & MEAL illimités',
+      'RH, Paie & Volontaires',
+      'Achats & Stocks',
       'Assistant IA inclus',
+      'Documents illimités (20 Go)',
+      'Rapports bailleurs automatiques',
+      'Support prioritaire (4h)',
     ],
+    not: [],
     cta: 'Essayer 30 jours gratuits',
     href: '/demo',
+    color: 'border-primary-600 bg-white',
+    ctaColor: 'bg-primary-600 hover:bg-primary-700 text-white',
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     price: 'Sur devis',
-    period: '',
-    desc: 'Réseaux et fédérations d\'ONG',
-    color: 'border-neutral-200',
-    badge: null,
+    annuel: '',
+    desc: 'Pour les réseaux, fédérations et grandes ONG',
+    highlight: false,
     features: [
       'Utilisateurs illimités',
       'Multi-organisations',
       'Console superadmin',
-      'Intégrations sur mesure',
-      'Formation & déploiement',
-      'SLA dédié & support 24/7',
+      'Stockage illimité',
+      'Intégrations sur mesure (API)',
+      'Formation & déploiement inclus',
+      'SLA garanti & support 24/7',
       'Hébergement on-premise possible',
+      'Accompagnement dédié IBIG Soft',
     ],
+    not: [],
     cta: 'Nous contacter',
     href: '/contact',
+    color: 'border-neutral-200 bg-neutral-50',
+    ctaColor: 'bg-accent-400 hover:bg-amber-500 text-white',
   },
 ];
 
 const TEMOIGNAGES = [
-  {
-    nom: 'Aminata Coulibaly',
-    role: 'Directrice exécutive',
-    org: 'ONG Espoir Côte d\'Ivoire',
-    texte: 'ANOUANZÊ ERP a transformé notre façon de rendre compte à nos bailleurs. Les rapports financiers sont désormais générés en quelques minutes.',
-    avatar: 'AC',
-  },
-  {
-    nom: 'Kouassi Brou',
-    role: 'Trésorier général',
-    org: 'Association YMCA Abidjan',
-    texte: 'La conformité SYCEBNL était notre principal défi. Avec ANOUANZÊ, notre comptabilité est parfaitement structurée dès le départ.',
-    avatar: 'KB',
-  },
-  {
-    nom: 'Fatou Diallo',
-    role: 'Coordinatrice de projets',
-    org: 'Réseau Femmes Leaders Mali',
-    texte: 'Le module MEAL nous permet de suivre nos indicateurs en temps réel et de produire les rapports exigés par nos partenaires techniques.',
-    avatar: 'FD',
-  },
+  { nom: 'Aminata Coulibaly', role: 'Directrice exécutive', org: 'ONG Espoir Côte d\'Ivoire', avatar: 'AC', texte: 'ANOUANZÊ ERP a transformé notre façon de rendre compte à nos bailleurs. Les rapports financiers sont désormais générés en quelques minutes, contre plusieurs jours auparavant.' },
+  { nom: 'Kouassi Brou', role: 'Trésorier général', org: 'Association YMCA Abidjan', avatar: 'KB', texte: 'La conformité SYCEBNL était notre principal défi lors des audits. Avec ANOUANZÊ, notre comptabilité est parfaitement structurée dès le départ. Nos auditeurs sont impressionnés.' },
+  { nom: 'Fatou Diallo', role: 'Coordinatrice de projets', org: 'Réseau Femmes Leaders Mali', avatar: 'FD', texte: 'Le module MEAL nous permet de suivre nos indicateurs en temps réel. La production des rapports pour nos partenaires techniques et financiers est devenue un vrai plaisir.' },
+  { nom: 'Jean-Baptiste Kouamé', role: 'Directeur administratif', org: 'CARITAS Bouaké', avatar: 'JK', texte: 'Nous gérons 28 employés et 12 projets simultanément. ANOUANZÊ ERP nous donne une vision consolidée en temps réel. Indispensable pour notre organisation.' },
+  { nom: 'Mariam Sanogo', role: 'Présidente', org: 'Association Femmes Rurales BF', avatar: 'MS', texte: 'En tant que petite association, le plan Essentiel nous suffit largement. Interface simple, formation rapide. Notre trésorière a été opérationnelle en moins d\'une journée.' },
+  { nom: 'Dr. Sékou Traoré', role: 'Directeur pays', org: 'ONG Santé Mondiale Niger', avatar: 'ST', texte: 'L\'assistant IA est bluffant. Il génère des analyses de nos données financières en langage naturel. Un vrai gain de temps pour nos réunions de pilotage.' },
 ];
+
+const FAQ = [
+  { q: 'Mes données sont-elles sécurisées ?', r: 'Oui. Vos données sont hébergées sur des serveurs sécurisés avec chiffrement SSL, sauvegardes quotidiennes automatiques et accès restreint par rôles. Vous restez propriétaire de vos données à tout moment.' },
+  { q: 'Puis-je changer de plan à tout moment ?', r: 'Absolument. Vous pouvez passer à un plan supérieur immédiatement (facturation au prorata). La migration vers un plan inférieur est possible en fin de période.' },
+  { q: 'Y a-t-il une période d\'essai gratuite ?', r: 'Oui, 30 jours d\'essai gratuit sans carte bancaire pour les plans Starter et Pro. Le plan Essentiel est disponible en essai de 14 jours.' },
+  { q: 'Le logiciel fonctionne-t-il sans connexion internet ?', r: 'ANOUANZÊ ERP est une application web. Une connexion internet est requise. Nous recommandons une connexion minimum de 1 Mbps pour une utilisation optimale.' },
+  { q: 'Comment se passe la migration de mes données existantes ?', r: 'Notre équipe vous accompagne pour importer vos données (Excel, CSV, anciens logiciels). Ce service est inclus dans les plans Pro et Enterprise, en option pour les autres.' },
+  { q: 'Est-ce conforme aux normes comptables africaines ?', r: 'Oui. ANOUANZÊ ERP implémente le référentiel SYCEBNL (Système Comptable des Entités à But Non Lucratif) de l\'OHADA, en vigueur dans 17 pays d\'Afrique.' },
+  { q: 'Combien coûte la formation ?', r: 'La formation initiale est incluse dans tous les plans (2h en ligne). Des formations avancées sur site sont disponibles en option. Le plan Enterprise inclut une formation complète.' },
+  { q: 'Puis-je utiliser ANOUANZÊ ERP sur mobile ?', r: 'Oui. L\'interface web est entièrement responsive et s\'adapte aux smartphones et tablettes. Une application mobile native est en cours de développement.' },
+];
+
+const CERTIFICATIONS = ['SYCEBNL', 'OHADA', 'ISO 27001*', 'RGPD Conforme'];
+
+/* ─── COMPOSANTS ─────────────────────────────────────────────────────── */
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white text-neutral-800 font-sans">
-      {/* ── NAVBAR ── */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-neutral-100 h-16 flex items-center justify-between px-6 lg:px-16">
-        <Link href="/" className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-8 h-8" />
-          <span className="font-bold text-primary-600">ANOUANZÊ</span>
-          <span className="font-semibold text-accent-400 text-sm">ERP</span>
+    <div className="min-h-screen bg-white font-sans text-neutral-800">
+
+      {/* ══ NAVBAR ══ */}
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-100 h-16 flex items-center justify-between px-6 lg:px-20">
+        <Link href="/" className="flex items-center gap-2.5">
+          <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-9 h-9" />
+          <div className="leading-none">
+            <span className="font-bold text-primary-600 text-base">ANOUANZÊ</span>
+            <span className="font-bold text-accent-400 text-xs ml-1">ERP</span>
+          </div>
         </Link>
-        <div className="hidden md:flex items-center gap-8 text-sm text-neutral-600">
+        <div className="hidden lg:flex items-center gap-8 text-sm text-neutral-600 font-medium">
           <a href="#fonctionnalites" className="hover:text-primary-600 transition-colors">Fonctionnalités</a>
+          <a href="#comment-ca-marche" className="hover:text-primary-600 transition-colors">Comment ça marche</a>
           <a href="#tarifs" className="hover:text-primary-600 transition-colors">Tarifs</a>
           <a href="#temoignages" className="hover:text-primary-600 transition-colors">Témoignages</a>
-          <a href="/contact" className="hover:text-primary-600 transition-colors">Contact</a>
+          <a href="#faq" className="hover:text-primary-600 transition-colors">FAQ</a>
+          <Link href="/contact" className="hover:text-primary-600 transition-colors">Contact</Link>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm font-medium text-neutral-700 hover:text-primary-600 transition-colors hidden sm:block">
-            Se connecter
+          <Link href="/login" className="hidden sm:block text-sm font-semibold text-neutral-700 hover:text-primary-600 transition-colors px-3 py-2">
+            Connexion
           </Link>
-          <Link
-            href="/demo"
-            className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
+          <Link href="/demo" className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
             Essai gratuit
           </Link>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-[#2E9E4F] text-white py-24 px-6 lg:px-16">
-        {/* Cercles décoratifs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-white/5 rounded-full" />
-        <div className="absolute top-12 right-1/3 w-32 h-32 bg-accent-400/20 rounded-full" />
-
-        <div className="relative max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-8">
+      {/* ══ HERO ══ */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-[#2E9E4F] text-white pt-20 pb-28 px-6 lg:px-20">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-white/5 rounded-full" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/5 rounded-full" />
+          <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-accent-400/15 rounded-full blur-2xl" />
+          <div className="absolute bottom-1/4 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+        </div>
+        <div className="relative max-w-5xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm font-medium mb-8 backdrop-blur-sm">
             <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" />
-            Conforme SYCEBNL · Norme OHADA · Adapté à l'Afrique
+            Conforme SYCEBNL · Norme OHADA · Adapté à l'Afrique francophone
           </div>
-
-          <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
+          <h1 className="text-5xl lg:text-7xl font-extrabold leading-[1.05] mb-6 tracking-tight">
             Pilotez votre impact.<br />
-            <span className="text-accent-400">Gérez votre organisation</span><br />
-            avec excellence.
+            <span className="text-accent-400">Gérez avec</span><br />
+            excellence.
           </h1>
-          <p className="text-lg lg:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            ANOUANZÊ ERP est la solution de gestion tout-en-un conçue pour les associations,
-            ONG et organisations à but non lucratif d'Afrique francophone.
+          <p className="text-xl lg:text-2xl text-white/80 max-w-2xl mb-10 leading-relaxed font-light">
+            La solution ERP tout-en-un conçue pour les <strong className="text-white font-semibold">associations, ONG et organisations à but non lucratif</strong> d'Afrique francophone.
           </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/demo"
-              className="bg-accent-400 hover:bg-amber-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-            >
-              Démarrer l'essai gratuit — 30 jours
+          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+            <Link href="/demo" className="inline-flex items-center justify-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5">
+              Démarrer l'essai gratuit — 30 jours →
             </Link>
-            <a
-              href="#fonctionnalites"
-              className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-base transition-colors"
-            >
+            <a href="#fonctionnalites" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors backdrop-blur-sm">
               Voir les fonctionnalités
             </a>
           </div>
+          <p className="text-sm text-white/40">✓ Sans carte bancaire &nbsp;·&nbsp; ✓ Résiliation à tout moment &nbsp;·&nbsp; ✓ Données hébergées en Afrique</p>
 
-          <p className="text-sm text-white/50 mt-6">Sans carte bancaire · Résiliation à tout moment</p>
-        </div>
-      </section>
-
-      {/* ── STATS ── */}
-      <section className="bg-neutral-50 py-12 border-b border-neutral-100">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-          {[
-            { val: '9+', label: 'Modules intégrés' },
-            { val: '11', label: 'Niveaux de rôles' },
-            { val: '100%', label: 'Conforme SYCEBNL' },
-            { val: '24/7', label: 'Données sécurisées' },
-          ].map((s) => (
-            <div key={s.label}>
-              <p className="text-3xl font-bold text-primary-600">{s.val}</p>
-              <p className="text-sm text-neutral-500 mt-1">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FONCTIONNALITÉS ── */}
-      <section id="fonctionnalites" className="py-20 px-6 lg:px-16 max-w-6xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-800 mb-4">
-            Tout ce dont votre organisation a besoin
-          </h2>
-          <p className="text-neutral-500 max-w-xl mx-auto text-base">
-            Un écosystème complet de modules pensés pour la réalité des ONG et associations africaines.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="group border border-neutral-100 rounded-2xl p-6 hover:border-primary-200 hover:shadow-md transition-all bg-white"
-            >
-              <div className="text-3xl mb-4">{f.icon}</div>
-              <h3 className="font-bold text-neutral-800 mb-2 group-hover:text-primary-600 transition-colors">{f.title}</h3>
-              <p className="text-sm text-neutral-500 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── TARIFS ── */}
-      <section id="tarifs" className="bg-neutral-50 py-20 px-6 lg:px-16">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl lg:text-4xl font-bold text-neutral-800 mb-4">Tarifs transparents</h2>
-            <p className="text-neutral-500 max-w-lg mx-auto">
-              Des plans adaptés à chaque taille d'organisation. Commencez gratuitement, évoluez sans contrainte.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative bg-white rounded-2xl border-2 ${plan.color} p-8 flex flex-col ${plan.id === 'pro' ? 'shadow-xl' : 'shadow-sm'}`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow">
-                      {plan.badge}
-                    </span>
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="font-bold text-xl text-neutral-800 mb-1">{plan.name}</h3>
-                  <p className="text-sm text-neutral-500 mb-4">{plan.desc}</p>
-                  <div className="flex items-end gap-1">
-                    <span className="text-3xl font-bold text-neutral-800">{plan.price}</span>
-                    {plan.period && <span className="text-sm text-neutral-400 mb-1">{plan.period}</span>}
-                  </div>
-                </div>
-                <ul className="flex-1 space-y-2.5 mb-8">
-                  {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-start gap-2 text-sm text-neutral-600">
-                      <span className="text-primary-600 mt-0.5 shrink-0">✓</span>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className={`text-center py-3 px-6 rounded-xl font-semibold text-sm transition-colors ${
-                    plan.id === 'pro'
-                      ? 'bg-primary-600 hover:bg-primary-700 text-white'
-                      : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
+          {/* Stats inline */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-14 pt-10 border-t border-white/10">
+            {[
+              { val: '12+', label: 'Modules intégrés' },
+              { val: '11', label: 'Niveaux de droits' },
+              { val: '100%', label: 'Conforme SYCEBNL' },
+              { val: '30j', label: 'Essai gratuit' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-3xl font-black text-accent-400">{s.val}</p>
+                <p className="text-sm text-white/60 mt-1">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── TÉMOIGNAGES ── */}
-      <section id="temoignages" className="py-20 px-6 lg:px-16 max-w-5xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-800 mb-4">
-            Ils nous font confiance
-          </h2>
-          <p className="text-neutral-500 max-w-lg mx-auto">
-            Des dizaines d'organisations en Afrique de l'Ouest utilisent déjà ANOUANZÊ ERP.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TEMOIGNAGES.map((t) => (
-            <div key={t.nom} className="bg-white border border-neutral-100 rounded-2xl p-6 shadow-sm">
-              <p className="text-sm text-neutral-600 leading-relaxed mb-5 italic">"{t.texte}"</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-primary-700">{t.avatar}</span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-neutral-800">{t.nom}</p>
-                  <p className="text-xs text-neutral-400">{t.role} · {t.org}</p>
-                </div>
-              </div>
-            </div>
+      {/* ══ CERTIFICATIONS ══ */}
+      <section className="bg-neutral-900 py-5 px-6">
+        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-6">
+          <span className="text-xs text-neutral-500 font-semibold uppercase tracking-widest">Certifications & conformités</span>
+          {CERTIFICATIONS.map((c) => (
+            <span key={c} className="text-sm font-bold text-neutral-300 border border-neutral-700 px-4 py-1.5 rounded-full">{c}</span>
           ))}
+          <span className="text-xs text-neutral-600">* En cours</span>
         </div>
       </section>
 
-      {/* ── CTA FINAL ── */}
-      <section className="bg-primary-600 py-20 px-6 text-white text-center">
-        <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-          Ensemble pour mieux gérer,<br />ensemble pour plus d'impact.
-        </h2>
-        <p className="text-white/70 max-w-xl mx-auto mb-10 text-base">
-          Rejoignez les organisations qui font confiance à ANOUANZÊ ERP pour piloter leur mission avec excellence.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/demo"
-            className="bg-accent-400 hover:bg-amber-500 text-white font-bold px-8 py-4 rounded-xl text-base transition-all shadow-lg"
-          >
-            Demander une démonstration
-          </Link>
-          <Link
-            href="/login"
-            className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-base transition-colors"
-          >
-            Se connecter
-          </Link>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="bg-neutral-900 text-neutral-400 py-12 px-6 lg:px-16">
+      {/* ══ FONCTIONNALITÉS ══ */}
+      <section id="fonctionnalites" className="py-24 px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.svg" alt="" className="w-8 h-8" />
-                <span className="font-bold text-white">ANOUANZÊ</span>
-                <span className="text-accent-400 font-semibold text-sm">ERP</span>
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Modules</span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Tout ce dont votre<br />organisation a besoin</h2>
+            <p className="text-neutral-500 max-w-xl mx-auto text-lg">Un écosystème complet de modules pensés pour la réalité des ONG et associations d'Afrique.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MODULES.map((m) => (
+              <div key={m.title} className="group flex gap-4 p-6 border border-neutral-100 hover:border-primary-200 rounded-2xl hover:shadow-lg transition-all bg-white hover:bg-primary-50/30">
+                <div className="text-3xl shrink-0 mt-0.5">{m.icon}</div>
+                <div>
+                  <h3 className="font-bold text-neutral-800 mb-1.5 group-hover:text-primary-700 transition-colors">{m.title}</h3>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{m.desc}</p>
+                </div>
               </div>
-              <p className="text-sm leading-relaxed max-w-xs">
-                L'ERP des associations, ONG et organisations à but non lucratif d'Afrique.
-                Conforme SYCEBNL · Norme OHADA.
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ COMMENT ÇA MARCHE ══ */}
+      <section id="comment-ca-marche" className="py-24 px-6 lg:px-20 bg-neutral-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Mise en route</span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Opérationnel en 3 étapes</h2>
+            <p className="text-neutral-500 max-w-lg mx-auto text-lg">De l'inscription à la première clôture comptable, notre équipe vous accompagne à chaque étape.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {ETAPES.map((e, i) => (
+              <div key={e.num} className="relative">
+                {i < 2 && <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-primary-200 to-transparent z-0" />}
+                <div className="relative bg-white rounded-2xl p-8 shadow-sm border border-neutral-100 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-primary-600 text-white font-black text-xl flex items-center justify-center mx-auto mb-5">{e.num}</div>
+                  <h3 className="font-bold text-neutral-800 text-lg mb-3">{e.title}</h3>
+                  <p className="text-sm text-neutral-500 leading-relaxed">{e.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link href="/demo" className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-8 py-4 rounded-xl transition-colors shadow-lg">
+              Demander une démonstration gratuite →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ TARIFS ══ */}
+      <section id="tarifs" className="py-24 px-6 lg:px-20 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Tarifs</span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Des prix adaptés à<br />chaque organisation</h2>
+            <p className="text-neutral-500 max-w-lg mx-auto text-lg">Tous les plans incluent l'hébergement, les mises à jour et le support. Sans frais cachés.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {PLANS.map((plan) => (
+              <div key={plan.id} className={`relative flex flex-col rounded-2xl border-2 ${plan.color} ${plan.highlight ? 'shadow-2xl scale-[1.02]' : 'shadow-sm'} overflow-hidden`}>
+                {plan.highlight && (
+                  <div className="bg-primary-600 text-white text-xs font-bold text-center py-2 tracking-wide">
+                    ⭐ LE PLUS POPULAIRE
+                  </div>
+                )}
+                <div className="p-7 flex flex-col flex-1">
+                  <div className="mb-6">
+                    <h3 className="font-black text-xl text-neutral-800 mb-1">{plan.name}</h3>
+                    <p className="text-xs text-neutral-400 mb-4">{plan.desc}</p>
+                    <div className="flex items-end gap-1 mb-1">
+                      {plan.annuel ? (
+                        <>
+                          <span className="text-3xl font-black text-neutral-800">{plan.price}</span>
+                          <span className="text-sm text-neutral-400 mb-1">FCFA / mois</span>
+                        </>
+                      ) : (
+                        <span className="text-2xl font-black text-neutral-800">{plan.price}</span>
+                      )}
+                    </div>
+                    {plan.annuel && (
+                      <p className="text-xs text-primary-600 font-semibold">
+                        ou {plan.annuel} FCFA / an <span className="text-neutral-400 font-normal">(2 mois offerts)</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <ul className="space-y-2.5 flex-1 mb-6">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-neutral-700">
+                        <span className="text-primary-500 shrink-0 mt-0.5 font-bold">✓</span>
+                        {f}
+                      </li>
+                    ))}
+                    {plan.not.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-neutral-300">
+                        <span className="shrink-0 mt-0.5">✕</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link href={plan.href} className={`block text-center py-3 px-5 rounded-xl font-bold text-sm transition-all ${plan.ctaColor}`}>
+                    {plan.cta}
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Note */}
+          <p className="text-center text-sm text-neutral-400 mt-8">
+            Tous les prix sont HT. TVA applicable selon la réglementation locale. &nbsp;·&nbsp;
+            <Link href="/contact" className="text-primary-600 hover:underline">Besoin d'un devis personnalisé ?</Link>
+          </p>
+
+          {/* Tableau comparatif */}
+          <div className="mt-16 overflow-x-auto">
+            <h3 className="text-2xl font-bold text-neutral-800 mb-6 text-center">Comparatif détaillé</h3>
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-neutral-50">
+                  <th className="text-left px-5 py-4 font-semibold text-neutral-600 w-1/3">Fonctionnalité</th>
+                  {PLANS.map((p) => (
+                    <th key={p.id} className={`text-center px-4 py-4 font-bold ${p.highlight ? 'text-primary-600 bg-primary-50' : 'text-neutral-700'}`}>{p.name}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Utilisateurs', '3', '8', '15', 'Illimités'],
+                  ['Membres & Cotisations', '✓', '✓', '✓', '✓'],
+                  ['Comptabilité SYCEBNL', 'Basique', '✓', '✓', '✓'],
+                  ['Budget & Trésorerie', '✓', '✓', '✓', '✓'],
+                  ['Projets actifs', '—', '3', 'Illimités', 'Illimités'],
+                  ['MEAL & Rapports bailleurs', '—', '—', '✓', '✓'],
+                  ['RH & Paie', '—', '—', '✓', '✓'],
+                  ['Achats & Stocks', '—', '—', '✓', '✓'],
+                  ['Assistant IA', '—', '—', '✓', '✓'],
+                  ['Stockage documents', '1 Go', '5 Go', '20 Go', 'Illimité'],
+                  ['API & Intégrations', '—', '—', '—', '✓'],
+                  ['Multi-organisations', '—', '—', '—', '✓'],
+                  ['Support', 'Email 72h', 'Email 24h', 'Prioritaire 4h', 'Dédié 24/7'],
+                ].map(([feat, ...vals]) => (
+                  <tr key={feat} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
+                    <td className="px-5 py-3.5 text-neutral-700 font-medium">{feat}</td>
+                    {vals.map((v, i) => (
+                      <td key={i} className={`text-center px-4 py-3.5 ${PLANS[i].highlight ? 'bg-primary-50/50' : ''} ${v === '✓' ? 'text-primary-600 font-bold text-base' : v === '—' ? 'text-neutral-300' : 'text-neutral-700'}`}>
+                        {v}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ TÉMOIGNAGES ══ */}
+      <section id="temoignages" className="py-24 px-6 lg:px-20 bg-neutral-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Témoignages</span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Ils nous font confiance</h2>
+            <p className="text-neutral-500 max-w-lg mx-auto text-lg">Des organisations à travers l'Afrique de l'Ouest utilisent ANOUANZÊ ERP au quotidien.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {TEMOIGNAGES.map((t) => (
+              <div key={t.nom} className="bg-white rounded-2xl border border-neutral-100 p-7 shadow-sm flex flex-col">
+                <div className="flex gap-1 mb-4">
+                  {[1,2,3,4,5].map((s) => <span key={s} className="text-accent-400 text-sm">★</span>)}
+                </div>
+                <p className="text-neutral-600 leading-relaxed mb-6 flex-1 italic text-sm">"{t.texte}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-black text-primary-700">{t.avatar}</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-neutral-800 text-sm">{t.nom}</p>
+                    <p className="text-xs text-neutral-400">{t.role}</p>
+                    <p className="text-xs text-primary-600 font-medium">{t.org}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ FAQ ══ */}
+      <section id="faq" className="py-24 px-6 lg:px-20 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">FAQ</span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Questions fréquentes</h2>
+          </div>
+          <div className="space-y-4">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group border border-neutral-100 rounded-2xl overflow-hidden">
+                <summary className="flex items-center justify-between px-6 py-5 cursor-pointer font-semibold text-neutral-800 hover:bg-neutral-50 transition-colors list-none">
+                  {f.q}
+                  <span className="text-primary-500 text-xl font-light group-open:rotate-45 transition-transform shrink-0 ml-4">+</span>
+                </summary>
+                <div className="px-6 pb-5 text-sm text-neutral-600 leading-relaxed border-t border-neutral-50 pt-4">
+                  {f.r}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ CTA FINAL ══ */}
+      <section className="bg-gradient-to-br from-primary-700 to-[#2E9E4F] py-24 px-6 text-white text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-4xl lg:text-5xl font-extrabold mb-5 leading-tight">
+            Ensemble pour mieux gérer,<br />ensemble pour plus d'impact.
+          </h2>
+          <p className="text-white/70 max-w-xl mx-auto mb-10 text-lg">
+            Rejoignez les organisations qui font confiance à ANOUANZÊ ERP pour piloter leur mission avec excellence.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+            <Link href="/demo" className="bg-accent-400 hover:bg-amber-500 text-white font-bold px-10 py-4 rounded-xl text-lg transition-all shadow-xl hover:-translate-y-0.5">
+              Demander une démonstration
+            </Link>
+            <Link href="/login" className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-10 py-4 rounded-xl text-lg transition-colors">
+              Se connecter
+            </Link>
+          </div>
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-white/60">
+            <span>📧 contact@ibigsoft.com</span>
+            <span>📞 +225 07 78 88 25 92</span>
+            <span>📞 +225 27 22 27 60 14</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ══ FOOTER ══ */}
+      <footer className="bg-neutral-950 text-neutral-400 py-16 px-6 lg:px-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+            {/* Brand */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-2.5 mb-5">
+                <img src="/logo.svg" alt="" className="w-9 h-9" />
+                <div>
+                  <span className="font-bold text-white">ANOUANZÊ</span>
+                  <span className="text-accent-400 font-bold text-xs ml-1">ERP</span>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed max-w-xs mb-5">
+                L'ERP des associations, ONG et organisations à but non lucratif d'Afrique. Conforme SYCEBNL · Norme OHADA.
               </p>
-              <div className="mt-4 text-xs space-y-1">
-                <p>📧 contact@anouanzeerp.com</p>
-                <p>📞 +225 07 00 00 00 00</p>
-                <p>🌐 www.anouanzeerp.com</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2"><span>📧</span><a href="mailto:contact@ibigsoft.com" className="hover:text-white transition-colors">contact@ibigsoft.com</a></div>
+                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2250778882592" className="hover:text-white transition-colors">+225 07 78 88 25 92</a></div>
+                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2252722276014" className="hover:text-white transition-colors">+225 27 22 27 60 14</a></div>
+                <div className="flex items-center gap-2"><span>🌐</span><a href="https://www.anouanzeerp.com" className="hover:text-white transition-colors">www.anouanzeerp.com</a></div>
               </div>
             </div>
+
+            {/* Produit */}
             <div>
-              <h4 className="text-white font-semibold mb-4 text-sm">Produit</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Produit</h4>
+              <ul className="space-y-3 text-sm">
                 <li><a href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</a></li>
                 <li><a href="#tarifs" className="hover:text-white transition-colors">Tarifs</a></li>
-                <li><a href="/demo" className="hover:text-white transition-colors">Demande de démo</a></li>
-                <li><a href="/aide" className="hover:text-white transition-colors">Centre d'aide</a></li>
+                <li><Link href="/demo" className="hover:text-white transition-colors">Demande de démo</Link></li>
+                <li><a href="#temoignages" className="hover:text-white transition-colors">Témoignages</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
+
+            {/* Ressources */}
             <div>
-              <h4 className="text-white font-semibold mb-4 text-sm">Éditeur</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="https://ibigsoft.com" className="hover:text-white transition-colors">IBIG SARL</a></li>
-                <li><a href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</a></li>
-                <li><a href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</a></li>
-                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Ressources</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link href="/aide" className="hover:text-white transition-colors">Centre d'aide</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Nous contacter</Link></li>
+                <li><Link href="/login" className="hover:text-white transition-colors">Se connecter</Link></li>
+                <li><a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">IBIG SARL</a></li>
+              </ul>
+            </div>
+
+            {/* Légal */}
+            <div>
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Légal</h4>
+              <ul className="space-y-3 text-sm">
+                <li><Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link></li>
+                <li><Link href="/confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link></li>
+                <li><Link href="/cgu" className="hover:text-white transition-colors">CGU</Link></li>
+                <li><Link href="/cgs" className="hover:text-white transition-colors">CGS</Link></li>
+                <li><Link href="/cookies" className="hover:text-white transition-colors">Politique cookies</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-neutral-800 pt-6 flex flex-col sm:flex-row justify-between text-xs gap-2">
-            <p>© {new Date().getFullYear()} IBIG SARL — L'excellence est notre passion.</p>
-            <p>ANOUANZÊ ERP — Tous droits réservés.</p>
+
+          <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">IBIG SARL</strong> — L'excellence est notre passion. Tous droits réservés.</p>
+            <p>ANOUANZÊ ERP est édité par <strong className="text-neutral-300">IBIG SARL</strong>, société enregistrée en Côte d'Ivoire.</p>
           </div>
         </div>
       </footer>

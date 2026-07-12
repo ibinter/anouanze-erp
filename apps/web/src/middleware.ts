@@ -2,7 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/', '/tarifs', '/demo', '/contact', '/mentions-legales'];
+const PUBLIC_PATHS = ['/', '/tarifs', '/demo', '/contact', '/mentions-legales', '/confidentialite', '/cgu', '/cgs', '/cookies', '/aide'];
 const AUTH_PATHS = ['/login', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe'];
 const SUPERADMIN_PREFIX = '/superadmin';
 
