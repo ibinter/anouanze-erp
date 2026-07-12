@@ -478,7 +478,7 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-white/60">
             <span>📧 contact@ibigsoft.com</span>
-            <span>📞 +225 07 78 88 25 92</span>
+            <span>📞 +225 05 55 05 99 01</span>
             <span>📞 +225 27 22 27 60 14</span>
           </div>
         </div>
@@ -497,37 +497,27 @@ export default function LandingPage() {
                   <span className="text-accent-400 font-bold text-xs ml-1">ERP</span>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed max-w-xs mb-5">
+              <p className="text-sm leading-relaxed max-w-xs mb-1">
                 L'ERP des associations, ONG et organisations à but non lucratif d'Afrique. Conforme SYCEBNL · Norme OHADA.
               </p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2"><span>📧</span><a href="mailto:contact@ibigsoft.com" className="hover:text-white transition-colors">contact@ibigsoft.com</a></div>
-                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2250778882592" className="hover:text-white transition-colors">+225 07 78 88 25 92</a></div>
-                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2252722276014" className="hover:text-white transition-colors">+225 27 22 27 60 14</a></div>
-                <div className="flex items-center gap-2"><span>🌐</span><a href="https://www.anouanzeerp.com" className="hover:text-white transition-colors">www.anouanzeerp.com</a></div>
-              </div>
+              <p className="text-xs text-neutral-500 mb-5">
+                Un produit de <span className="text-neutral-300 font-semibold">IBIG SOFT</span> (Intermark Business International Group)
+              </p>
+              <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors">
+                ibigsoft.com →
+              </a>
             </div>
 
-            {/* Produit */}
+            {/* Liens rapides */}
             <div>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Produit</h4>
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Liens rapides</h4>
               <ul className="space-y-3 text-sm">
-                <li><a href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</a></li>
+                <li><a href="#fonctionnalites" className="hover:text-white transition-colors">Modules</a></li>
                 <li><a href="#tarifs" className="hover:text-white transition-colors">Tarifs</a></li>
-                <li><Link href="/demo" className="hover:text-white transition-colors">Demande de démo</Link></li>
-                <li><a href="#temoignages" className="hover:text-white transition-colors">Témoignages</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
-              </ul>
-            </div>
-
-            {/* Ressources */}
-            <div>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Ressources</h4>
-              <ul className="space-y-3 text-sm">
-                <li><Link href="/aide" className="hover:text-white transition-colors">Centre d'aide</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Nous contacter</Link></li>
-                <li><Link href="/login" className="hover:text-white transition-colors">Se connecter</Link></li>
-                <li><a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">IBIG SARL</a></li>
+                <li><Link href="/login" className="hover:text-white transition-colors">Connexion</Link></li>
+                <li><Link href="/cgu" className="hover:text-white transition-colors">CGU</Link></li>
+                <li><Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
 
@@ -538,15 +528,27 @@ export default function LandingPage() {
                 <li><Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link></li>
                 <li><Link href="/confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link></li>
                 <li><Link href="/cgu" className="hover:text-white transition-colors">CGU</Link></li>
-                <li><Link href="/cgs" className="hover:text-white transition-colors">CGS</Link></li>
                 <li><Link href="/cookies" className="hover:text-white transition-colors">Politique cookies</Link></li>
               </ul>
+            </div>
+
+            {/* Adresse */}
+            <div>
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wide">Adresse</h4>
+              <div className="space-y-3 text-sm">
+                <p className="text-neutral-300 font-semibold">IBIG SOFT</p>
+                <p className="text-xs text-neutral-500 leading-relaxed">Intermark Business<br />International Group</p>
+                <div className="flex items-center gap-2 pt-1"><span>📍</span><span>Abidjan, Côte d'Ivoire</span></div>
+                <div className="flex items-center gap-2"><span>📧</span><a href="mailto:contact@ibigsoft.com" className="hover:text-white transition-colors">contact@ibigsoft.com</a></div>
+                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2252722276014" className="hover:text-white transition-colors">+225 27 22 27 60 14</a></div>
+                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2250555059901" className="hover:text-white transition-colors">+225 05 55 05 99 01</a></div>
+              </div>
             </div>
           </div>
 
           <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">IBIG SARL</strong> — L'excellence est notre passion. Tous droits réservés.</p>
-            <p>ANOUANZÊ ERP est édité par <strong className="text-neutral-300">IBIG SARL</strong>, société enregistrée en Côte d'Ivoire.</p>
+            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">IBIG SOFT (Intermark Business International Group)</strong> — L'excellence est notre passion. Tous droits réservés.</p>
+            <p>ANOUANZÊ ERP est édité par <strong className="text-neutral-300">IBIG SOFT (Intermark Business International Group)</strong>, société enregistrée en Côte d'Ivoire.</p>
           </div>
         </div>
       </footer>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Nous contacter — ANOUANZÊ ERP',
-  description: 'Contactez l\'équipe IBIG SARL pour toute question sur ANOUANZÊ ERP. Support, vente, partenariat.',
+  description: 'Contactez l\'équipe IBIG SOFT (Intermark Business International Group) pour toute question sur ANOUANZÊ ERP. Support, vente, partenariat.',
 };
 
 export default function ContactPage() {
@@ -57,7 +57,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-bold text-neutral-800 mb-1">Téléphone mobile</p>
-                  <a href="tel:+2250778882592" className="text-primary-600 hover:underline font-medium block">+225 07 78 88 25 92</a>
+                  <a href="tel:+2250555059901" className="text-primary-600 hover:underline font-medium block">+225 05 55 05 99 01</a>
                   <p className="text-sm text-neutral-400 mt-1">Lun–Ven, 8h–18h GMT</p>
                 </div>
               </div>
@@ -79,7 +79,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-bold text-neutral-800 mb-1">Siège social</p>
-                  <p className="text-neutral-600 font-medium">IBIG SARL</p>
+                  <p className="text-neutral-600 font-medium">IBIG SOFT (Intermark Business International Group)</p>
                   <p className="text-sm text-neutral-400">Abidjan, Côte d'Ivoire</p>
                   <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:underline mt-1 inline-block">www.ibigsoft.com</a>
                 </div>
@@ -148,7 +148,7 @@ export default function ContactPage() {
 
       {/* Footer minimal */}
       <footer className="bg-neutral-950 text-neutral-500 text-sm py-8 px-6 text-center">
-        <p>© {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP &nbsp;·&nbsp;
+        <p>© {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP &nbsp;·&nbsp;
           <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link> &nbsp;·&nbsp;
           <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link> &nbsp;·&nbsp;
           <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Politique de confidentialité — ANOUANZÊ ERP',
-  description: 'Comment IBIG SARL collecte, utilise et protège vos données personnelles dans le cadre de l\'utilisation d\'ANOUANZÊ ERP.',
+  description: 'Comment IBIG SOFT (Intermark Business International Group) collecte, utilise et protège vos données personnelles dans le cadre de l\'utilisation d\'ANOUANZÊ ERP.',
 };
 
 export default function ConfidentialitePage() {
@@ -30,9 +30,9 @@ export default function ConfidentialitePage() {
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">1. Responsable du traitement</h2>
             <p>Le responsable du traitement des données collectées via la plateforme ANOUANZÊ ERP est :</p>
             <div className="mt-4 p-5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1">
-              <p><strong>IBIG SARL</strong> — Abidjan, Côte d'Ivoire</p>
+              <p><strong>IBIG SOFT (Intermark Business International Group)</strong> — Abidjan, Côte d'Ivoire</p>
               <p>Email : <a href="mailto:contact@ibigsoft.com" className="text-primary-600 hover:underline">contact@ibigsoft.com</a></p>
-              <p>Tél. : <a href="tel:+2250778882592" className="text-primary-600 hover:underline">+225 07 78 88 25 92</a></p>
+              <p>Tél. : <a href="tel:+2250555059901" className="text-primary-600 hover:underline">+225 05 55 05 99 01</a></p>
             </div>
           </section>
 
@@ -103,7 +103,7 @@ export default function ConfidentialitePage() {
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">6. Partage des données</h2>
-            <p>IBIG SARL ne vend jamais vos données personnelles à des tiers. Vos données peuvent être partagées avec :</p>
+            <p>IBIG SOFT (Intermark Business International Group) ne vend jamais vos données personnelles à des tiers. Vos données peuvent être partagées avec :</p>
             <ul className="mt-3 space-y-2">
               <li>• <strong>Prestataires techniques</strong> : hébergement, messagerie, paiement (sous contrat de confidentialité)</li>
               <li>• <strong>Autorités compétentes</strong> : uniquement sur réquisition légale</li>
@@ -112,7 +112,7 @@ export default function ConfidentialitePage() {
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">7. Sécurité des données</h2>
-            <p>IBIG SARL met en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données :</p>
+            <p>IBIG SOFT (Intermark Business International Group) met en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données :</p>
             <ul className="mt-3 space-y-2">
               <li>• Chiffrement SSL/TLS de toutes les communications</li>
               <li>• Chiffrement des données sensibles en base de données</li>
@@ -153,7 +153,7 @@ export default function ConfidentialitePage() {
             <p>Pour toute question relative à cette politique ou pour exercer vos droits :</p>
             <div className="mt-3 p-5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1">
               <p>📧 <a href="mailto:contact@ibigsoft.com" className="text-primary-600 hover:underline">contact@ibigsoft.com</a></p>
-              <p>📞 <a href="tel:+2250778882592" className="text-primary-600 hover:underline">+225 07 78 88 25 92</a></p>
+              <p>📞 <a href="tel:+2250555059901" className="text-primary-600 hover:underline">+225 05 55 05 99 01</a></p>
               <p>☎️ <a href="tel:+2252722276014" className="text-primary-600 hover:underline">+225 27 22 27 60 14</a></p>
             </div>
           </section>
@@ -161,7 +161,7 @@ export default function ConfidentialitePage() {
       </div>
 
       <footer className="bg-neutral-950 text-neutral-500 text-sm py-8 px-6 text-center">
-        <p>© {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP &nbsp;·&nbsp;
+        <p>© {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP &nbsp;·&nbsp;
           <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link> &nbsp;·&nbsp;
           <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>
         </p>

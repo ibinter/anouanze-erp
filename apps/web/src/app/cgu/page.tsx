@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Conditions Générales d\'Utilisation — ANOUANZÊ ERP',
-  description: 'Conditions générales d\'utilisation de la plateforme ANOUANZÊ ERP éditée par IBIG SARL.',
+  description: 'Conditions générales d\'utilisation de la plateforme ANOUANZÊ ERP éditée par IBIG SOFT (Intermark Business International Group).',
 };
 
 export default function CGUPage() {
@@ -34,7 +34,7 @@ export default function CGUPage() {
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">1. Définitions</h2>
             <div className="space-y-2">
               {[
-                ['Éditeur / Prestataire', 'IBIG SARL, société éditrice de la plateforme ANOUANZÊ ERP'],
+                ['Éditeur / Prestataire', 'IBIG SOFT (Intermark Business International Group), société éditrice de la plateforme ANOUANZÊ ERP'],
                 ['Plateforme', 'La solution logicielle ANOUANZÊ ERP accessible en mode SaaS'],
                 ['Client', 'Toute organisation (association, ONG, fondation) souscrivant à un abonnement'],
                 ['Utilisateur', 'Toute personne physique ayant accès à la plateforme pour le compte d\'un Client'],
@@ -61,7 +61,7 @@ export default function CGUPage() {
               <li>• La création d'un compte administrateur par l'organisation Cliente</li>
               <li>• L'acceptation des présentes CGU et de la Politique de confidentialité</li>
             </ul>
-            <p className="mt-4">La plateforme est accessible 24h/24, 7j/7, sous réserve des opérations de maintenance. IBIG SARL s'engage à informer les Clients des interruptions planifiées avec un préavis minimum de 24 heures.</p>
+            <p className="mt-4">La plateforme est accessible 24h/24, 7j/7, sous réserve des opérations de maintenance. IBIG SOFT (Intermark Business International Group) s'engage à informer les Clients des interruptions planifiées avec un préavis minimum de 24 heures.</p>
           </section>
 
           <section>
@@ -70,7 +70,7 @@ export default function CGUPage() {
             <ul className="mt-3 space-y-2">
               <li>• La confidentialité de ses identifiants de connexion</li>
               <li>• Toutes les actions effectuées depuis son compte</li>
-              <li>• La notification immédiate à IBIG SARL de tout accès non autorisé</li>
+              <li>• La notification immédiate à IBIG SOFT (Intermark Business International Group) de tout accès non autorisé</li>
             </ul>
             <p className="mt-3">Le partage de compte entre plusieurs personnes est interdit. Chaque utilisateur doit disposer de son propre compte.</p>
           </section>
@@ -82,13 +82,13 @@ export default function CGUPage() {
               <p><strong>Facturation :</strong> Les abonnements sont facturés mensuellement ou annuellement selon le choix du Client. La facturation intervient en début de période.</p>
               <p><strong>Essai gratuit :</strong> Les plans Starter et Pro bénéficient d'une période d'essai gratuite de 30 jours. Le plan Essentiel dispose d'un essai de 14 jours. Aucune carte bancaire n'est requise pour l'essai.</p>
               <p><strong>Renouvellement :</strong> Les abonnements se renouvellent automatiquement sauf résiliation notifiée par email à <a href="mailto:contact@ibigsoft.com" className="text-primary-600 hover:underline">contact@ibigsoft.com</a> au moins 15 jours avant l'échéance.</p>
-              <p><strong>Modifications tarifaires :</strong> IBIG SARL se réserve le droit de modifier ses tarifs avec un préavis minimum de 60 jours par email.</p>
+              <p><strong>Modifications tarifaires :</strong> IBIG SOFT (Intermark Business International Group) se réserve le droit de modifier ses tarifs avec un préavis minimum de 60 jours par email.</p>
             </div>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">6. Propriété des données</h2>
-            <p>Les données saisies par le Client dans la plateforme lui appartiennent exclusivement. IBIG SARL ne revendique aucun droit de propriété sur ces données et s'engage à :</p>
+            <p>Les données saisies par le Client dans la plateforme lui appartiennent exclusivement. IBIG SOFT (Intermark Business International Group) ne revendique aucun droit de propriété sur ces données et s'engage à :</p>
             <ul className="mt-3 space-y-2">
               <li>• Ne pas utiliser les données du Client à des fins autres que la fourniture du service</li>
               <li>• Permettre l'export des données à tout moment (formats CSV, Excel, PDF)</li>
@@ -104,7 +104,7 @@ export default function CGUPage() {
               <li>• Ne pas tenter d'accéder à des zones de la plateforme non autorisées</li>
               <li>• Ne pas introduire de virus, malwares ou codes malveillants</li>
               <li>• Maintenir la confidentialité des accès de ses utilisateurs</li>
-              <li>• Informer IBIG SARL de tout incident de sécurité</li>
+              <li>• Informer IBIG SOFT (Intermark Business International Group) de tout incident de sécurité</li>
               <li>• Ne pas sous-licencier, revendre ou transférer l'accès à des tiers</li>
             </ul>
           </section>
@@ -127,19 +127,19 @@ export default function CGUPage() {
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">9. Limitation de responsabilité</h2>
-            <p>Dans les limites permises par la loi, la responsabilité de IBIG SARL est limitée au montant des abonnements payés par le Client au cours des 12 derniers mois précédant le sinistre.</p>
-            <p className="mt-3">IBIG SARL ne saurait être responsable des pertes indirectes, du manque à gagner, de la perte de données due à une faute du Client ou d'un cas de force majeure.</p>
+            <p>Dans les limites permises par la loi, la responsabilité de IBIG SOFT (Intermark Business International Group) est limitée au montant des abonnements payés par le Client au cours des 12 derniers mois précédant le sinistre.</p>
+            <p className="mt-3">IBIG SOFT (Intermark Business International Group) ne saurait être responsable des pertes indirectes, du manque à gagner, de la perte de données due à une faute du Client ou d'un cas de force majeure.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">10. Résiliation</h2>
             <p><strong>Par le Client :</strong> Résiliation possible à tout moment, avec effet à la fin de la période en cours, par email à <a href="mailto:contact@ibigsoft.com" className="text-primary-600 hover:underline">contact@ibigsoft.com</a>.</p>
-            <p className="mt-3"><strong>Par IBIG SARL :</strong> En cas de violation des présentes CGU, de non-paiement après mise en demeure restée sans suite, ou pour tout motif légitime avec un préavis de 30 jours.</p>
+            <p className="mt-3"><strong>Par IBIG SOFT (Intermark Business International Group) :</strong> En cas de violation des présentes CGU, de non-paiement après mise en demeure restée sans suite, ou pour tout motif légitime avec un préavis de 30 jours.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">11. Modifications des CGU</h2>
-            <p>IBIG SARL se réserve le droit de modifier les présentes CGU. Toute modification substantielle sera notifiée par email aux Clients actifs avec un préavis de 30 jours. La poursuite de l'utilisation de la plateforme après ce délai vaut acceptation des nouvelles conditions.</p>
+            <p>IBIG SOFT (Intermark Business International Group) se réserve le droit de modifier les présentes CGU. Toute modification substantielle sera notifiée par email aux Clients actifs avec un préavis de 30 jours. La poursuite de l'utilisation de la plateforme après ce délai vaut acceptation des nouvelles conditions.</p>
           </section>
 
           <section>
@@ -150,9 +150,9 @@ export default function CGUPage() {
           <section>
             <h2 className="text-xl font-bold text-neutral-800 mb-4 pb-2 border-b border-neutral-100">13. Contact</h2>
             <div className="p-5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-1">
-              <p><strong>IBIG SARL</strong> — Abidjan, Côte d'Ivoire</p>
+              <p><strong>IBIG SOFT (Intermark Business International Group)</strong> — Abidjan, Côte d'Ivoire</p>
               <p>📧 <a href="mailto:contact@ibigsoft.com" className="text-primary-600 hover:underline">contact@ibigsoft.com</a></p>
-              <p>📞 <a href="tel:+2250778882592" className="text-primary-600 hover:underline">+225 07 78 88 25 92</a></p>
+              <p>📞 <a href="tel:+2250555059901" className="text-primary-600 hover:underline">+225 05 55 05 99 01</a></p>
               <p>☎️ <a href="tel:+2252722276014" className="text-primary-600 hover:underline">+225 27 22 27 60 14</a></p>
             </div>
           </section>
@@ -160,7 +160,7 @@ export default function CGUPage() {
       </div>
 
       <footer className="bg-neutral-950 text-neutral-500 text-sm py-8 px-6 text-center">
-        <p>© {new Date().getFullYear()} IBIG SARL — ANOUANZÊ ERP &nbsp;·&nbsp;
+        <p>© {new Date().getFullYear()} IBIG SOFT (Intermark Business International Group) — ANOUANZÊ ERP &nbsp;·&nbsp;
           <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link> &nbsp;·&nbsp;
           <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
         </p>
