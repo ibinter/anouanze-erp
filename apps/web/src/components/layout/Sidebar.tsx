@@ -4,30 +4,32 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, Heart, Building2, FolderKanban,
-  BookOpen, Wallet, ShoppingCart, Archive, FileText,
+  BookOpen, Wallet, ShoppingCart, FileText,
   BarChart3, Settings, Shield, Calendar, HelpCircle,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Landmark, Briefcase,
+  PiggyBank, UserSquare2, PackageSearch, Bot, Archive,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Gouvernance', href: '/gouvernance', icon: Building2 },
+  { label: 'Gouvernance', href: '/gouvernance', icon: Landmark },
   { label: 'Membres', href: '/membres', icon: Users },
   { label: 'Donateurs', href: '/donateurs', icon: Heart },
   { label: 'Bailleurs', href: '/bailleurs', icon: Building2 },
   { label: 'Projets', href: '/projets', icon: FolderKanban },
-  { label: 'Bénéficiaires', href: '/beneficiaires', icon: Users },
-  { label: 'Ressources humaines', href: '/rh', icon: Users },
+  { label: 'Bénéficiaires', href: '/beneficiaires', icon: UserSquare2 },
+  { label: 'Ressources humaines', href: '/rh', icon: Briefcase },
   { label: 'Comptabilité', href: '/comptabilite', icon: BookOpen },
-  { label: 'Budget', href: '/budget', icon: Wallet },
+  { label: 'Budget', href: '/budget', icon: PiggyBank },
   { label: 'Trésorerie', href: '/tresorerie', icon: Wallet },
   { label: 'Achats', href: '/achats', icon: ShoppingCart },
-  { label: 'Stocks', href: '/stocks', icon: Archive },
+  { label: 'Stocks', href: '/stocks', icon: PackageSearch },
   { label: 'Documents', href: '/documents', icon: FileText },
   { label: 'Événements', href: '/evenements', icon: Calendar },
   { label: 'Rapports & BI', href: '/reporting', icon: BarChart3 },
+  { label: 'Assistant IA', href: '/ia', icon: Bot },
   { label: 'Audit', href: '/audit', icon: Shield },
 ];
 
@@ -50,20 +52,16 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-100">
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
-            <div className="leading-none">
+          <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+            <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-8 h-8 flex-shrink-0" />
+            <div className="leading-none min-w-0">
               <span className="text-sm font-bold text-primary-600">ANOUANZÊ</span>
               <span className="text-xs font-semibold text-accent-400 block">ERP</span>
             </div>
           </Link>
         )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center mx-auto">
-            <span className="text-white font-bold text-sm">A</span>
-          </div>
+          <img src="/logo.svg" alt="A" className="w-8 h-8 mx-auto" />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -77,7 +75,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
         {navigation.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}

@@ -6,7 +6,8 @@ import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
-import { Search, UserPlus, Users, UserCheck, UserX, X } from 'lucide-react';
+import { Search, UserPlus, Users, UserCheck, UserX, X, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
+import { exportXLSX, exportPDF } from '@/lib/export';
 
 interface Membre {
   id: string;
@@ -196,6 +197,7 @@ function MembresTable() {
   const [search, setSearch] = useState('');
   const [statut, setStatut] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const limit = 10;
 
   const { data, isLoading } = useQuery<MembresResponse>({
@@ -212,6 +214,50 @@ function MembresTable() {
   const total = data?.meta?.total ?? 0;
   const totalActifs = membres.filter((m) => m.statutMembre === 'ACTIF').length;
   const totalInactifs = membres.filter((m) => m.statutMembre !== 'ACTIF').length;
+
+  const exportColumns = [
+    { key: 'numero', header: 'N°', width: 10 },
+    { key: 'nom', header: 'Nom', width: 20 },
+    { key: 'prenom', header: 'Prénom', width: 20 },
+    { key: 'email', header: 'Email', width: 28 },
+    { key: 'telephone', header: 'Téléphone', width: 18 },
+    { key: 'statutMembre', header: 'Statut', width: 12 },
+    { key: 'dateAdhesion', header: 'Date adhésion', width: 16, format: 'date' as const },
+  ];
+
+  const handleExportXLSX = async () => {
+    setExporting(true);
+    try {
+      const { data: allData } = await (await import('@/lib/api')).api.get('/membres', { params: { limit: 9999 } });
+      await exportXLSX({ filename: 'membres', sheetName: 'Membres', columns: exportColumns, data: allData.data ?? membres, title: 'Liste des membres', subtitle: `Total : ${total} membres` });
+    } finally { setExporting(false); }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const { data: allData } = await (await import('@/lib/api')).api.get('/membres', { params: { limit: 9999 } });
+      const rows = (allData.data ?? membres).map((m: Membre) => ({
+        numero: m.numero, nom: m.nom, prenom: m.prenom, email: m.email,
+        telephone: m.telephone, statut: m.statutMembre,
+        adhesion: m.dateAdhesion ? new Date(m.dateAdhesion).toLocaleDateString('fr-CI') : '—',
+      }));
+      await exportPDF({
+        filename: 'membres', title: 'Liste des membres', subtitle: `Total : ${total} membres — Actifs : ${totalActifs}`,
+        orientation: 'landscape',
+        columns: [
+          { header: 'N°', dataKey: 'numero', width: 15 },
+          { header: 'Nom', dataKey: 'nom', width: 30 },
+          { header: 'Prénom', dataKey: 'prenom', width: 30 },
+          { header: 'Email', dataKey: 'email', width: 50 },
+          { header: 'Téléphone', dataKey: 'telephone', width: 28 },
+          { header: 'Statut', dataKey: 'statut', width: 18 },
+          { header: 'Adhésion', dataKey: 'adhesion', width: 22 },
+        ],
+        data: rows,
+      });
+    } finally { setExporting(false); }
+  };
 
   const columns: Column<Membre>[] = [
     { key: 'numero', header: 'N°', width: '90px' },
@@ -260,10 +306,20 @@ function MembresTable() {
           <h1 className="text-2xl font-bold text-neutral-800">Membres</h1>
           <p className="text-sm text-neutral-500 mt-1">Gestion des membres de l&apos;organisation</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
-          <UserPlus className="w-4 h-4" />
-          Nouveau membre
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleExportXLSX} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
+            <FileSpreadsheet className="w-4 h-4" />
+            Excel
+          </button>
+          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
+            <FilePdf className="w-4 h-4" />
+            PDF
+          </button>
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />
+            Nouveau membre
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

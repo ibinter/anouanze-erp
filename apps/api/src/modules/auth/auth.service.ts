@@ -2,12 +2,16 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { EmailService } from '../../common/email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +19,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly email: EmailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -146,5 +151,44 @@ export class AuthService {
 
   async logout(token: string) {
     await this.prisma.session.deleteMany({ where: { token } });
+  }
+
+  async forgotPassword(emailAddr: string): Promise<void> {
+    const user = await this.prisma.utilisateur.findUnique({ where: { email: emailAddr } });
+    // Réponse identique que l'utilisateur existe ou non (sécurité anti-énumération)
+    if (!user) return;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expire = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
+
+    await this.prisma.utilisateur.update({
+      where: { id: user.id },
+      data: { tokenReinit: token, tokenReinitExpire: expire },
+    });
+
+    const appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
+    const resetUrl = `${appUrl}/reinitialiser-mot-de-passe?token=${token}`;
+
+    // Non bloquant — une erreur SMTP ne fait pas échouer la requête
+    this.email.sendPasswordReset(emailAddr, user.prenom ?? user.nom ?? 'Utilisateur', resetUrl)
+      .catch(() => {/* journalisé dans EmailService */});
+  }
+
+  async resetPassword(token: string, nouveauMotDePasse: string): Promise<void> {
+    const user = await this.prisma.utilisateur.findUnique({ where: { tokenReinit: token } });
+
+    if (!user || !user.tokenReinitExpire || user.tokenReinitExpire < new Date()) {
+      throw new BadRequestException('Lien de réinitialisation invalide ou expiré');
+    }
+
+    const motDePasseHash = await bcrypt.hash(nouveauMotDePasse, 12);
+
+    await this.prisma.utilisateur.update({
+      where: { id: user.id },
+      data: { motDePasseHash, tokenReinit: null, tokenReinitExpire: null },
+    });
+
+    // Invalider toutes les sessions actives
+    await this.prisma.session.deleteMany({ where: { utilisateurId: user.id } });
   }
 }

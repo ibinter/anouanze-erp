@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Plus, ChevronRight, ChevronDown } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
+import { exportXLSX, exportPDF } from '@/lib/export';
 import { Tabs } from '@/components/ui/Tabs';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
@@ -378,6 +379,58 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
 export default function ComptabilitePage() {
   const [activeTab, setActiveTab] = useState('plan');
   const [modalOpen, setModalOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportEcritures = async () => {
+    setExporting(true);
+    try {
+      const { data } = await api.get('/comptabilite/ecritures', { params: { limit: 9999 } });
+      const rows = (data?.data ?? []).map((e: Ecriture) => ({
+        date: e.date ? new Date(e.date).toLocaleDateString('fr-CI') : '—',
+        journal: typeof e.journal === 'string' ? e.journal : (e.journal?.code ?? '—'),
+        libelle: e.libelle,
+        debit: e.montantDebit ?? e.lignes?.reduce((s, l) => s + (l.debit ?? 0), 0) ?? 0,
+        credit: e.montantCredit ?? e.lignes?.reduce((s, l) => s + (l.credit ?? 0), 0) ?? 0,
+        statut: e.statut ?? '—',
+      }));
+      if (activeTab === 'ecritures') {
+        await exportXLSX({
+          filename: 'ecritures_comptables', sheetName: 'Écritures',
+          title: 'Journal des écritures comptables',
+          columns: [
+            { key: 'date', header: 'Date', width: 14 },
+            { key: 'journal', header: 'Journal', width: 12 },
+            { key: 'libelle', header: 'Libellé', width: 40 },
+            { key: 'debit', header: 'Débit (FCFA)', width: 16, format: 'currency' },
+            { key: 'credit', header: 'Crédit (FCFA)', width: 16, format: 'currency' },
+            { key: 'statut', header: 'Statut', width: 12 },
+          ],
+          data: rows,
+        });
+      } else if (activeTab === 'balance') {
+        const { data: balData } = await api.get('/comptabilite/balance');
+        const balRows = (balData?.data ?? balData ?? []).map((b: BalanceLigne) => ({
+          compte: b.compte ?? b.numero ?? '—',
+          libelle: b.libelle,
+          debit: b.debitCumul ?? b.totalDebit ?? 0,
+          credit: b.creditCumul ?? b.totalCredit ?? 0,
+          solde: b.solde ?? 0,
+        }));
+        await exportPDF({
+          filename: 'balance_comptable', title: 'Balance comptable SYCEBNL',
+          orientation: 'landscape',
+          columns: [
+            { header: 'Compte', dataKey: 'compte', width: 20 },
+            { header: 'Libellé', dataKey: 'libelle', width: 60 },
+            { header: 'Débit cumulé', dataKey: 'debit', width: 30 },
+            { header: 'Crédit cumulé', dataKey: 'credit', width: 30 },
+            { header: 'Solde', dataKey: 'solde', width: 25 },
+          ],
+          data: balRows,
+        });
+      }
+    } finally { setExporting(false); }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -386,10 +439,18 @@ export default function ComptabilitePage() {
           <h1 className="text-2xl font-bold text-neutral-800">Comptabilité SYCEBNL</h1>
           <p className="text-sm text-neutral-500 mt-1">Plan comptable, journaux et balance</p>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Nouvelle écriture
-        </button>
+        <div className="flex items-center gap-2">
+          {(activeTab === 'ecritures' || activeTab === 'balance') && (
+            <button onClick={handleExportEcritures} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
+              {activeTab === 'balance' ? <FilePdf className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
+              {exporting ? 'Export…' : activeTab === 'balance' ? 'PDF Balance' : 'Excel Écritures'}
+            </button>
+          )}
+          <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Nouvelle écriture
+          </button>
+        </div>
       </div>
 
       <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />

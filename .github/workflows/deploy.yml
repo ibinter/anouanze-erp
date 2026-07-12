@@ -1,0 +1,39 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deploy ANOUANZÊ ERP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /opt/anouanze-erp
+
+            echo "==> Git pull..."
+            git pull origin master
+
+            echo "==> Build web..."
+            docker compose build web --no-cache
+
+            echo "==> Restart web..."
+            docker compose up -d web
+
+            echo "==> Migration Prisma..."
+            docker compose exec -T api npx prisma migrate deploy
+
+            echo "==> Done ✓"
+            docker compose ps

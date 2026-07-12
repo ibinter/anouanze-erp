@@ -218,6 +218,8 @@ model Utilisateur {
   emailVerifie   Boolean   @default(false)
   deuxFacteurs   Boolean   @default(false)
   deuxFacteursSecret String?
+  tokenReinit    String?   @unique
+  tokenReinitExpire DateTime?
   dernierLogin   DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

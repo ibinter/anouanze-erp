@@ -19,9 +19,13 @@ export const metadata: Metadata = {
   description:
     "L'ERP des associations, ONG et organisations à but non lucratif. Conforme SYCEBNL, adapté aux réalités africaines.",
   keywords: ['ERP', 'ONG', 'association', 'SYCEBNL', 'OHADA', 'Afrique', 'gestion'],
-  authors: [{ name: 'IBIG SARL', url: 'https://www.anouanze-erp.com' }],
+  authors: [{ name: 'IBIG SARL', url: 'https://ibigsoft.com' }],
   creator: 'IBIG SARL',
-  robots: 'noindex, nofollow',
+  robots: 'index, follow',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export const viewport: Viewport = {

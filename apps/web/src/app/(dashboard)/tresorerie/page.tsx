@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Plus, TrendingUp, Landmark } from 'lucide-react';
+import { Plus, TrendingUp, Landmark, FileSpreadsheet } from 'lucide-react';
+import { exportXLSX } from '@/lib/export';
 import { Modal } from '@/components/ui/Modal';
 import { formatMontant, formatDate, cn } from '@/lib/utils';
 
@@ -32,6 +33,7 @@ export default function TresoreriePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '', compteId: '' });
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
   const queryClient = useQueryClient();
 
   const createMouvement = useMutation({
@@ -80,6 +82,37 @@ export default function TresoreriePage() {
   const mouvements: Mouvement[] = mouvementsData?.data ?? mouvementsData ?? [];
   const totalTresorerie = comptes.reduce((s, c) => s + (c.solde ?? 0), 0);
 
+  const handleExportMouvements = async () => {
+    if (!selectedCompte) return;
+    setExporting(true);
+    try {
+      const { data } = await api.get(`/tresorerie/comptes/${selectedCompte.id}/mouvements`, { params: { limit: 9999 } });
+      const rows = (data?.data ?? data ?? mouvements).map((m: Mouvement) => ({
+        date: m.date ? new Date(m.date).toLocaleDateString('fr-CI') : '—',
+        libelle: m.libelle,
+        debit: m.debit ?? (m.type === 'debit' ? m.montant : 0) ?? 0,
+        credit: m.credit ?? (m.type === 'credit' ? m.montant : 0) ?? 0,
+        rapproche: m.rapproche ? 'Oui' : 'Non',
+        soldeApres: m.soldeApres ?? '',
+      }));
+      await exportXLSX({
+        filename: `tresorerie_${selectedCompte.nom.replace(/\s+/g, '_')}`,
+        sheetName: 'Mouvements',
+        title: `Relevé de compte — ${selectedCompte.nom}`,
+        subtitle: `${selectedCompte.banque} — Solde : ${selectedCompte.solde?.toLocaleString('fr-CI')} FCFA`,
+        columns: [
+          { key: 'date', header: 'Date', width: 14 },
+          { key: 'libelle', header: 'Libellé', width: 42 },
+          { key: 'debit', header: 'Débit (FCFA)', width: 18, format: 'currency' },
+          { key: 'credit', header: 'Crédit (FCFA)', width: 18, format: 'currency' },
+          { key: 'rapproche', header: 'Rapproché', width: 13 },
+          { key: 'soldeApres', header: 'Solde après', width: 18, format: 'currency' },
+        ],
+        data: rows,
+      });
+    } finally { setExporting(false); }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -87,10 +120,18 @@ export default function TresoreriePage() {
           <h1 className="text-2xl font-bold text-neutral-800">Trésorerie</h1>
           <p className="text-sm text-neutral-500 mt-1">Situation des comptes et flux de trésorerie</p>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Nouveau mouvement
-        </button>
+        <div className="flex items-center gap-2">
+          {selectedCompte && (
+            <button onClick={handleExportMouvements} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
+              <FileSpreadsheet className="w-4 h-4" />
+              {exporting ? 'Export…' : 'Relevé Excel'}
+            </button>
+          )}
+          <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Nouveau mouvement
+          </button>
+        </div>
       </div>
 
       <div className="card p-5 flex items-center justify-between">

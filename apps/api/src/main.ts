@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
@@ -20,8 +20,16 @@ async function bootstrap() {
   app.use(compression());
 
   // CORS
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3099',
+    'https://anouanze.ibigsoft.com',
+    'https://anouanzeerp.com',
+    'https://www.anouanzeerp.com',
+    configService.get<string>('APP_URL', 'http://localhost:3000'),
+  ].filter(Boolean);
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3099', configService.get<string>('APP_URL', 'http://localhost:3000')],
+    origin: allowedOrigins,
     credentials: true,
   });
 
