@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import HeroSlider from '@/components/sara/HeroSlider';
+import SaraChat from '@/components/sara/SaraChat';
 
 export const metadata: Metadata = {
   title: 'ANOUANZÊ ERP — L\'ERP des associations et ONG d\'Afrique',
@@ -168,7 +170,7 @@ export default function LandingPage() {
             <span className="font-bold text-accent-400 text-xs ml-1">ERP</span>
           </div>
         </Link>
-        <div className="hidden lg:flex items-center gap-8 text-sm text-neutral-600 font-medium">
+        <div className="hidden lg:flex items-center gap-6 text-sm text-neutral-600 font-medium">
           <a href="#fonctionnalites" className="hover:text-primary-600 transition-colors">Fonctionnalités</a>
           <a href="#comment-ca-marche" className="hover:text-primary-600 transition-colors">Comment ça marche</a>
           <a href="#tarifs" className="hover:text-primary-600 transition-colors">Tarifs</a>
@@ -176,7 +178,15 @@ export default function LandingPage() {
           <a href="#faq" className="hover:text-primary-600 transition-colors">FAQ</a>
           <Link href="/contact" className="hover:text-primary-600 transition-colors">Contact</Link>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <a
+            href="https://ibigpartners.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-accent-500 hover:text-accent-600 border border-accent-300 hover:border-accent-400 px-3 py-2 rounded-xl transition-colors"
+          >
+            🤝 Devenir partenaire
+          </a>
           <Link href="/login" className="hidden sm:block text-sm font-semibold text-neutral-700 hover:text-primary-600 transition-colors px-3 py-2">
             Connexion
           </Link>
@@ -186,53 +196,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ══ HERO ══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-[#2E9E4F] text-white pt-20 pb-28 px-6 lg:px-20">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-white/5 rounded-full" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/5 rounded-full" />
-          <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-accent-400/15 rounded-full blur-2xl" />
-          <div className="absolute bottom-1/4 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-xl" />
-        </div>
-        <div className="relative max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm font-medium mb-8 backdrop-blur-sm">
-            <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" />
-            Conforme SYCEBNL · Norme OHADA · Adapté à l'Afrique francophone
-          </div>
-          <h1 className="text-5xl lg:text-7xl font-extrabold leading-[1.05] mb-6 tracking-tight">
-            Pilotez votre impact.<br />
-            <span className="text-accent-400">Gérez avec</span><br />
-            excellence.
-          </h1>
-          <p className="text-xl lg:text-2xl text-white/80 max-w-2xl mb-10 leading-relaxed font-light">
-            La solution ERP tout-en-un conçue pour les <strong className="text-white font-semibold">associations, ONG et organisations à but non lucratif</strong> d'Afrique francophone.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
-            <Link href="/demo" className="inline-flex items-center justify-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5">
-              Démarrer l'essai gratuit — 30 jours →
-            </Link>
-            <a href="#fonctionnalites" className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors backdrop-blur-sm">
-              Voir les fonctionnalités
-            </a>
-          </div>
-          <p className="text-sm text-white/40">✓ Sans carte bancaire &nbsp;·&nbsp; ✓ Résiliation à tout moment &nbsp;·&nbsp; ✓ Données hébergées en Afrique</p>
-
-          {/* Stats inline */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-14 pt-10 border-t border-white/10">
-            {[
-              { val: '12+', label: 'Modules intégrés' },
-              { val: '11', label: 'Niveaux de droits' },
-              { val: '100%', label: 'Conforme SYCEBNL' },
-              { val: '30j', label: 'Essai gratuit' },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-3xl font-black text-accent-400">{s.val}</p>
-                <p className="text-sm text-white/60 mt-1">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ══ HERO SLIDER ══ */}
+      <HeroSlider />
 
       {/* ══ CERTIFICATIONS ══ */}
       <section className="bg-neutral-900 py-5 px-6">
@@ -551,6 +516,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      {/* ══ SARA CHAT ══ */}
+      <SaraChat />
     </div>
   );
 }

@@ -9,6 +9,7 @@ const NAV = [
   { href: '/superadmin/licences', label: '🔑 Licences' },
   { href: '/superadmin/prospects', label: '🎯 Prospects / CRM' },
   { href: '/superadmin/utilisateurs', label: '👤 Utilisateurs globaux' },
+  { href: '/superadmin/sara', label: '🤖 SARA — IA Visiteurs' },
   { href: '/superadmin/logs', label: '📋 Logs système' },
 ];
 
@@ -46,7 +47,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       <div className="flex-1 overflow-auto">
         <header className="h-16 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between px-8">
           <div className="text-sm text-neutral-400">
-            Console d'administration IBIG SARL — <span className="text-primary-400 font-semibold">Superadmin</span>
+            Console d'administration IBIG SOFT (Intermark Business International Group) — <span className="text-primary-400 font-semibold">Superadmin</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-green-400 rounded-full" />
