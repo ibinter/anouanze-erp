@@ -7,6 +7,7 @@ import OpenSaraButton from '@/components/landing/OpenSaraButton';
 import WhatsAppButton from '@/components/landing/WhatsAppButton';
 import CookieBanner from '@/components/landing/CookieBanner';
 import PWABanner from '@/components/landing/PWABanner';
+import LanguageSwitcher from '@/components/landing/LanguageSwitcher';
 
 export const metadata: Metadata = {
   title: 'ANOUANZÊ ERP — L\'ERP des associations et ONG d\'Afrique',
@@ -146,37 +147,45 @@ export default function LandingPage() {
       <InfoBar />
 
       {/* ══ NAVBAR ══ */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-100 h-16 flex items-center justify-between px-6 lg:px-20">
-        <Link href="/" className="flex items-center gap-2.5">
-          <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-9 h-9" />
-          <div className="leading-none">
-            <span className="font-bold text-primary-600 text-base">ANOUANZÊ</span>
-            <span className="font-bold text-accent-400 text-xs ml-1">ERP</span>
+      <nav className="sticky top-0 z-50 bg-white/98 backdrop-blur-xl border-b border-neutral-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-[68px] flex items-center justify-between gap-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-9 h-9" />
+            <div className="flex items-baseline gap-1 leading-none">
+              <span className="font-extrabold text-primary-700 text-lg tracking-tight">ANOUANZÊ</span>
+              <span className="font-bold text-accent-400 text-[11px] bg-accent-50 border border-accent-200 px-1.5 py-0.5 rounded-md leading-none">ERP</span>
+            </div>
+          </Link>
+
+          {/* Nav centre */}
+          <div className="hidden xl:flex items-center gap-1 text-[13.5px] text-neutral-600 font-medium">
+            <a href="#fonctionnalites" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Fonctionnalités</a>
+            <a href="#comment-ca-marche" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Comment ça marche</a>
+            <a href="#tarifs" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Tarifs</a>
+            <a href="#temoignages" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Témoignages</a>
+            <a href="#faq" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">FAQ</a>
+            <Link href="/contact" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Contact</Link>
           </div>
-        </Link>
-        <div className="hidden lg:flex items-center gap-6 text-sm text-neutral-600 font-medium">
-          <a href="#fonctionnalites" className="hover:text-primary-600 transition-colors">Fonctionnalités</a>
-          <a href="#comment-ca-marche" className="hover:text-primary-600 transition-colors">Comment ça marche</a>
-          <a href="#tarifs" className="hover:text-primary-600 transition-colors">Tarifs</a>
-          <a href="#temoignages" className="hover:text-primary-600 transition-colors">Témoignages</a>
-          <a href="#faq" className="hover:text-primary-600 transition-colors">FAQ</a>
-          <Link href="/contact" className="hover:text-primary-600 transition-colors">Contact</Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="https://ibigpartners.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-accent-500 hover:text-accent-600 border border-accent-300 hover:border-accent-400 px-3 py-2 rounded-xl transition-colors"
-          >
-            🤝 Devenir partenaire
-          </a>
-          <Link href="/login" className="hidden sm:block text-sm font-semibold text-neutral-700 hover:text-primary-600 transition-colors px-3 py-2">
-            Connexion
-          </Link>
-          <Link href="/demo" className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-            Essai gratuit
-          </Link>
+
+          {/* Actions droite */}
+          <div className="flex items-center gap-2 shrink-0">
+            <LanguageSwitcher />
+            <a
+              href="https://ibigpartners.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-500 hover:text-accent-600 border border-accent-300 hover:border-accent-400 hover:bg-accent-50 px-3 py-2 rounded-xl transition-colors"
+            >
+              🤝 Devenir partenaire
+            </a>
+            <Link href="/login" className="hidden sm:block text-[13px] font-semibold text-neutral-700 hover:text-primary-600 hover:bg-neutral-100 transition-colors px-3 py-2 rounded-lg">
+              Connexion
+            </Link>
+            <Link href="/demo" className="bg-primary-600 hover:bg-primary-700 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-px">
+              Essai gratuit
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -674,69 +683,98 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FOOTER ══ */}
-      <footer className="bg-neutral-950 text-neutral-400 py-16 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 mb-12">
+      <footer className="bg-[#0a0f0d] text-neutral-400">
+        {/* Bande accent top */}
+        <div className="h-1 bg-gradient-to-r from-primary-600 via-accent-400 to-primary-600" />
+
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 mb-14">
             {/* Brand */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <img src="/logo.svg" alt="" className="w-9 h-9" />
-                <div>
-                  <span className="font-bold text-white">ANOUANZÊ</span>
-                  <span className="text-accent-400 font-bold text-xs ml-1">ERP</span>
+            <div className="col-span-2 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-5">
+                <img src="/logo.svg" alt="" className="w-10 h-10" />
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-extrabold text-white text-lg tracking-tight">ANOUANZÊ</span>
+                  <span className="text-accent-400 font-bold text-[11px] bg-accent-400/10 border border-accent-400/30 px-1.5 py-0.5 rounded-md">ERP</span>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed max-w-xs mb-3">L'ERP des associations, ONG et organisations à but non lucratif d'Afrique. Conforme SYCEBNL · Norme OHADA.</p>
-              <p className="text-xs text-neutral-600 mb-4">Un produit de <span className="text-neutral-400">IBIG SOFT</span> — Intermark Business International Group</p>
-              <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="text-xs text-primary-500 hover:text-primary-400 transition-colors">ibigsoft.com →</a>
+              <p className="text-sm leading-relaxed text-neutral-500 max-w-[260px] mb-4">
+                L'ERP des associations, ONG et organisations à but non lucratif d'Afrique.<br/>
+                <span className="text-primary-500 font-medium">Conforme SYCEBNL · Norme OHADA.</span>
+              </p>
+              <p className="text-xs text-neutral-600 mb-5">Un produit de <span className="text-neutral-500 font-semibold">IBIG SOFT</span><br/>Intermark Business International Group</p>
+              <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:text-primary-400 border border-primary-800 hover:border-primary-600 px-3 py-1.5 rounded-lg transition-colors">
+                ibigsoft.com →
+              </a>
             </div>
+
             {/* Navigation */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-wider">Navigation</h4>
+              <h4 className="text-primary-400 font-bold mb-4 text-[11px] uppercase tracking-widest">Navigation</h4>
               <ul className="space-y-2.5 text-sm">
                 {[['#fonctionnalites', 'Fonctionnalités'], ['#comment-ca-marche', 'Comment ça marche'], ['#tarifs', 'Tarifs'], ['#temoignages', 'Témoignages'], ['/demo', 'Démonstration'], ['/login', 'Connexion']].map(([href, label]) => (
                   <li key={label}><a href={href} className="hover:text-white transition-colors">{label}</a></li>
                 ))}
               </ul>
             </div>
+
             {/* Ressources */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-wider">Ressources</h4>
+              <h4 className="text-primary-400 font-bold mb-4 text-[11px] uppercase tracking-widest">Ressources</h4>
               <ul className="space-y-2.5 text-sm">
-                {[['/contact', 'Centre d\'aide'], ['/contact', 'Ouvrir un ticket'], ['/contact', 'FAQ'], ['#faq', 'Questions fréquentes'], ['https://ibigsoft.com', 'Blog IBIG SOFT']].map(([href, label]) => (
+                {[['/contact', 'Centre d\'aide'], ['/contact', 'Ouvrir un ticket'], ['#faq', 'Questions fréquentes'], ['https://ibigsoft.com', 'Blog IBIG SOFT'], ['/conditions-sara', 'Conditions SARA IA']].map(([href, label]) => (
                   <li key={label}><a href={href} className="hover:text-white transition-colors">{label}</a></li>
                 ))}
               </ul>
             </div>
+
             {/* IBIG SOFT */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-wider">IBIG SOFT</h4>
+              <h4 className="text-primary-400 font-bold mb-4 text-[11px] uppercase tracking-widest">IBIG SOFT</h4>
               <ul className="space-y-2.5 text-sm">
-                {[['https://ibigsoft.com', 'À propos d\'IBIG SOFT'], ['https://ibigpartners.com/', 'Devenir partenaire'], ['https://ibigpartners.com/', 'Programme IBIG PARTNERS'], ['/contact', 'Contact'], ['/contact', 'Support']].map(([href, label]) => (
+                {[['https://ibigsoft.com', 'À propos d\'IBIG SOFT'], ['https://ibigpartners.com/', 'Devenir partenaire'], ['https://ibigpartners.com/', 'IBIG PARTNERS'], ['/contact', 'Contact & Support']].map(([href, label]) => (
                   <li key={label}><a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="hover:text-white transition-colors">{label}</a></li>
                 ))}
               </ul>
             </div>
+
             {/* Légal + Contact */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-xs uppercase tracking-wider">Légal</h4>
-              <ul className="space-y-2.5 text-sm mb-6">
-                {[['/mentions-legales', 'Mentions légales'], ['/confidentialite', 'Confidentialité'], ['/cgu', 'CGU'], ['/cookies', 'Politique cookies']].map(([href, label]) => (
+              <h4 className="text-primary-400 font-bold mb-4 text-[11px] uppercase tracking-widest">Légal</h4>
+              <ul className="space-y-2.5 text-sm mb-7">
+                {[['/mentions-legales', 'Mentions légales'], ['/confidentialite', 'Confidentialité'], ['/cgu', 'CGU'], ['/cookies', 'Politique cookies'], ['/licence', 'CLUF'], ['/propriete-intellectuelle', 'Propriété intellectuelle']].map(([href, label]) => (
                   <li key={label}><Link href={href} className="hover:text-white transition-colors">{label}</Link></li>
                 ))}
               </ul>
-              <h4 className="text-white font-bold mb-3 text-xs uppercase tracking-wider">Contact</h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center gap-2"><span>📍</span><span>Abidjan, Côte d'Ivoire</span></div>
-                <div className="flex items-center gap-2"><span>📧</span><a href="mailto:contact@ibigsoft.com" className="hover:text-white transition-colors">contact@ibigsoft.com</a></div>
-                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2252722276014" className="hover:text-white transition-colors">+225 27 22 27 60 14</a></div>
-                <div className="flex items-center gap-2"><span>📞</span><a href="tel:+2250555059901" className="hover:text-white transition-colors">+225 05 55 05 99 01</a></div>
+              <h4 className="text-primary-400 font-bold mb-3 text-[11px] uppercase tracking-widest">Contact</h4>
+              <div className="space-y-1.5 text-xs text-neutral-500">
+                <div className="flex items-center gap-2">
+                  <span className="text-neutral-600">📍</span><span>Abidjan, Côte d'Ivoire</span>
+                </div>
+                <a href="mailto:contact@ibigsoft.com" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <span className="text-neutral-600">✉</span> contact@ibigsoft.com
+                </a>
+                <a href="tel:+2252722276014" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <span className="text-neutral-600">📞</span> +225 27 22 27 60 14
+                </a>
+                <a href="tel:+2250555059901" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <span className="text-neutral-600">📞</span> +225 05 55 05 99 01
+                </a>
               </div>
             </div>
           </div>
-          <div className="border-t border-neutral-800 pt-8 space-y-3 text-xs text-neutral-600">
-            <p>© {new Date().getFullYear()} <strong className="text-neutral-300">ANOUANZÊ ERP</strong>. Tous droits réservés. &nbsp;·&nbsp; Logiciel conçu, édité et exploité par <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-white transition-colors">IBIG SOFT</a>, une marque de IBIG SARL – Intermark Business International Group.</p>
-            <p className="text-neutral-700">Toute reproduction, imitation, copie ou utilisation non autorisée du logiciel, de son interface, de son logo ou de sa documentation est interdite.</p>
+
+          {/* Bottom bar */}
+          <div className="border-t border-neutral-800/60 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-neutral-600">
+            <p>© {new Date().getFullYear()} <strong className="text-neutral-400">ANOUANZÊ ERP</strong>. Tous droits réservés. · Logiciel conçu, édité et exploité par{' '}
+              <a href="https://ibigsoft.com" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-white transition-colors font-medium">IBIG SOFT</a>,
+              une marque de IBIG SARL – Intermark Business International Group.
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+              <span className="text-primary-600 font-medium">Opérationnel</span>
+            </div>
           </div>
         </div>
       </footer>
