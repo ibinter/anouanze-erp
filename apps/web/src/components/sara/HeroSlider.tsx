@@ -40,55 +40,62 @@ export default function HeroSlider() {
   const slide = SLIDES[current];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-[#2E9E4F] text-white pt-20 pb-28 px-6 lg:px-20">
-      {/* Blobs décoratifs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-white/5 rounded-full" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/5 rounded-full" />
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-accent-400/15 rounded-full blur-2xl" />
-        <div className="absolute bottom-1/4 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-600 to-[#2E9E4F] text-white pt-12 sm:pt-20 pb-16 sm:pb-28 px-4 sm:px-6 lg:px-20">
+      {/* Blobs décoratifs — clippés par overflow-hidden de la section */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div className="absolute -top-32 -right-32 w-64 sm:w-[500px] h-64 sm:h-[500px] bg-white/5 rounded-full" />
+        <div className="absolute -bottom-20 -left-20 w-48 sm:w-80 h-48 sm:h-80 bg-white/5 rounded-full" />
+        <div className="absolute top-1/3 right-1/4 w-32 sm:w-48 h-32 sm:h-48 bg-accent-400/15 rounded-full blur-2xl" />
+        <div className="absolute bottom-1/4 left-1/3 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full blur-xl" />
       </div>
 
       <div className="relative max-w-5xl mx-auto">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-2 text-sm font-medium mb-8 backdrop-blur-sm transition-all duration-700">
-          <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" />
-          {slide.badge}
+        <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium mb-6 sm:mb-8 backdrop-blur-sm transition-all duration-700 max-w-full">
+          <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse flex-shrink-0" />
+          <span className="truncate">{slide.badge}</span>
         </div>
 
-        {/* Titre — hauteur fixe pour éviter le layout shift */}
-        <div className="min-h-[220px] lg:min-h-[280px] flex items-start">
+        {/* Titre — hauteur min fluide, taille clamp pour éviter overflow */}
+        <div className="min-h-[140px] sm:min-h-[220px] lg:min-h-[280px] flex items-start">
           <h1
             key={current}
-            className="text-5xl lg:text-7xl font-extrabold leading-[1.05] mb-6 tracking-tight animate-fade-in"
+            className="text-[clamp(2.25rem,8vw,4.5rem)] lg:text-7xl font-extrabold leading-[1.05] mb-4 sm:mb-6 tracking-tight animate-fade-in"
           >
             {slide.title}
           </h1>
         </div>
 
-        <p key={`sub-${current}`} className="text-xl lg:text-2xl text-white/80 max-w-2xl mb-10 leading-relaxed font-light animate-fade-in">
+        {/* Sous-titre */}
+        <p key={`sub-${current}`} className="text-base sm:text-xl lg:text-2xl text-white/80 max-w-2xl mb-8 sm:mb-10 leading-relaxed font-light animate-fade-in">
           {slide.subtitle}
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-12">
+        {/* CTA buttons — empilés sur mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-10 sm:mb-12">
           <Link
             href={slide.cta.href}
-            className="inline-flex items-center justify-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-8 py-4 rounded-xl text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
+            className="inline-flex items-center justify-center gap-2 bg-accent-400 hover:bg-amber-500 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-base sm:text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 w-full sm:w-auto text-center"
           >
             {slide.cta.label}
           </Link>
           <a
             href={slide.secondary.href}
-            className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors backdrop-blur-sm"
+            className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl text-base sm:text-lg transition-colors backdrop-blur-sm w-full sm:w-auto text-center"
           >
             {slide.secondary.label}
           </a>
         </div>
 
-        <p className="text-sm text-white/40">✓ Sans carte bancaire &nbsp;·&nbsp; ✓ Résiliation à tout moment &nbsp;·&nbsp; ✓ Données hébergées en Afrique</p>
+        {/* Mentions — flex wrap pour mobile, pas de &nbsp; */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/40">
+          <span>✓ Sans carte bancaire</span>
+          <span>✓ Résiliation à tout moment</span>
+          <span>✓ Données hébergées en Afrique</span>
+        </div>
 
         {/* Dots navigation */}
-        <div className="flex items-center gap-3 mt-10">
+        <div className="flex items-center gap-3 mt-8 sm:mt-10">
           {SLIDES.map((_, i) => (
             <button
               key={i}
@@ -100,7 +107,7 @@ export default function HeroSlider() {
         </div>
 
         {/* Stats inline */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-14 pt-10 border-t border-white/10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-10 sm:mt-14 pt-8 sm:pt-10 border-t border-white/10">
           {[
             { val: '12+', label: 'Modules intégrés' },
             { val: '11', label: 'Niveaux de droits' },
@@ -108,8 +115,8 @@ export default function HeroSlider() {
             { val: '30j', label: 'Essai gratuit' },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <p className="text-3xl font-black text-accent-400">{s.val}</p>
-              <p className="text-sm text-white/60 mt-1">{s.label}</p>
+              <p className="text-2xl sm:text-3xl font-black text-accent-400">{s.val}</p>
+              <p className="text-xs sm:text-sm text-white/60 mt-1">{s.label}</p>
             </div>
           ))}
         </div>

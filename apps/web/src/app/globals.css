@@ -4,6 +4,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Base responsive ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  max-width: 100%;
+  /* Protection complémentaire après correction des sources */
+  overflow-x: clip;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
 @layer base {
   :root {
     --color-primary: 20 108 67;       /* #146C43 */

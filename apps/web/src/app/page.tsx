@@ -7,7 +7,7 @@ import OpenSaraButton from '@/components/landing/OpenSaraButton';
 import WhatsAppButton from '@/components/landing/WhatsAppButton';
 import CookieBanner from '@/components/landing/CookieBanner';
 import PWABanner from '@/components/landing/PWABanner';
-import LanguageSwitcher from '@/components/landing/LanguageSwitcher';
+import LandingNav from '@/components/landing/LandingNav';
 
 export const metadata: Metadata = {
   title: 'ANOUANZÊ ERP — L\'ERP des associations et ONG d\'Afrique',
@@ -147,53 +147,13 @@ export default function LandingPage() {
       <InfoBar />
 
       {/* ══ NAVBAR ══ */}
-      <nav className="sticky top-0 z-50 bg-white/98 backdrop-blur-xl border-b border-neutral-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-[68px] flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-9 h-9" />
-            <div className="flex items-baseline gap-1 leading-none">
-              <span className="font-extrabold text-primary-700 text-lg tracking-tight">ANOUANZÊ</span>
-              <span className="font-bold text-accent-400 text-[11px] bg-accent-50 border border-accent-200 px-1.5 py-0.5 rounded-md leading-none">ERP</span>
-            </div>
-          </Link>
-
-          {/* Nav centre */}
-          <div className="hidden xl:flex items-center gap-1 text-[13.5px] text-neutral-600 font-medium">
-            <a href="#fonctionnalites" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Fonctionnalités</a>
-            <a href="#comment-ca-marche" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Comment ça marche</a>
-            <a href="#tarifs" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Tarifs</a>
-            <a href="#temoignages" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Témoignages</a>
-            <a href="#faq" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">FAQ</a>
-            <Link href="/contact" className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors">Contact</Link>
-          </div>
-
-          {/* Actions droite */}
-          <div className="flex items-center gap-2 shrink-0">
-            <LanguageSwitcher />
-            <a
-              href="https://ibigpartners.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-500 hover:text-accent-600 border border-accent-300 hover:border-accent-400 hover:bg-accent-50 px-3 py-2 rounded-xl transition-colors"
-            >
-              🤝 Devenir partenaire
-            </a>
-            <Link href="/login" className="hidden sm:block text-[13px] font-semibold text-neutral-700 hover:text-primary-600 hover:bg-neutral-100 transition-colors px-3 py-2 rounded-lg">
-              Connexion
-            </Link>
-            <Link href="/demo" className="bg-primary-600 hover:bg-primary-700 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-px">
-              Essai gratuit
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* ══ HERO SLIDER ══ */}
       <HeroSlider />
 
       {/* ══ CERTIFICATIONS ══ */}
-      <section className="bg-neutral-900 py-5 px-6">
+      <section className="bg-neutral-900 py-4 sm:py-5 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-6">
           <span className="text-xs text-neutral-500 font-semibold uppercase tracking-widest">Certifications & conformités</span>
           {CERTIFICATIONS.map((c) => (
@@ -204,11 +164,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ PROBLÈMES RÉSOLUS ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-white">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-red-600 uppercase tracking-widest bg-red-50 px-3 py-1.5 rounded-full">Avant / Après</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Les problèmes que nous<br />résolvons pour vous</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Les problèmes que nous<br />résolvons pour vous</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">Chaque ONG affronte les mêmes défis. ANOUANZÊ ERP les élimine un par un.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -229,11 +189,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ BÉNÉFICES ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-neutral-50">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-neutral-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Bénéfices</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Ce que vous gagnez<br />concrètement</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Ce que vous gagnez<br />concrètement</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">Des résultats mesurables dès les premières semaines d'utilisation.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,11 +209,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FONCTIONNALITÉS / MODULES ══ */}
-      <section id="fonctionnalites" className="py-24 px-6 lg:px-20 bg-white">
+      <section id="fonctionnalites" className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">12 Modules</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Tout ce dont votre<br />organisation a besoin</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Tout ce dont votre<br />organisation a besoin</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">Un écosystème complet de modules pensés pour la réalité des ONG et associations d'Afrique.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -271,11 +231,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ PUBLICS CONCERNÉS ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-neutral-50">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-neutral-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Pour qui ?</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Conçu pour toutes les<br />organisations à but non lucratif</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Conçu pour toutes les<br />organisations à but non lucratif</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">ANOUANZÊ ERP s'adapte à la taille et au secteur de chaque organisation.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
@@ -291,11 +251,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ COMMENT ÇA MARCHE ══ */}
-      <section id="comment-ca-marche" className="py-24 px-6 lg:px-20 bg-white">
+      <section id="comment-ca-marche" className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Mise en route</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Opérationnel en 3 étapes</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Opérationnel en 3 étapes</h2>
             <p className="text-neutral-500 max-w-lg mx-auto text-lg">De l'inscription à la première clôture comptable, notre équipe vous accompagne à chaque étape.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -319,12 +279,12 @@ export default function LandingPage() {
       </section>
 
       {/* ══ SARA IA ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-gradient-to-br from-primary-800 to-primary-900 text-white">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-gradient-to-br from-primary-800 to-primary-900 text-white">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <span className="text-xs font-bold text-accent-400 uppercase tracking-widest bg-accent-400/10 border border-accent-400/30 px-3 py-1.5 rounded-full">Intelligence Artificielle</span>
-              <h2 className="text-4xl lg:text-5xl font-bold mt-6 mb-5 leading-tight">SARA, votre assistante<br />intelligente intégrée</h2>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-6 mb-5 leading-tight">SARA, votre assistante<br />intelligente intégrée</h2>
               <p className="text-white/70 text-lg mb-8 leading-relaxed">SARA est disponible 24h/24 pour répondre à toutes vos questions sur ANOUANZÊ ERP, vous guider dans les fonctionnalités et vous aider à choisir la bonne formule.</p>
               <ul className="space-y-3 mb-8">
                 {['Présente le logiciel et ses fonctionnalités', 'Compare les offres et oriente vers la bonne formule', 'Guide vers l\'essai gratuit et la démonstration', 'Répond en français, en temps réel, 24h/24', 'Escalade vers un conseiller humain si nécessaire'].map(f => (
@@ -370,11 +330,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ SÉCURITÉ ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-white">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Sécurité</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Vos données sont<br />protégées</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Vos données sont<br />protégées</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">La sécurité de vos données est notre priorité absolue.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -395,7 +355,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ PWA ══ */}
-      <section className="py-20 px-6 lg:px-20 bg-neutral-900 text-white">
+      <section className="py-10 sm:py-20 px-4 sm:px-6 lg:px-20 bg-neutral-900 text-white">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -424,11 +384,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ TARIFS ══ */}
-      <section id="tarifs" className="py-24 px-6 lg:px-20 bg-white">
+      <section id="tarifs" className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Tarifs</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Des prix adaptés à<br />chaque organisation</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Des prix adaptés à<br />chaque organisation</h2>
             <p className="text-neutral-500 max-w-lg mx-auto text-lg">Tous les plans incluent l'hébergement, les mises à jour et le support. Sans frais cachés.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -470,7 +430,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-center text-sm text-neutral-400 mt-8">
-            Tous les prix sont HT. TVA applicable selon la réglementation locale. &nbsp;·&nbsp;
+            Tous les prix sont HT. TVA applicable selon la réglementation locale.{' '}
             <Link href="/contact" className="text-primary-600 hover:underline">Besoin d'un devis personnalisé ?</Link>
           </p>
           {/* Tableau comparatif */}
@@ -515,11 +475,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ AVANTAGES IBIG SOFT ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-neutral-50">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-neutral-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Pourquoi IBIG SOFT ?</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">L'éditeur de confiance<br />des ONG africaines</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">L'éditeur de confiance<br />des ONG africaines</h2>
             <p className="text-neutral-500 max-w-xl mx-auto text-lg">IBIG SOFT conçoit des solutions pensées pour les réalités africaines depuis Abidjan, Côte d'Ivoire.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -540,11 +500,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ TÉMOIGNAGES ══ */}
-      <section id="temoignages" className="py-24 px-6 lg:px-20 bg-white">
+      <section id="temoignages" className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">Témoignages</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Ils nous font confiance</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Ils nous font confiance</h2>
             <p className="text-neutral-500 max-w-lg mx-auto text-lg">Des organisations à travers l'Afrique de l'Ouest utilisent ANOUANZÊ ERP au quotidien.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -569,10 +529,10 @@ export default function LandingPage() {
       </section>
 
       {/* ══ IBIG PARTNERS ══ */}
-      <section className="py-24 px-6 lg:px-20 bg-gradient-to-br from-accent-400 to-amber-500 text-white">
+      <section className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-gradient-to-br from-accent-400 to-amber-500 text-white">
         <div className="max-w-4xl mx-auto text-center">
           <span className="text-xs font-bold uppercase tracking-widest bg-white/20 border border-white/30 px-3 py-1.5 rounded-full">Programme partenaire</span>
-          <h2 className="text-4xl lg:text-5xl font-bold mt-6 mb-5">Développez vos revenus<br />avec IBIG PARTNERS</h2>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-6 mb-5">Développez vos revenus<br />avec IBIG PARTNERS</h2>
           <p className="text-white/85 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
             Rejoignez gratuitement le programme de partenariat IBIG et recommandez nos solutions à votre réseau.
             Accédez aux outils, suivez vos recommandations et percevez vos commissions.
@@ -604,11 +564,11 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FAQ ══ */}
-      <section id="faq" className="py-24 px-6 lg:px-20 bg-white">
+      <section id="faq" className="py-12 sm:py-24 px-4 sm:px-6 lg:px-20 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-xs font-bold text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-full">FAQ</span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Questions fréquentes</h2>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-800 mt-4 mb-4">Questions fréquentes</h2>
           </div>
           <div className="space-y-4">
             {FAQ.map((f) => (
@@ -636,9 +596,9 @@ export default function LandingPage() {
       </section>
 
       {/* ══ CENTRE D'AIDE ══ */}
-      <section className="py-16 px-6 lg:px-20 bg-neutral-50">
+      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-20 bg-neutral-50">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8 flex flex-col sm:flex-row items-center gap-6">
+          <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div className="text-5xl shrink-0">🆘</div>
             <div className="flex-1 text-center sm:text-left">
               <h3 className="text-xl font-bold text-neutral-800 mb-2">Centre d'aide IBIG SOFT</h3>
@@ -657,23 +617,27 @@ export default function LandingPage() {
       </section>
 
       {/* ══ CTA FINAL ══ */}
-      <section className="bg-gradient-to-br from-primary-700 to-[#2E9E4F] py-24 px-6 text-white text-center">
+      <section className="bg-gradient-to-br from-primary-700 to-[#2E9E4F] py-12 sm:py-24 px-4 sm:px-6 text-white text-center">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl lg:text-5xl font-extrabold mb-5 leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-5 leading-tight">
             Prêt à moderniser la gestion<br />de votre organisation ?
           </h2>
           <p className="text-white/70 max-w-xl mx-auto mb-10 text-lg">
             Essayez ANOUANZÊ ERP, demandez une démonstration ou échangez immédiatement avec SARA.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Link href="/demo" className="bg-accent-400 hover:bg-amber-500 text-white font-bold px-10 py-4 rounded-xl text-lg transition-all shadow-xl hover:-translate-y-0.5">
+            <Link href="/demo" className="bg-accent-400 hover:bg-amber-500 text-white font-bold px-6 sm:px-10 py-3.5 sm:py-4 rounded-xl text-base sm:text-lg transition-all shadow-xl hover:-translate-y-0.5">
               Commencer gratuitement →
             </Link>
-            <Link href="/contact" className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-10 py-4 rounded-xl text-lg transition-colors">
+            <Link href="/contact" className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold px-6 sm:px-10 py-3.5 sm:py-4 rounded-xl text-base sm:text-lg transition-colors">
               Demander une démonstration
             </Link>
           </div>
-          <p className="text-sm text-white/50 mb-8">✓ Sans carte bancaire &nbsp;·&nbsp; ✓ Résiliation à tout moment &nbsp;·&nbsp; ✓ Données hébergées en Afrique</p>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-white/50 mb-8">
+            <span>✓ Sans carte bancaire</span>
+            <span>✓ Résiliation à tout moment</span>
+            <span>✓ Données hébergées en Afrique</span>
+          </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-white/60">
             <span>📧 contact@ibigsoft.com</span>
             <span>📞 +225 05 55 05 99 01</span>
@@ -687,8 +651,8 @@ export default function LandingPage() {
         {/* Bande accent top */}
         <div className="h-1 bg-gradient-to-r from-primary-600 via-accent-400 to-primary-600" />
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-10">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 mb-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-16 pb-8 sm:pb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-10 mb-14">
             {/* Brand */}
             <div className="col-span-2 lg:col-span-2">
               <div className="flex items-center gap-3 mb-5">
