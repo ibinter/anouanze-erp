@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Deploy ANOUANZÊ ERP
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Setup SSH key
@@ -23,30 +23,31 @@ jobs:
       - name: Test SSH connection
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "echo '==> SSH OK, host: $(hostname)'"
+            "echo '==> SSH OK'"
 
-      - name: Deploy ANOUANZÊ ERP
+      - name: Git pull on VPS
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
-          set -e
-          cd /opt/anouanze-erp
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/anouanze-erp && git pull origin master"
 
-          echo "==> Git pull..."
-          git pull origin master
+      - name: Build web (background, ~10 min)
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=40 \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/anouanze-erp && docker compose -f docker-compose.prod.yml build web --no-cache"
 
-          echo "==> Build web..."
-          docker compose -f docker-compose.prod.yml build web --no-cache
+      - name: Restart web container
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/anouanze-erp && docker compose -f docker-compose.prod.yml stop web && docker compose -f docker-compose.prod.yml up -d web && sleep 5 && docker compose -f docker-compose.prod.yml ps web"
 
-          echo "==> Restart web..."
-          docker compose -f docker-compose.prod.yml up -d web
-
-          echo "==> Attente démarrage API..."
-          sleep 10
-          echo "==> Migration Prisma..."
-          docker compose -f docker-compose.prod.yml exec -T api npx prisma migrate deploy || echo "Migration ignorée (déjà à jour)"
-
-          echo "==> Done ✓"
-          docker compose -f docker-compose.prod.yml ps
-          ENDSSH
+      - name: Run Prisma migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "cd /opt/anouanze-erp && sleep 10 && docker compose -f docker-compose.prod.yml exec -T api npx prisma migrate deploy || echo 'Migration ignorée'"
