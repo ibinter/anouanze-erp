@@ -54,8 +54,8 @@ export default function MealPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">SERA / MEAL</h1>
           <p className="text-sm text-neutral-500 mt-1">Suivi-Évaluation, Redevabilité et Apprentissage</p>

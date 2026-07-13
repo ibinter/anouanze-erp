@@ -182,8 +182,8 @@ export default function AchatsPage() {
   const montantTotal = statsData?.montantTotal ?? commandes.reduce((s, c) => s + (c.montantTotal ?? 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary-50">
             <ShoppingCart className="w-5 h-5 text-primary-600" />
@@ -264,7 +264,7 @@ export default function AchatsPage() {
             <input type="date" className="input" value={cmdForm.dateCommande} onChange={(e) => setCmdForm((p) => ({ ...p, dateCommande: e.target.value }))} />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <label className="label">Articles</label>
               <button
                 className="text-xs text-primary-600 hover:text-primary-700 font-medium"

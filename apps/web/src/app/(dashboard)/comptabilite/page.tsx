@@ -131,8 +131,8 @@ function TableauEcritures() {
 
   return (
     <>
-      <div className="card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="card overflow-x-auto">
+        <table className="w-full text-sm min-w-[540px]">
           <thead>
             <tr className="bg-neutral-50 border-b border-neutral-100">
               <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Date</th>
@@ -188,8 +188,8 @@ function Balance() {
   const lignes: BalanceLigne[] = data ?? [];
 
   return (
-    <div className="card overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="card overflow-x-auto">
+      <table className="w-full text-sm min-w-[480px]">
         <thead>
           <tr className="bg-neutral-50 border-b border-neutral-100">
             <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Compte</th>
@@ -309,7 +309,7 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="label">Journal</label>
             <select className="input w-full" value={journalId} onChange={(e) => setJournalId(e.target.value)}>
@@ -433,13 +433,13 @@ export default function ComptabilitePage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Comptabilité SYCEBNL</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Comptabilité SYCEBNL</h1>
           <p className="text-sm text-neutral-500 mt-1">Plan comptable, journaux et balance</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {(activeTab === 'ecritures' || activeTab === 'balance') && (
             <button onClick={handleExportEcritures} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
               {activeTab === 'balance' ? <FilePdf className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}

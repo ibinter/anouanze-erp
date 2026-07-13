@@ -384,7 +384,7 @@ export default function BudgetPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {showModal && <NouveauBudgetModal onClose={() => setShowModal(false)} />}
 
       {/* En-tête */}

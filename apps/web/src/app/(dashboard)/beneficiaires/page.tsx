@@ -103,8 +103,8 @@ export default function BeneficiairesPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">Bénéficiaires</h1>
           <p className="text-sm text-neutral-500 mt-1">Registre des bénéficiaires de l&apos;organisation</p>

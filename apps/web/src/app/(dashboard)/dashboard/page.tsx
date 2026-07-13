@@ -112,7 +112,7 @@ export default function DashboardPage() {
   ] as { message: string; niveau: 'error' | 'warning' }[];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-800">Tableau de bord</h1>
         <p className="text-sm text-neutral-500 mt-1">Vue d&apos;ensemble de votre organisation</p>

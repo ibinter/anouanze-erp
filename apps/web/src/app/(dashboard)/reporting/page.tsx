@@ -71,7 +71,7 @@ export default function ReportingPage() {
   const totalPassif = bilanData?.totalPassif ?? passif.reduce((s: number, r: LigneBilan) => s + r.montant, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary-50">
           <BarChart2 className="w-5 h-5 text-primary-600" />

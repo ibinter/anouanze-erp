@@ -469,7 +469,7 @@ export default function RHPage() {
   const employes: Employe[] = employesData?.data ?? [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-800">Ressources Humaines</h1>
         <p className="text-sm text-neutral-500 mt-1">Gestion du personnel, paie et congés</p>

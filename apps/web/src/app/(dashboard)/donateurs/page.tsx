@@ -283,11 +283,11 @@ export default function DonateursPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {showNewDonateur && <NouveauDonateurModal onClose={() => setShowNewDonateur(false)} />}
       {donForModal && <NouveauDonModal donateur={donForModal} onClose={() => setDonForModal(null)} />}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">Donateurs</h1>
           <p className="text-sm text-neutral-500 mt-1">Suivi des donateurs et contributions</p>
@@ -374,7 +374,7 @@ export default function DonateursPage() {
                 <p className="text-sm text-neutral-500">{selected.telephone}</p>
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-sm font-semibold text-neutral-700">{(selected as any)._count?.dons ?? 0} don(s)</p>
               <button
                 onClick={() => { setDonForModal(selected); setSelected(null); }}
@@ -390,7 +390,7 @@ export default function DonateursPage() {
               )}
               {dons.map((don) => (
                 <div key={don.id} className="border border-neutral-100 rounded-lg p-3 space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <span className="font-semibold text-neutral-800">
                       {don.montant ? formatMontant(don.montant) : TYPE_LABEL[don.type] ?? don.type}
                     </span>

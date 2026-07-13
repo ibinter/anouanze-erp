@@ -236,7 +236,7 @@ export default function ParametresPage() {
         <div className="max-w-2xl space-y-6">
           <div className="card space-y-4">
             <h3 className="font-semibold text-neutral-800">Authentification</h3>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-neutral-700">Double authentification (2FA)</p>
                 <p className="text-xs text-neutral-400 mt-0.5">Ajoute une couche de sécurité supplémentaire</p>

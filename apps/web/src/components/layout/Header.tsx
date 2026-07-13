@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search, ChevronDown, X } from 'lucide-react';
+import { Bell, Search, ChevronDown, X, Menu } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,11 @@ const TYPE_LABELS: Record<string, string> = {
   document: 'Document',
 };
 
-export function Header() {
+interface HeaderProps {
+  onHamburgerClick?: () => void;
+}
+
+export function Header({ onHamburgerClick }: HeaderProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,8 +34,10 @@ export function Header() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
 
   const doSearch = useCallback(async (q: string) => {
     if (!q || q.length < 2) { setResults([]); setOpen(false); return; }
@@ -44,7 +50,6 @@ export function Header() {
       ]);
 
       const all: SearchResult[] = [];
-
       const [membresRes, projetsRes, donateursRes] = requests;
 
       if (membresRes.status === 'fulfilled') {
@@ -88,12 +93,18 @@ export function Header() {
     setQuery('');
     setResults([]);
     setOpen(false);
+    setMobileSearchOpen(false);
   };
 
   const handleClear = () => {
     setQuery('');
     setResults([]);
     setOpen(false);
+  };
+
+  const openMobileSearch = () => {
+    setMobileSearchOpen(true);
+    setTimeout(() => mobileInputRef.current?.focus(), 50);
   };
 
   useEffect(() => {
@@ -106,15 +117,65 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const SearchDropdown = ({ results, searching, query, open }: { results: SearchResult[]; searching: boolean; query: string; open: boolean }) => {
+    if (!open) return null;
+    return (
+      <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-xl border border-neutral-100 z-50 overflow-hidden">
+        {searching && <div className="px-4 py-3 text-sm text-neutral-400">Recherche…</div>}
+        {!searching && results.length === 0 && query.length >= 2 && (
+          <div className="px-4 py-3 text-sm text-neutral-400">Aucun résultat pour « {query} »</div>
+        )}
+        {!searching && results.length > 0 && (
+          <ul>
+            {results.map((r) => (
+              <li key={`${r.type}-${r.id}`}>
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-50 transition-colors"
+                  onClick={() => handleSelect(r)}
+                >
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 font-medium whitespace-nowrap">
+                    {TYPE_LABELS[r.type] ?? r.type}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-neutral-800 block truncate">{r.label}</span>
+                    {r.sublabel && <span className="text-xs text-neutral-400 truncate block">{r.sublabel}</span>}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <header className="h-16 bg-white border-b border-neutral-100 flex items-center justify-between px-6 flex-shrink-0">
-      {/* Recherche globale */}
-      <div ref={wrapperRef} className="relative w-72">
+    <header className="h-16 bg-white border-b border-neutral-100 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 gap-3">
+      {/* Mobile: hamburger + search icon */}
+      <div className="flex items-center gap-2 lg:hidden">
+        <button
+          onClick={onHamburgerClick}
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <button
+          onClick={openMobileSearch}
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500"
+          aria-label="Rechercher"
+        >
+          <Search className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Desktop: search bar */}
+      <div ref={wrapperRef} className="relative hidden lg:block w-72">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
         <input
           type="search"
           placeholder="Rechercher membres, projets…"
-          className="input pl-9 pr-8 py-1.5 text-sm"
+          className="input pl-9 pr-8 py-1.5 text-sm w-full"
           value={query}
           onChange={handleChange}
           onFocus={() => results.length > 0 && setOpen(true)}
@@ -125,40 +186,44 @@ export function Header() {
             <X className="w-4 h-4" />
           </button>
         )}
-        {open && (
-          <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-xl border border-neutral-100 z-50 overflow-hidden">
-            {searching && (
-              <div className="px-4 py-3 text-sm text-neutral-400">Recherche…</div>
-            )}
-            {!searching && results.length === 0 && query.length >= 2 && (
-              <div className="px-4 py-3 text-sm text-neutral-400">Aucun résultat pour « {query} »</div>
-            )}
-            {!searching && results.length > 0 && (
-              <ul>
-                {results.map((r) => (
-                  <li key={`${r.type}-${r.id}`}>
-                    <button
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-50 transition-colors"
-                      onClick={() => handleSelect(r)}
-                    >
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 font-medium whitespace-nowrap">
-                        {TYPE_LABELS[r.type] ?? r.type}
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-neutral-800 block truncate">{r.label}</span>
-                        {r.sublabel && <span className="text-xs text-neutral-400 truncate block">{r.sublabel}</span>}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
+        <SearchDropdown results={results} searching={searching} query={query} open={open} />
       </div>
 
+      {/* Mobile: expanded search bar */}
+      {mobileSearchOpen && (
+        <div className="absolute inset-x-0 top-0 h-16 bg-white z-50 flex items-center px-4 gap-2 lg:hidden border-b border-neutral-100">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+            <input
+              ref={mobileInputRef}
+              type="search"
+              placeholder="Rechercher membres, projets…"
+              className="input pl-9 pr-8 py-1.5 text-sm w-full"
+              value={query}
+              onChange={handleChange}
+              autoComplete="off"
+            />
+            {query && (
+              <button onClick={handleClear} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            <SearchDropdown results={results} searching={searching} query={query} open={open} />
+          </div>
+          <button
+            onClick={() => { setMobileSearchOpen(false); handleClear(); }}
+            className="text-sm font-medium text-primary-600 whitespace-nowrap"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
+
+      {/* Spacer on mobile */}
+      <div className="flex-1 lg:hidden" />
+
       {/* Actions droite */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-neutral-100 text-neutral-500">
           <Bell className="w-5 h-5" />
@@ -169,9 +234,9 @@ export function Header() {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 p-1.5 pr-3 rounded-lg hover:bg-neutral-100 transition-colors"
+            className="flex items-center gap-2 p-1.5 pr-2 sm:pr-3 rounded-lg hover:bg-neutral-100 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
               <span className="text-sm font-semibold text-primary-700">
                 {session?.user?.name?.[0]?.toUpperCase() ?? 'U'}
               </span>
@@ -184,7 +249,7 @@ export function Header() {
                 {session?.user?.email ?? ''}
               </p>
             </div>
-            <ChevronDown className="w-4 h-4 text-neutral-400" />
+            <ChevronDown className="w-4 h-4 text-neutral-400 hidden sm:block" />
           </button>
 
           {menuOpen && (

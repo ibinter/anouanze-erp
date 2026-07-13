@@ -75,7 +75,7 @@ function StatutBadge({ statut }: { statut: string }) {
 
 export default function GouvernancePage() {
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-4 sm:p-6 space-y-8">
       {/* En-tête */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>

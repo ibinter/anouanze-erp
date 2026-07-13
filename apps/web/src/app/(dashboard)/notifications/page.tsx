@@ -58,8 +58,8 @@ export default function NotificationsPage() {
   const unreadCount = notifs.filter((n) => !n.lue).length;
 
   return (
-    <div className="p-6 max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 max-w-3xl space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-800">Notifications</h1>
           <p className="text-sm text-neutral-500 mt-1">

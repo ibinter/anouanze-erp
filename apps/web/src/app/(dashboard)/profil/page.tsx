@@ -153,7 +153,7 @@ export default function ProfilPage() {
           <Building2 className="w-5 h-5 text-neutral-600" />
           <h2 className="font-semibold text-neutral-800">Mon organisation</h2>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-neutral-700">ANOUANZÊ ONG</p>
             <p className="text-xs text-neutral-400">Abidjan, Côte d&apos;Ivoire · ID: ORG-2024-001</p>
