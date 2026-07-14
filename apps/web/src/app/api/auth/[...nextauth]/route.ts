@@ -13,7 +13,7 @@ const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const apiUrl = process.env.API_URL ?? 'http://localhost:4000';
+          const apiUrl = (process.env.API_URL ?? 'http://localhost:4000/api/v1').replace(/\/api\/v1$/, '');
           const res = await fetch(`${apiUrl}/api/v1/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
