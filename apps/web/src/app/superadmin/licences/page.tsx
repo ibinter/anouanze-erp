@@ -1,150 +1,160 @@
 'use client';
 
 import { useState } from 'react';
+import { CreditCard, Search, RefreshCw, Plus, X, TrendingUp } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 interface Licence {
   id: string;
-  organisation: string;
-  plan: 'Essentiel' | 'Starter' | 'Pro' | 'Enterprise';
-  statut: 'ACTIVE' | 'ESSAI' | 'SUSPENDUE' | 'EXPIREE';
-  debut: string;
-  fin: string;
-  mrr: number;
-  renouvellementAuto: boolean;
-  maxUsers: number;
-  usersActifs: number;
+  nom: string;
+  planActuel?: string;
+  dateFinLicence?: string;
+  statutLicence?: string;
+  renouvellementAuto?: boolean;
+  maxUtilisateurs?: number;
+  _count?: { utilisateurs: number };
 }
 
-const LICENCES: Licence[] = [
-  { id: 'L001', organisation: 'ONG Espoir CI', plan: 'Pro', statut: 'ACTIVE', debut: '2026-02-01', fin: '2027-01-31', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 8 },
-  { id: 'L002', organisation: 'Association YMCA Abidjan', plan: 'Starter', statut: 'ACTIVE', debut: '2026-04-01', fin: '2026-12-31', mrr: 29900, renouvellementAuto: false, maxUsers: 8, usersActifs: 3 },
-  { id: 'L003', organisation: 'Réseau Femmes Leaders Mali', plan: 'Pro', statut: 'ACTIVE', debut: '2026-04-15', fin: '2027-03-15', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 12 },
-  { id: 'L004', organisation: 'CARITAS Bouaké', plan: 'Enterprise', statut: 'ACTIVE', debut: '2025-07-01', fin: '2027-06-30', mrr: 200000, renouvellementAuto: true, maxUsers: 999, usersActifs: 28 },
-  { id: 'L005', organisation: 'Fondation Santé 2030', plan: 'Essentiel', statut: 'ESSAI', debut: '2026-07-10', fin: '2026-07-24', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 2 },
-  { id: 'L006', organisation: 'AVSF Burkina Faso', plan: 'Pro', statut: 'ACTIVE', debut: '2026-05-01', fin: '2027-02-28', mrr: 59900, renouvellementAuto: true, maxUsers: 15, usersActifs: 6 },
-  { id: 'L007', organisation: 'ONG JADES Niger', plan: 'Essentiel', statut: 'SUSPENDUE', debut: '2026-01-20', fin: '2026-06-30', mrr: 0, renouvellementAuto: false, maxUsers: 3, usersActifs: 1 },
-  { id: 'L008', organisation: 'Groupement Femmes Rurales BF', plan: 'Essentiel', statut: 'ACTIVE', debut: '2026-06-01', fin: '2027-05-31', mrr: 12900, renouvellementAuto: true, maxUsers: 3, usersActifs: 2 },
-];
+const PLAN_COLORS: Record<string, string> = {
+  ESSENTIEL: 'bg-gray-100 text-gray-700',
+  STARTER: 'bg-blue-100 text-blue-700',
+  PRO: 'bg-purple-100 text-purple-700',
+  ENTERPRISE: 'bg-yellow-100 text-yellow-700',
+};
 
 const STATUT_COLORS: Record<string, string> = {
-  ACTIVE: 'text-green-400 bg-green-400/10',
-  ESSAI: 'text-yellow-400 bg-yellow-400/10',
-  SUSPENDUE: 'text-red-400 bg-red-400/10',
-  EXPIREE: 'text-neutral-500 bg-neutral-500/10',
+  ACTIVE: 'bg-green-100 text-green-700',
+  ESSAI: 'bg-orange-100 text-orange-700',
+  SUSPENDUE: 'bg-red-100 text-red-700',
+  EXPIREE: 'bg-gray-100 text-gray-500',
 };
 
-const PLAN_COLORS: Record<string, string> = {
-  Essentiel: 'text-neutral-400',
-  Starter: 'text-cyan-400',
-  Pro: 'text-blue-400',
-  Enterprise: 'text-yellow-400',
+const PLAN_PRIX: Record<string, number> = {
+  ESSENTIEL: 12900,
+  STARTER: 29900,
+  PRO: 59900,
+  ENTERPRISE: 0,
 };
 
-export default function LicencesPage() {
+export default function SuperAdminLicencesPage() {
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState<string | null>(null);
+  const [newPlan, setNewPlan] = useState('PRO');
 
-  const filtered = LICENCES.filter((l) => !search || l.organisation.toLowerCase().includes(search.toLowerCase()) || l.id.toLowerCase().includes(search.toLowerCase()));
+  const { data, isLoading, refetch } = useQuery<{ data: Licence[]; total: number }>({
+    queryKey: ['sa-licences', search],
+    queryFn: () => api.get('/organisations', { params: { search: search || undefined, limit: 100 } }).then((r: any) => r.data),
+  });
 
-  const mrrTotal = LICENCES.filter((l) => l.statut === 'ACTIVE').reduce((s, l) => s + l.mrr, 0);
-  const essais = LICENCES.filter((l) => l.statut === 'ESSAI').length;
-  const expirantSoon = LICENCES.filter((l) => {
-    const fin = new Date(l.fin);
-    const now = new Date();
-    const diff = (fin.getTime() - now.getTime()) / (1000 * 3600 * 24);
-    return diff > 0 && diff <= 30 && l.statut === 'ACTIVE';
-  }).length;
+  const updateLicence = useMutation({
+    mutationFn: ({ id, plan }: { id: string; plan: string }) =>
+      api.patch(`/organisations/${id}`, { planActuel: plan }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sa-licences'] }); setShowModal(null); },
+  });
+
+  const orgs = data?.data ?? [];
+  const mrr = orgs.reduce((sum, o) => sum + (PLAN_PRIX[o.planActuel ?? 'ESSENTIEL'] ?? 0), 0);
+  const actives = orgs.filter(o => o.statutLicence === 'ACTIVE' || !o.statutLicence).length;
+  const essais = orgs.filter(o => o.statutLicence === 'ESSAI').length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Gestion des licences</h1>
-        <p className="text-neutral-400 text-sm mt-1">
-          MRR actif : <span className="text-green-400 font-semibold">{mrrTotal.toLocaleString('fr-CI')} FCFA</span>
-          {' · '}{essais} essai(s) en cours
-          {expirantSoon > 0 && <span className="text-yellow-400"> · ⚠️ {expirantSoon} licence(s) expirant dans 30 jours</span>}
-        </p>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Licences</h1>
+          <p className="text-gray-500 text-sm">{data?.total ?? 0} organisation{(data?.total ?? 0) > 1 ? 's' : ''}</p>
+        </div>
+        <button onClick={() => refetch()} className="p-2 border border-gray-300 rounded-lg text-gray-500"><RefreshCw className="w-4 h-4" /></button>
       </div>
 
-      {/* KPIs mini */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Licences actives', val: LICENCES.filter((l) => l.statut === 'ACTIVE').length, color: 'text-green-400' },
-          { label: 'Essais en cours', val: essais, color: 'text-yellow-400' },
-          { label: 'Suspendues', val: LICENCES.filter((l) => l.statut === 'SUSPENDUE').length, color: 'text-red-400' },
-          { label: 'MRR total', val: `${mrrTotal.toLocaleString('fr-CI')} F`, color: 'text-primary-400' },
-        ].map((k) => (
-          <div key={k.label} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-            <p className="text-xs text-neutral-500 mb-1">{k.label}</p>
-            <p className={`text-xl font-bold ${k.color}`}>{k.val}</p>
+          { label: 'MRR estimé', value: `${mrr.toLocaleString('fr-FR')} FCFA`, icon: TrendingUp, color: 'text-green-600' },
+          { label: 'Licences actives', value: actives, icon: CreditCard, color: 'text-primary' },
+          { label: 'En essai', value: essais, icon: CreditCard, color: 'text-orange-500' },
+          { label: 'Total orgs', value: data?.total ?? 0, icon: CreditCard, color: 'text-blue-600' },
+        ].map(kpi => (
+          <div key={kpi.label} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-500">{kpi.label}</span>
+              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+            </div>
+            <p className="text-xl font-bold text-gray-900">{kpi.value}</p>
           </div>
         ))}
       </div>
 
-      <input
-        className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 w-72"
-        placeholder="Rechercher organisation ou ID…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
 
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left border-b border-neutral-800">
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">ID</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Organisation</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Plan</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Statut</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Users</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">MRR</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Période</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Auto-renouvellement</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((l) => {
-              const daysLeft = Math.ceil((new Date(l.fin).getTime() - Date.now()) / (1000 * 3600 * 24));
-              const expirationWarn = daysLeft <= 30 && daysLeft > 0 && l.statut === 'ACTIVE';
-              return (
-                <tr key={l.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/40 transition-colors">
-                  <td className="px-5 py-3 text-neutral-400 font-mono text-xs">{l.id}</td>
-                  <td className="px-5 py-3 font-medium text-white">{l.organisation}</td>
-                  <td className="px-5 py-3">
-                    <span className={`text-xs font-semibold ${PLAN_COLORS[l.plan]}`}>{l.plan}</span>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />)}</div>
+        ) : (
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Organisation</th>
+                <th className="px-4 py-3 text-left">Plan</th>
+                <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Expiration</th>
+                <th className="px-4 py-3 text-left">Utilisateurs</th>
+                <th className="px-4 py-3 text-left">MRR</th>
+                <th className="px-4 py-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {orgs.map((o) => (
+                <tr key={o.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900">{o.nom}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${PLAN_COLORS[o.planActuel ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>{o.planActuel ?? 'ESSENTIEL'}</span>
                   </td>
-                  <td className="px-5 py-3">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUT_COLORS[l.statut]}`}>{l.statut}</span>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[o.statutLicence ?? ''] ?? 'bg-green-100 text-green-700'}`}>{o.statutLicence ?? 'ACTIVE'}</span>
                   </td>
-                  <td className="px-5 py-3 text-neutral-300 text-xs">
-                    <span className={l.usersActifs >= l.maxUsers ? 'text-red-400' : ''}>{l.usersActifs}</span>
-                    <span className="text-neutral-600"> / {l.maxUsers === 999 ? '∞' : l.maxUsers}</span>
-                  </td>
-                  <td className="px-5 py-3 font-mono text-xs text-primary-400">{l.mrr > 0 ? `${l.mrr.toLocaleString('fr-CI')} F` : '—'}</td>
-                  <td className="px-5 py-3 text-xs text-neutral-400">
-                    <p>{new Date(l.debut).toLocaleDateString('fr-CI', { day: '2-digit', month: 'short', year: '2-digit' })}</p>
-                    <p className={expirationWarn ? 'text-yellow-400 font-semibold' : ''}>
-                      → {new Date(l.fin).toLocaleDateString('fr-CI', { day: '2-digit', month: 'short', year: '2-digit' })}
-                      {expirationWarn && ` (J-${daysLeft})`}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3">
-                    <span className={`text-xs font-semibold ${l.renouvellementAuto ? 'text-green-400' : 'text-neutral-500'}`}>
-                      {l.renouvellementAuto ? 'Oui' : 'Non'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <button className="text-xs text-primary-400 hover:underline">Modifier</button>
-                      <button className="text-xs text-yellow-400 hover:underline">Renouveler</button>
-                    </div>
+                  <td className="px-4 py-3 text-gray-500">{o.dateFinLicence ? new Date(o.dateFinLicence).toLocaleDateString('fr-FR') : '—'}</td>
+                  <td className="px-4 py-3 text-gray-600">{o._count?.utilisateurs ?? 0} / {o.maxUtilisateurs ?? '∞'}</td>
+                  <td className="px-4 py-3 text-gray-600">{(PLAN_PRIX[o.planActuel ?? ''] ?? 0).toLocaleString('fr-FR')} FCFA</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => { setShowModal(o.id); setNewPlan(o.planActuel ?? 'PRO'); }} className="text-xs text-primary hover:underline">Modifier plan</button>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        )}
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Modifier le plan</h2>
+              <button onClick={() => setShowModal(null)}><X className="w-5 h-5" /></button>
+            </div>
+            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4" value={newPlan} onChange={e => setNewPlan(e.target.value)}>
+              <option value="ESSENTIEL">Essentiel — 12 900 FCFA/mois</option>
+              <option value="STARTER">Starter — 29 900 FCFA/mois</option>
+              <option value="PRO">Pro — 59 900 FCFA/mois</option>
+              <option value="ENTERPRISE">Enterprise — Sur devis</option>
+            </select>
+            <div className="flex gap-2">
+              <button onClick={() => setShowModal(null)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => updateLicence.mutate({ id: showModal, plan: newPlan })} disabled={updateLicence.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+                {updateLicence.isPending ? 'Mise à jour...' : 'Appliquer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

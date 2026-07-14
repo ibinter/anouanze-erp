@@ -137,6 +137,13 @@ export default function AidePage() {
               <span className="text-xs font-medium text-neutral-700">{item.label}</span>
             </a>
           ))}
+          <button
+            onClick={() => { localStorage.removeItem('anouanze-onboarding-done'); window.location.href = '/dashboard'; }}
+            className="card p-4 flex flex-col items-center gap-2 text-center hover:shadow-card-hover transition-shadow cursor-pointer group"
+          >
+            <Zap className="w-6 h-6 text-accent-500 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-neutral-700">Visite guidée</span>
+          </button>
         </div>
       )}
 

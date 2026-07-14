@@ -288,7 +288,8 @@ function CongesTab({ employes }: { employes: Employe[] }) {
         </select>
       </div>
       <div className="card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-neutral-50 border-b border-neutral-100">
               {['Type', 'Début', 'Fin', 'Statut', 'Actions'].map((h) => (
@@ -329,6 +330,7 @@ function CongesTab({ employes }: { employes: Employe[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

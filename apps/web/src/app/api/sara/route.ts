@@ -23,7 +23,8 @@ Règles :
 - Sois proactive : propose des démonstrations, des essais gratuits`;
 
 // Store in-memory pour tracking admin (réinitialisé au redémarrage)
-export const saraLogs: Array<{
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const saraLogs: Array<{
   id: string;
   timestamp: string;
   userMessage: string;

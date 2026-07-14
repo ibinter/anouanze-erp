@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Breadcrumb } from './Breadcrumb';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -22,6 +23,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
+        <OnboardingTour />
       </div>
     </div>
   );

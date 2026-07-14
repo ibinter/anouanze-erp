@@ -137,10 +137,43 @@ export class DocumentsService {
 
   async archiverDocument(id: string, organisationId: string) {
     await this.findOne(id, organisationId);
-
     return this.prisma.document.update({
       where: { id },
       data: { statut: StatutDocument.ARCHIVE },
     });
+  }
+
+  async getQrCode(id: string, organisationId: string, baseUrl: string): Promise<string> {
+    const doc = await this.findOne(id, organisationId);
+    const verificationUrl = `${baseUrl}/documents/verifier/${id}`;
+    // Encode sous forme de data URI Google Charts QR (pas de dépendance externe)
+    const encoded = encodeURIComponent(verificationUrl);
+    return {
+      url: verificationUrl,
+      qrImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`,
+      document: { id: doc.id, nom: doc.nom, fichierNom: doc.fichierNom },
+    } as any;
+  }
+
+  async verifierDocument(id: string) {
+    const doc = await this.prisma.document.findUnique({
+      where: { id },
+      include: {
+        createur: { select: { nom: true, prenom: true } },
+        organisation: { select: { nom: true } },
+      },
+    });
+    if (!doc) return { valide: false, message: 'Document introuvable ou supprimé' };
+    return {
+      valide: true,
+      document: {
+        id: doc.id,
+        nom: doc.nom,
+        organisation: (doc as any).organisation?.nom,
+        uploadePar: `${(doc as any).createur?.prenom ?? ''} ${(doc as any).createur?.nom ?? ''}`.trim(),
+        dateUpload: doc.createdAt,
+        statut: doc.statut,
+      },
+    };
   }
 }

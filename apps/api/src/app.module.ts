@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -28,7 +29,12 @@ import { PaiementsModule } from './modules/paiements/paiements.module';
 import { IaModule } from './modules/ia/ia.module';
 import { MealModule } from './modules/meal/meal.module';
 import { ImmobilisationsModule } from './modules/immobilisations/immobilisations.module';
+import { GouvernanceModule } from './modules/gouvernance/gouvernance.module';
+import { NotificationsRestModule } from './modules/notifications-rest/notifications-rest.module';
+import { TicketsModule } from './modules/tickets/tickets.module';
+import { ImportModule } from './modules/import/import.module';
 import { StorageModule } from './common/storage/storage.module';
+import { OrganisationGuard } from './common/guards/organisation.guard';
 import { EmailModule } from './common/email/email.module';
 import { NotificationsModule } from './common/notifications/notifications.module';
 
@@ -81,9 +87,15 @@ import { NotificationsModule } from './common/notifications/notifications.module
     IaModule,
     MealModule,
     ImmobilisationsModule,
+    GouvernanceModule,
+    NotificationsRestModule,
+    TicketsModule,
+    ImportModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    Reflector,
+    OrganisationGuard,
   ],
 })
 export class AppModule {}

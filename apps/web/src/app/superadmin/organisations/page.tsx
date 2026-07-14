@@ -1,151 +1,150 @@
 'use client';
 
 import { useState } from 'react';
-import type { Metadata } from 'next';
-
-type Plan = 'Starter' | 'Pro' | 'Enterprise';
-type Statut = 'ACTIF' | 'ESSAI' | 'SUSPENDU' | 'EXPIRE';
+import { Building2, Search, Plus, RefreshCw, Shield, X } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 interface Organisation {
   id: string;
   nom: string;
-  email: string;
-  pays: string;
-  plan: Plan;
-  statut: Statut;
-  users: number;
-  licenceExpire: string;
+  email?: string;
+  pays?: string;
+  plan?: string;
+  statut?: string;
   createdAt: string;
-  mrr: number;
+  _count?: { utilisateurs: number };
 }
 
-const ORGS: Organisation[] = [
-  { id: '1', nom: 'ONG Espoir CI', email: 'contact@espoir-ci.org', pays: 'CI', plan: 'Pro', statut: 'ACTIF', users: 8, licenceExpire: '2027-01-31', createdAt: '2026-01-15', mrr: 65000 },
-  { id: '2', nom: 'Association YMCA Abidjan', email: 'ymca@abidjan.ci', pays: 'CI', plan: 'Starter', statut: 'ACTIF', users: 3, licenceExpire: '2026-12-31', createdAt: '2026-03-10', mrr: 25000 },
-  { id: '3', nom: 'Réseau Femmes Leaders Mali', email: 'rfl@mali.org', pays: 'ML', plan: 'Pro', statut: 'ACTIF', users: 12, licenceExpire: '2027-03-15', createdAt: '2026-02-20', mrr: 65000 },
-  { id: '4', nom: 'CARITAS Bouaké', email: 'caritas@bouake.ci', pays: 'CI', plan: 'Enterprise', statut: 'ACTIF', users: 28, licenceExpire: '2027-06-30', createdAt: '2025-07-01', mrr: 180000 },
-  { id: '5', nom: 'Fondation Santé 2030', email: 'fs2030@gmail.com', pays: 'SN', plan: 'Starter', statut: 'ESSAI', users: 2, licenceExpire: '2026-07-17', createdAt: '2026-07-10', mrr: 0 },
-  { id: '6', nom: 'AVSF Burkina Faso', email: 'avsf@bf.org', pays: 'BF', plan: 'Pro', statut: 'ACTIF', users: 6, licenceExpire: '2027-02-28', createdAt: '2026-04-05', mrr: 65000 },
-  { id: '7', nom: 'ONG JADES Niger', email: 'jades@niger.org', pays: 'NE', plan: 'Starter', statut: 'SUSPENDU', users: 1, licenceExpire: '2026-06-30', createdAt: '2026-01-20', mrr: 0 },
-];
-
-const PLAN_COLORS: Record<Plan, string> = {
-  Pro: 'text-blue-400 bg-blue-400/10',
-  Starter: 'text-neutral-400 bg-neutral-400/10',
-  Enterprise: 'text-yellow-400 bg-yellow-400/10',
+const PLAN_COLORS: Record<string, string> = {
+  ESSENTIEL: 'bg-gray-100 text-gray-700',
+  STARTER: 'bg-blue-100 text-blue-700',
+  PRO: 'bg-purple-100 text-purple-700',
+  ENTERPRISE: 'bg-yellow-100 text-yellow-700',
 };
 
-const STATUT_COLORS: Record<Statut, string> = {
-  ACTIF: 'text-green-400 bg-green-400/10',
-  ESSAI: 'text-yellow-400 bg-yellow-400/10',
-  SUSPENDU: 'text-red-400 bg-red-400/10',
-  EXPIRE: 'text-neutral-500 bg-neutral-500/10',
-};
-
-export default function OrganisationsPage() {
+export default function SuperAdminOrganisationsPage() {
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
-  const [filterPlan, setFilterPlan] = useState<string>('');
-  const [filterStatut, setFilterStatut] = useState<string>('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({ nom: '', email: '', pays: 'CI', telephone: '' });
 
-  const filtered = ORGS.filter((o) => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || o.nom.toLowerCase().includes(q) || o.email.toLowerCase().includes(q);
-    const matchPlan = !filterPlan || o.plan === filterPlan;
-    const matchStatut = !filterStatut || o.statut === filterStatut;
-    return matchSearch && matchPlan && matchStatut;
+  const { data, isLoading, refetch } = useQuery<{ data: Organisation[]; total: number }>({
+    queryKey: ['sa-organisations', search],
+    queryFn: () => api.get('/organisations', { params: { search: search || undefined, limit: 50 } }).then((r: any) => r.data),
   });
 
-  const totalMRR = ORGS.filter((o) => o.statut === 'ACTIF').reduce((s, o) => s + o.mrr, 0);
+  const createOrg = useMutation({
+    mutationFn: (d: any) => api.post('/organisations', d),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sa-organisations'] }); setShowCreate(false); setForm({ nom: '', email: '', pays: 'CI', telephone: '' }); },
+  });
+
+  const suspendOrg = useMutation({
+    mutationFn: ({ id, statut }: { id: string; statut: string }) => api.patch(`/organisations/${id}`, { statut }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sa-organisations'] }),
+  });
+
+  const orgs = data?.data ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Organisations</h1>
-          <p className="text-neutral-400 text-sm mt-1">{ORGS.length} organisations enregistrées · MRR total : <span className="text-primary-400 font-semibold">{totalMRR.toLocaleString('fr-CI')} FCFA</span></p>
+          <h1 className="text-2xl font-bold text-gray-900">Organisations</h1>
+          <p className="text-gray-500 text-sm">{data?.total ?? 0} organisation{(data?.total ?? 0) > 1 ? 's' : ''} enregistrée{(data?.total ?? 0) > 1 ? 's' : ''}</p>
         </div>
-        <button className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-          + Nouvelle organisation
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => refetch()} className="p-2 border border-gray-300 rounded-lg text-gray-500"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm"><Plus className="w-4 h-4" /> Nouvelle</button>
+        </div>
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-3 flex-wrap">
-        <input
-          className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500 w-64"
-          placeholder="Rechercher…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select
-          className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          value={filterPlan}
-          onChange={(e) => setFilterPlan(e.target.value)}
-        >
-          <option value="">Tous les plans</option>
-          <option>Starter</option>
-          <option>Pro</option>
-          <option>Enterprise</option>
-        </select>
-        <select
-          className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          value={filterStatut}
-          onChange={(e) => setFilterStatut(e.target.value)}
-        >
-          <option value="">Tous les statuts</option>
-          <option>ACTIF</option>
-          <option>ESSAI</option>
-          <option>SUSPENDU</option>
-          <option>EXPIRE</option>
-        </select>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Rechercher une organisation..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* Table */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left border-b border-neutral-800">
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Organisation</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Pays</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Plan</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Statut</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Users</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">MRR</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Expiration</th>
-              <th className="px-5 py-3 text-xs text-neutral-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((o) => (
-              <tr key={o.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/40 transition-colors">
-                <td className="px-5 py-3">
-                  <p className="font-medium text-white">{o.nom}</p>
-                  <p className="text-xs text-neutral-500">{o.email}</p>
-                </td>
-                <td className="px-5 py-3 text-neutral-400 font-mono text-xs">{o.pays}</td>
-                <td className="px-5 py-3">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PLAN_COLORS[o.plan]}`}>{o.plan}</span>
-                </td>
-                <td className="px-5 py-3">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUT_COLORS[o.statut]}`}>{o.statut}</span>
-                </td>
-                <td className="px-5 py-3 text-neutral-400">{o.users}</td>
-                <td className="px-5 py-3 text-neutral-300 font-mono text-xs">{o.mrr > 0 ? `${o.mrr.toLocaleString('fr-CI')} F` : '—'}</td>
-                <td className="px-5 py-3 text-xs text-neutral-400">{new Date(o.licenceExpire).toLocaleDateString('fr-CI')}</td>
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-2">
-                    <button className="text-xs text-primary-400 hover:underline">Gérer</button>
-                    <button className="text-xs text-neutral-500 hover:text-white">Impersonner</button>
-                  </div>
-                </td>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="p-6 space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />)}</div>
+        ) : orgs.length === 0 ? (
+          <div className="py-16 text-center text-gray-400">
+            <Building2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
+            <p>{search ? `Aucun résultat pour "${search}"` : 'Aucune organisation'}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Organisation</th>
+                <th className="px-4 py-3 text-left">Pays</th>
+                <th className="px-4 py-3 text-left">Plan</th>
+                <th className="px-4 py-3 text-left">Utilisateurs</th>
+                <th className="px-4 py-3 text-left">Inscrite le</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-5 py-8 text-center text-neutral-500 text-sm">Aucune organisation.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {orgs.map((o) => (
+                <tr key={o.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-gray-900">{o.nom}</p>
+                    {o.email && <p className="text-xs text-gray-400">{o.email}</p>}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{o.pays ?? '—'}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${PLAN_COLORS[o.plan ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>{o.plan ?? 'Essentiel'}</span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{o._count?.utilisateurs ?? 0}</td>
+                  <td className="px-4 py-3 text-gray-400">{new Date(o.createdAt).toLocaleDateString('fr-FR')}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => suspendOrg.mutate({ id: o.id, statut: o.statut === 'SUSPENDU' ? 'ACTIF' : 'SUSPENDU' })}
+                      className={`text-xs px-2 py-1 rounded ${o.statut === 'SUSPENDU' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}
+                    >
+                      {o.statut === 'SUSPENDU' ? 'Réactiver' : 'Suspendre'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        )}
       </div>
+
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Nouvelle organisation</h2>
+              <button onClick={() => setShowCreate(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Nom *" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Téléphone" value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} />
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.pays} onChange={e => setForm(f => ({ ...f, pays: e.target.value }))}>
+                <option value="CI">Côte d'Ivoire</option>
+                <option value="SN">Sénégal</option>
+                <option value="ML">Mali</option>
+                <option value="BF">Burkina Faso</option>
+                <option value="GN">Guinée</option>
+                <option value="TG">Togo</option>
+                <option value="BJ">Bénin</option>
+                <option value="CM">Cameroun</option>
+              </select>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowCreate(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => createOrg.mutate(form)} disabled={!form.nom || createOrg.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+                {createOrg.isPending ? 'Création...' : 'Créer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

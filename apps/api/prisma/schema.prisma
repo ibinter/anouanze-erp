@@ -197,6 +197,10 @@ model Organisation {
   evenements        Evenement[]
   parametres        ParametreOrganisation[]
   logsAudit         LogAudit[]
+  organes           OrganeGouvernance[]
+  resolutions       Resolution[]
+  notifications     Notification[]
+  tickets           TicketSupport[]
 
   @@map("organisations")
 }
@@ -228,7 +232,9 @@ model Utilisateur {
   organisations  UtilisateurOrganisation[]
   sessions       Session[]
   logsAudit      LogAudit[]
-  documents      Document[]  @relation("DocumentCree")
+  documents      Document[]    @relation("DocumentCree")
+  notifications  Notification[]
+  tickets        TicketSupport[]
 
   @@map("utilisateurs")
 }
@@ -977,4 +983,165 @@ model ParametreOrganisation {
 
   @@unique([organisationId, cle])
   @@map("parametres_organisation")
+}
+
+// ============================================================
+// GOUVERNANCE
+// ============================================================
+
+enum StatutResolution {
+  EN_ATTENTE
+  APPROUVEE
+  EN_COURS
+  APPLIQUEE
+  REJETEE
+}
+
+enum TypeOrgane {
+  ASSEMBLEE_GENERALE
+  CONSEIL_ADMINISTRATION
+  BUREAU_EXECUTIF
+  COMITE_CONTROLE
+  COMMISSION
+  AUTRE
+}
+
+model OrganeGouvernance {
+  id             String     @id @default(uuid())
+  organisationId String
+  nom            String
+  type           TypeOrgane @default(AUTRE)
+  description    String?
+  nbMembres      Int        @default(0)
+  statut         String     @default("actif")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  reunions       Reunion[]
+  resolutions    Resolution[]
+
+  @@map("organes_gouvernance")
+}
+
+model Reunion {
+  id             String   @id @default(uuid())
+  organeId       String
+  titre          String
+  dateReunion    DateTime
+  lieu           String?
+  ordre          String[] // ordre du jour
+  statut         String   @default("PLANIFIEE") // PLANIFIEE, TENUE, ANNULEE
+  procesVerbal   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organe         OrganeGouvernance @relation(fields: [organeId], references: [id], onDelete: Cascade)
+  resolutions    Resolution[]
+
+  @@map("reunions")
+}
+
+model Resolution {
+  id             String           @id @default(uuid())
+  organisationId String
+  organeId       String?
+  reunionId      String?
+  reference      String
+  titre          String
+  description    String?
+  statut         StatutResolution @default(EN_ATTENTE)
+  dateAdoption   DateTime?
+  dateEcheance   DateTime?
+  responsable    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organisation   Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  organe         OrganeGouvernance? @relation(fields: [organeId], references: [id])
+  reunion        Reunion?           @relation(fields: [reunionId], references: [id])
+
+  @@map("resolutions")
+}
+
+// ============================================================
+// NOTIFICATIONS (REST)
+// ============================================================
+
+enum TypeNotification {
+  ALERTE
+  INFO
+  SUCCES
+  RAPPEL
+  AVERTISSEMENT
+}
+
+model Notification {
+  id             String           @id @default(uuid())
+  organisationId String?
+  utilisateurId  String?
+  type           TypeNotification @default(INFO)
+  titre          String
+  message        String
+  lue            Boolean          @default(false)
+  lien           String?
+  createdAt      DateTime         @default(now())
+
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  utilisateur    Utilisateur?  @relation(fields: [utilisateurId], references: [id])
+
+  @@map("notifications")
+}
+
+// ============================================================
+// TICKETS SUPPORT
+// ============================================================
+
+enum PrioriteTicket {
+  BASSE
+  NORMALE
+  HAUTE
+  URGENTE
+}
+
+enum StatutTicket {
+  OUVERT
+  EN_COURS
+  EN_ATTENTE
+  RESOLU
+  FERME
+}
+
+model TicketSupport {
+  id             String         @id @default(uuid())
+  organisationId String?
+  utilisateurId  String?
+  reference      String         @unique
+  sujet          String
+  description    String
+  categorie      String         @default("GENERAL")
+  priorite       PrioriteTicket @default(NORMALE)
+  statut         StatutTicket   @default(OUVERT)
+  reponse        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  utilisateur    Utilisateur?  @relation(fields: [utilisateurId], references: [id])
+  messages       MessageTicket[]
+
+  @@map("tickets_support")
+}
+
+model MessageTicket {
+  id        String   @id @default(uuid())
+  ticketId  String
+  auteur    String   // nom ou "Support"
+  contenu   String
+  estSupport Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  ticket    TicketSupport @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("messages_ticket")
 }

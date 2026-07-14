@@ -1,238 +1,356 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Building2, Users, FileText, Calendar, CheckCircle,
-  Clock, AlertTriangle, Plus, ChevronRight,
+  Clock, AlertTriangle, Plus, RefreshCw, X,
 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
-const ORGANES = [
-  {
-    nom: "Assemblée Générale",
-    membres: 42,
-    prochainReunion: "2026-09-15",
-    statut: "actif",
-    description: "Organe souverain de l'organisation regroupant tous les membres.",
-  },
-  {
-    nom: "Conseil d'Administration",
-    membres: 9,
-    prochainReunion: "2026-07-28",
-    statut: "actif",
-    description: "Gouvernance stratégique et supervision de la direction exécutive.",
-  },
-  {
-    nom: "Bureau Exécutif",
-    membres: 5,
-    prochainReunion: "2026-07-20",
-    statut: "actif",
-    description: "Président, Vice-Président, Secrétaire Général, Trésorier, Commissaire aux comptes.",
-  },
-  {
-    nom: "Comité de Contrôle",
-    membres: 3,
-    prochainReunion: null,
-    statut: "actif",
-    description: "Contrôle interne, audit et conformité.",
-  },
-];
-
-const RESOLUTIONS = [
-  {
-    ref: "RES-2026-01",
-    titre: "Approbation du budget annuel 2026",
-    organe: "Assemblée Générale",
-    date: "2026-01-15",
-    statut: "APPLIQUEE",
-  },
-  {
-    ref: "RES-2026-02",
-    titre: "Renouvellement du mandat du Directeur Exécutif",
-    organe: "Conseil d'Administration",
-    date: "2026-02-10",
-    statut: "APPLIQUEE",
-  },
-  {
-    ref: "RES-2026-03",
-    titre: "Ouverture d'un nouveau compte bancaire ECOBANK",
-    organe: "Bureau Exécutif",
-    date: "2026-03-05",
-    statut: "EN_COURS",
-  },
-  {
-    ref: "RES-2026-04",
-    titre: "Partenariat avec USAID — Convention 2026-2028",
-    organe: "Conseil d'Administration",
-    date: "2026-06-20",
-    statut: "EN_ATTENTE",
-  },
-];
-
-function StatutBadge({ statut }: { statut: string }) {
-  if (statut === 'APPLIQUEE') return <span className="badge bg-primary-50 text-primary-700 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Appliquée</span>;
-  if (statut === 'EN_COURS') return <span className="badge bg-blue-50 text-blue-700 flex items-center gap-1"><Clock className="w-3 h-3" /> En cours</span>;
-  return <span className="badge bg-amber-50 text-amber-700 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> En attente</span>;
+interface Organe {
+  id: string;
+  nom: string;
+  typeOrgane: string;
+  nombreMembres?: number;
+  description?: string;
+  _count?: { reunions: number };
+  prochainReunion?: string;
 }
 
+interface Resolution {
+  id: string;
+  titre: string;
+  statut: string;
+  dateAdoption?: string;
+  responsable?: string;
+  description?: string;
+}
+
+interface GouvernanceStats {
+  organeActifs: number;
+  totalMembres: number;
+  resolutionsParStatut: Record<string, number>;
+  prochainReunion?: string;
+}
+
+const STATUT_COLORS: Record<string, string> = {
+  EN_ATTENTE: 'bg-yellow-100 text-yellow-700',
+  APPROUVEE: 'bg-green-100 text-green-700',
+  EN_COURS: 'bg-blue-100 text-blue-700',
+  APPLIQUEE: 'bg-gray-100 text-gray-600',
+  REJETEE: 'bg-red-100 text-red-700',
+};
+
+const STATUT_LABELS: Record<string, string> = {
+  EN_ATTENTE: 'En attente',
+  APPROUVEE: 'Approuvée',
+  EN_COURS: 'En cours',
+  APPLIQUEE: 'Appliquée',
+  REJETEE: 'Rejetée',
+};
+
 export default function GouvernancePage() {
+  const qc = useQueryClient();
+  const [tab, setTab] = useState<'organes' | 'reunions' | 'resolutions'>('organes');
+  const [showOrganeModal, setShowOrganeModal] = useState(false);
+  const [showResolutionModal, setShowResolutionModal] = useState(false);
+  const [showReunionModal, setShowReunionModal] = useState(false);
+  const [selectedOrganeId, setSelectedOrganeId] = useState<string | null>(null);
+  const [organeForm, setOrganeForm] = useState({ nom: '', typeOrgane: 'CONSEIL_ADMINISTRATION', nombreMembres: '', description: '' });
+  const [resolutionForm, setResolutionForm] = useState({ titre: '', description: '', responsable: '' });
+  const [reunionForm, setReunionForm] = useState({ titre: '', dateReunion: '', lieu: '', ordreJour: '' });
+
+  const { data: stats } = useQuery<GouvernanceStats>({
+    queryKey: ['gouvernance-stats'],
+    queryFn: () => api.get('/gouvernance/stats').then((r: any) => r.data),
+  });
+
+  const { data: organesData, isLoading: loadingOrganes } = useQuery<{ data: Organe[] }>({
+    queryKey: ['gouvernance-organes'],
+    queryFn: () => api.get('/gouvernance/organes').then((r: any) => r.data),
+  });
+
+  const { data: reunionsData, isLoading: loadingReunions } = useQuery<{ data: any[] }>({
+    queryKey: ['gouvernance-reunions', selectedOrganeId],
+    queryFn: () => api.get('/gouvernance/reunions', { params: selectedOrganeId ? { organeId: selectedOrganeId } : {} }).then((r: any) => r.data),
+    enabled: tab === 'reunions',
+  });
+
+  const { data: resolutionsData, isLoading: loadingResolutions } = useQuery<{ data: Resolution[]; meta: any }>({
+    queryKey: ['gouvernance-resolutions'],
+    queryFn: () => api.get('/gouvernance/resolutions').then((r: any) => r.data),
+    enabled: tab === 'resolutions',
+  });
+
+  const createOrgane = useMutation({
+    mutationFn: (data: any) => api.post('/gouvernance/organes', data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['gouvernance-organes'] }); qc.invalidateQueries({ queryKey: ['gouvernance-stats'] }); setShowOrganeModal(false); setOrganeForm({ nom: '', typeOrgane: 'CONSEIL_ADMINISTRATION', nombreMembres: '', description: '' }); },
+  });
+
+  const createResolution = useMutation({
+    mutationFn: (data: any) => api.post('/gouvernance/resolutions', data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['gouvernance-resolutions'] }); setShowResolutionModal(false); setResolutionForm({ titre: '', description: '', responsable: '' }); },
+  });
+
+  const createReunion = useMutation({
+    mutationFn: ({ organeId, data }: { organeId: string; data: any }) => api.post(`/gouvernance/organes/${organeId}/reunions`, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['gouvernance-reunions'] }); setShowReunionModal(false); setReunionForm({ titre: '', dateReunion: '', lieu: '', ordreJour: '' }); },
+  });
+
+  const updateResolution = useMutation({
+    mutationFn: ({ id, statut }: { id: string; statut: string }) => api.patch(`/gouvernance/resolutions/${id}`, { statut }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['gouvernance-resolutions'] }),
+  });
+
+  const organes = organesData?.data ?? [];
+  const reunions = reunionsData?.data ?? [];
+  const resolutions = resolutionsData?.data ?? [];
+
   return (
-    <div className="p-4 sm:p-6 space-y-8">
-      {/* En-tête */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Gouvernance</h1>
-          <p className="text-sm text-neutral-500 mt-1">Organes de gouvernance, résolutions et conformité statutaire</p>
+          <h1 className="text-2xl font-bold text-gray-900">Gouvernance</h1>
+          <p className="text-gray-500 text-sm mt-1">Organes statutaires, réunions et résolutions</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-secondary flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Planifier une réunion
-          </button>
-          <button className="btn-primary flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Nouvelle résolution
-          </button>
+          {tab === 'organes' && (
+            <button onClick={() => setShowOrganeModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
+              <Plus className="w-4 h-4" /> Nouvel organe
+            </button>
+          )}
+          {tab === 'reunions' && (
+            <button onClick={() => setShowReunionModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90" disabled={!selectedOrganeId}>
+              <Plus className="w-4 h-4" /> Planifier réunion
+            </button>
+          )}
+          {tab === 'resolutions' && (
+            <button onClick={() => setShowResolutionModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
+              <Plus className="w-4 h-4" /> Nouvelle résolution
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Indicateurs */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary-50">
-            <Building2 className="w-5 h-5 text-primary-600" />
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Organes actifs', value: stats?.organeActifs ?? '—', icon: Building2, color: 'text-primary' },
+          { label: 'Membres totaux', value: stats?.totalMembres ?? '—', icon: Users, color: 'text-blue-600' },
+          { label: 'Résolutions en cours', value: stats?.resolutionsParStatut?.EN_COURS ?? 0, icon: FileText, color: 'text-orange-500' },
+          { label: 'Prochaine réunion', value: stats?.prochainReunion ? new Date(stats.prochainReunion).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—', icon: Calendar, color: 'text-purple-600' },
+        ].map((kpi) => (
+          <div key={kpi.label} className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-gray-500">{kpi.label}</span>
+              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
           </div>
-          <div>
-            <p className="text-xs text-neutral-500">Organes actifs</p>
-            <p className="text-xl font-bold text-primary-600">4</p>
-          </div>
-        </div>
-        <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50">
-            <Users className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-500">Membres total</p>
-            <p className="text-xl font-bold text-blue-600">59</p>
-          </div>
-        </div>
-        <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-50">
-            <FileText className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-500">Résolutions 2026</p>
-            <p className="text-xl font-bold text-green-600">4</p>
-          </div>
-        </div>
-        <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-50">
-            <Calendar className="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-500">Prochaine réunion</p>
-            <p className="text-sm font-bold text-amber-600">20 juil.</p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Organes de gouvernance */}
-      <section>
-        <h2 className="text-base font-semibold text-neutral-700 mb-4 flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-primary-600" />
-          Organes de gouvernance
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ORGANES.map((organe) => (
-            <div key={organe.nom} className="card p-5 hover:shadow-card-hover transition-shadow cursor-pointer group">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-neutral-800 group-hover:text-primary-600 transition-colors">
-                    {organe.nom}
-                  </h3>
-                  <p className="text-xs text-neutral-500 mt-1">{organe.description}</p>
-                  <div className="flex items-center gap-4 mt-3 text-xs text-neutral-600">
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" />
-                      {organe.membres} membres
-                    </span>
-                    {organe.prochainReunion && (
-                      <span className="flex items-center gap-1 text-primary-600">
-                        <Calendar className="w-3.5 h-3.5" />
-                        Réunion : {new Date(organe.prochainReunion).toLocaleDateString('fr-CI', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
+      {/* Tabs */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="flex border-b border-gray-200">
+          {(['organes', 'reunions', 'resolutions'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${tab === t ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              {t === 'organes' ? 'Organes' : t === 'reunions' ? 'Réunions' : 'Résolutions'}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6">
+          {/* ORGANES */}
+          {tab === 'organes' && (
+            loadingOrganes ? (
+              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+            ) : organes.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Building2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                <p>Aucun organe créé</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {organes.map((o) => (
+                  <div key={o.id} className="border border-gray-200 rounded-xl p-4 hover:border-primary/30 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900">{o.nom}</h3>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Actif</span>
+                    </div>
+                    {o.description && <p className="text-sm text-gray-500 mb-3">{o.description}</p>}
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {o.nombreMembres ?? 0} membres</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {o._count?.reunions ?? 0} réunions</span>
+                    </div>
+                    {o.prochainReunion && (
+                      <p className="text-xs text-primary mt-2">Prochaine réunion : {new Date(o.prochainReunion).toLocaleDateString('fr-FR')}</p>
                     )}
                   </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* RÉUNIONS */}
+          {tab === 'reunions' && (
+            <div className="space-y-4">
+              {organes.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={() => setSelectedOrganeId(null)} className={`px-3 py-1.5 rounded-full text-xs border ${!selectedOrganeId ? 'bg-primary text-white border-primary' : 'border-gray-300 text-gray-600'}`}>Tous</button>
+                  {organes.map((o) => (
+                    <button key={o.id} onClick={() => setSelectedOrganeId(o.id)} className={`px-3 py-1.5 rounded-full text-xs border ${selectedOrganeId === o.id ? 'bg-primary text-white border-primary' : 'border-gray-300 text-gray-600'}`}>{o.nom}</button>
+                  ))}
                 </div>
-                <ChevronRight className="w-4 h-4 text-neutral-300 group-hover:text-primary-600 transition-colors shrink-0 mt-1" />
-              </div>
+              )}
+              {loadingReunions ? (
+                <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : reunions.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Calendar className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                  <p>Aucune réunion planifiée</p>
+                  {!selectedOrganeId && <p className="text-xs mt-1">Sélectionnez un organe pour planifier une réunion</p>}
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {reunions.map((r: any) => (
+                    <div key={r.id} className="py-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900">{r.titre}</p>
+                        <p className="text-sm text-gray-500">{r.lieu} · {new Date(r.dateReunion).toLocaleDateString('fr-FR')}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${r.statut === 'TENUE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {r.statut === 'TENUE' ? 'Tenue' : 'Planifiée'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
+          )}
 
-      {/* Résolutions */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-neutral-700 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-primary-600" />
-            Résolutions récentes
-          </h2>
-          <button className="text-sm text-primary-600 hover:underline font-medium">
-            Voir toutes les résolutions
-          </button>
+          {/* RÉSOLUTIONS */}
+          {tab === 'resolutions' && (
+            loadingResolutions ? (
+              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+            ) : resolutions.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <FileText className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                <p>Aucune résolution enregistrée</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {resolutions.map((r) => (
+                  <div key={r.id} className="py-4 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{r.titre}</p>
+                      {r.description && <p className="text-sm text-gray-500 mt-0.5">{r.description}</p>}
+                      {r.responsable && <p className="text-xs text-gray-400 mt-1">Responsable : {r.responsable}</p>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full ${STATUT_COLORS[r.statut] ?? 'bg-gray-100 text-gray-600'}`}>{STATUT_LABELS[r.statut] ?? r.statut}</span>
+                      {r.statut === 'EN_ATTENTE' && (
+                        <button onClick={() => updateResolution.mutate({ id: r.id, statut: 'APPROUVEE' })} className="text-xs text-primary underline">Approuver</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
         </div>
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50 border-b border-neutral-100">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Référence</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Résolution</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Organe</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Statut</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {RESOLUTIONS.map((res) => (
-                <tr key={res.ref} className="hover:bg-neutral-50 cursor-pointer">
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-500">{res.ref}</td>
-                  <td className="px-4 py-3 font-medium text-neutral-800">{res.titre}</td>
-                  <td className="px-4 py-3 text-neutral-600">{res.organe}</td>
-                  <td className="px-4 py-3 text-neutral-500">
-                    {new Date(res.date).toLocaleDateString('fr-CI')}
-                  </td>
-                  <td className="px-4 py-3"><StatutBadge statut={res.statut} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      </div>
 
-      {/* Calendrier des prochaines réunions */}
-      <section>
-        <h2 className="text-base font-semibold text-neutral-700 mb-4 flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary-600" />
-          Prochaines réunions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {ORGANES.filter((o) => o.prochainReunion).map((organe) => (
-            <div key={organe.nom} className="card p-4 flex items-center gap-3">
-              <div className="bg-primary-50 text-primary-600 rounded-lg p-2 text-center min-w-[3rem]">
-                <p className="text-xs font-medium">
-                  {new Date(organe.prochainReunion!).toLocaleDateString('fr-CI', { month: 'short' }).toUpperCase()}
-                </p>
-                <p className="text-xl font-bold leading-none">
-                  {new Date(organe.prochainReunion!).getDate()}
-                </p>
-              </div>
-              <div>
-                <p className="font-medium text-neutral-800 text-sm">{organe.nom}</p>
-                <p className="text-xs text-neutral-400">{organe.membres} membres attendus</p>
-              </div>
+      {/* Modal: Nouvel organe */}
+      {showOrganeModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Nouvel organe</h2>
+              <button onClick={() => setShowOrganeModal(false)}><X className="w-5 h-5" /></button>
             </div>
-          ))}
+            <div className="space-y-3">
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Nom de l'organe *" value={organeForm.nom} onChange={e => setOrganeForm(f => ({ ...f, nom: e.target.value }))} />
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={organeForm.typeOrgane} onChange={e => setOrganeForm(f => ({ ...f, typeOrgane: e.target.value }))}>
+                <option value="ASSEMBLEE_GENERALE">Assemblée Générale</option>
+                <option value="CONSEIL_ADMINISTRATION">Conseil d'Administration</option>
+                <option value="BUREAU_EXECUTIF">Bureau Exécutif</option>
+                <option value="COMITE_CONTROLE">Comité de Contrôle</option>
+                <option value="COMMISSION">Commission</option>
+                <option value="AUTRE">Autre</option>
+              </select>
+              <input type="number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Nombre de membres" value={organeForm.nombreMembres} onChange={e => setOrganeForm(f => ({ ...f, nombreMembres: e.target.value }))} />
+              <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows={2} placeholder="Description" value={organeForm.description} onChange={e => setOrganeForm(f => ({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowOrganeModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => createOrgane.mutate({ ...organeForm, nombreMembres: organeForm.nombreMembres ? parseInt(organeForm.nombreMembres) : undefined })} disabled={!organeForm.nom || createOrgane.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+                {createOrgane.isPending ? 'Création...' : 'Créer'}
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
+
+      {/* Modal: Nouvelle résolution */}
+      {showResolutionModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Nouvelle résolution</h2>
+              <button onClick={() => setShowResolutionModal(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Titre *" value={resolutionForm.titre} onChange={e => setResolutionForm(f => ({ ...f, titre: e.target.value }))} />
+              <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows={3} placeholder="Description" value={resolutionForm.description} onChange={e => setResolutionForm(f => ({ ...f, description: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Responsable de mise en œuvre" value={resolutionForm.responsable} onChange={e => setResolutionForm(f => ({ ...f, responsable: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowResolutionModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => createResolution.mutate(resolutionForm)} disabled={!resolutionForm.titre || createResolution.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+                {createResolution.isPending ? 'Création...' : 'Créer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Planifier réunion */}
+      {showReunionModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">Planifier une réunion</h2>
+              <button onClick={() => setShowReunionModal(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={selectedOrganeId ?? ''} onChange={e => setSelectedOrganeId(e.target.value)}>
+                <option value="">Sélectionner un organe *</option>
+                {organes.map(o => <option key={o.id} value={o.id}>{o.nom}</option>)}
+              </select>
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Titre *" value={reunionForm.titre} onChange={e => setReunionForm(f => ({ ...f, titre: e.target.value }))} />
+              <input type="datetime-local" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={reunionForm.dateReunion} onChange={e => setReunionForm(f => ({ ...f, dateReunion: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Lieu" value={reunionForm.lieu} onChange={e => setReunionForm(f => ({ ...f, lieu: e.target.value }))} />
+              <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows={3} placeholder="Ordre du jour (un point par ligne)" value={reunionForm.ordreJour} onChange={e => setReunionForm(f => ({ ...f, ordreJour: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowReunionModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button
+                onClick={() => selectedOrganeId && createReunion.mutate({ organeId: selectedOrganeId, data: { ...reunionForm, ordreJour: reunionForm.ordreJour.split('\n').filter(Boolean) } })}
+                disabled={!selectedOrganeId || !reunionForm.titre || createReunion.isPending}
+                className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60"
+              >
+                {createReunion.isPending ? 'Création...' : 'Planifier'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

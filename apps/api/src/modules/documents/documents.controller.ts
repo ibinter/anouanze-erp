@@ -118,4 +118,12 @@ export class DocumentsController {
   archiverDocument(@Param('id') id: string, @Request() req: any) {
     return this.documentsService.archiverDocument(id, req.user.organisationId);
   }
+
+  @ApiOperation({ summary: 'Générer le QR code de vérification' })
+  @Get(':id/qr')
+  getQrCode(@Param('id') id: string, @Request() req: any) {
+    const baseUrl = `${req.protocol}://${req.get('host')}/api/v1`;
+    return this.documentsService.getQrCode(id, req.user.organisationId, baseUrl);
+  }
+
 }

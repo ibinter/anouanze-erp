@@ -59,6 +59,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/meal') ||
     pathname.startsWith('/profil') ||
     pathname.startsWith('/notifications') ||
+    pathname.startsWith('/tickets') ||
+    pathname.startsWith('/import') ||
+    pathname.startsWith('/paiements') ||
     pathname.startsWith('/aide')
   ) {
     if (!token) {

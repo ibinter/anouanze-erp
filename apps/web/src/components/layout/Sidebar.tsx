@@ -8,20 +8,21 @@ import {
   BarChart3, Settings, Shield, Calendar, HelpCircle,
   ChevronLeft, ChevronRight, Landmark, Briefcase,
   PiggyBank, UserSquare2, PackageSearch, Bot, X,
+  MessageSquare, Upload, CreditCard,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, tourId: 'dashboard' },
   { label: 'Gouvernance', href: '/gouvernance', icon: Landmark },
-  { label: 'Membres', href: '/membres', icon: Users },
+  { label: 'Membres', href: '/membres', icon: Users, tourId: 'membres' },
   { label: 'Donateurs', href: '/donateurs', icon: Heart },
   { label: 'Bailleurs', href: '/bailleurs', icon: Building2 },
-  { label: 'Projets', href: '/projets', icon: FolderKanban },
+  { label: 'Projets', href: '/projets', icon: FolderKanban, tourId: 'projets' },
   { label: 'Bénéficiaires', href: '/beneficiaires', icon: UserSquare2 },
   { label: 'Ressources humaines', href: '/rh', icon: Briefcase },
-  { label: 'Comptabilité', href: '/comptabilite', icon: BookOpen },
+  { label: 'Comptabilité', href: '/comptabilite', icon: BookOpen, tourId: 'comptabilite' },
   { label: 'Budget', href: '/budget', icon: PiggyBank },
   { label: 'Trésorerie', href: '/tresorerie', icon: Wallet },
   { label: 'Achats', href: '/achats', icon: ShoppingCart },
@@ -29,8 +30,11 @@ const navigation = [
   { label: 'Documents', href: '/documents', icon: FileText },
   { label: 'Événements', href: '/evenements', icon: Calendar },
   { label: 'Rapports & BI', href: '/reporting', icon: BarChart3 },
-  { label: 'Assistant IA', href: '/ia', icon: Bot },
+  { label: 'Assistant IA', href: '/ia', icon: Bot, tourId: 'ia' },
   { label: 'Audit', href: '/audit', icon: Shield },
+  { label: 'Paiements Mobile', href: '/paiements', icon: CreditCard },
+  { label: 'Import de données', href: '/import', icon: Upload },
+  { label: 'Support', href: '/tickets', icon: MessageSquare },
 ];
 
 const bottomNav = [
@@ -95,6 +99,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               href={item.href}
               className={cn(isActive ? 'sidebar-item-active' : 'sidebar-item')}
               title={collapsed ? item.label : undefined}
+              {...((item as any).tourId ? { 'data-tour': (item as any).tourId } : {})}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}

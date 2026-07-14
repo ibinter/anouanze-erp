@@ -181,7 +181,8 @@ export default function TresoreriePage() {
             Mouvements — {selectedCompte.nom}
           </h2>
           <div className="card overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-100">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Date</th>
@@ -219,6 +220,7 @@ export default function TresoreriePage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

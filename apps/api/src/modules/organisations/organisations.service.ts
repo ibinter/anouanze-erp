@@ -31,7 +31,10 @@ export class OrganisationsService {
       : {};
 
     const [data, total] = await this.prisma.$transaction([
-      this.prisma.organisation.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.organisation.findMany({
+        where, skip, take: limit, orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { utilisateurs: true } } },
+      }),
       this.prisma.organisation.count({ where }),
     ]);
 

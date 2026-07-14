@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Search, Grid3X3, List, Upload, X, Tag } from 'lucide-react';
+import { Search, Grid3X3, List, Upload, X, Tag, QrCode } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { FileIcon } from '@/components/ui/FileIcon';
 import { Pagination } from '@/components/ui/Pagination';
@@ -59,7 +59,17 @@ export default function DocumentsPage() {
   const [dragging, setDragging] = useState(false);
   const [newDoc, setNewDoc] = useState({ nom: '', categorie: 'Rapports', tags: '' });
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [qrDoc, setQrDoc] = useState<{ id: string; nom: string; qrImageUrl: string; url: string } | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
   const limit = 24;
+
+  const openQr = async (docId: string, docNom: string) => {
+    setQrLoading(true);
+    try {
+      const { data } = await api.get(`/documents/${docId}/qr`) as any;
+      setQrDoc({ ...data, nom: docNom });
+    } catch { /* silencieux */ } finally { setQrLoading(false); }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['documents', page, search, categorie, statut],
@@ -163,8 +173,13 @@ export default function DocumentsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {documents.map((doc) => (
             <div key={doc.id} className="card p-4 hover:shadow-md transition-shadow cursor-pointer group">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-50 mb-3">
-                <FileIcon mimeType={doc.mimeType ?? ''} className="w-7 h-7" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-50">
+                  <FileIcon mimeType={doc.mimeType ?? ''} className="w-7 h-7" />
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); openQr(doc.id, doc.nom); }} title="QR code de vérification" className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-primary rounded-lg hover:bg-gray-100 transition-all">
+                  <QrCode className="w-4 h-4" />
+                </button>
               </div>
               <p className="text-sm font-medium text-neutral-800 truncate" title={doc.nom}>{doc.nom}</p>
               <p className="text-xs text-neutral-400 mt-0.5">{formatTaille(doc.taille)} · {formatDate(doc.createdAt ?? '')}</p>
@@ -284,6 +299,24 @@ export default function DocumentsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Modal QR code */}
+      {qrDoc && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setQrDoc(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-bold text-gray-900">QR code de vérification</h2>
+              <button onClick={() => setQrDoc(null)}><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4 truncate">{qrDoc.nom}</p>
+            <img src={qrDoc.qrImageUrl} alt="QR code" className="mx-auto w-48 h-48 rounded-xl border border-gray-200" />
+            <p className="text-xs text-gray-400 mt-3 break-all">{qrDoc.url}</p>
+            <a href={qrDoc.qrImageUrl} download={`qr-${qrDoc.id}.png`} className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
+              Télécharger le QR
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

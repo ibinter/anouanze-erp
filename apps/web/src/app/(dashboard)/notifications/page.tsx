@@ -1,124 +1,136 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Info, CheckCircle, Bell, Check } from 'lucide-react';
-import { Pagination } from '@/components/ui/Pagination';
-import { cn } from '@/lib/utils';
-
-type NotifType = 'alerte' | 'info' | 'succes' | 'rappel';
+import { Bell, CheckCheck, Trash2, RefreshCw } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 interface Notification {
-  id: number;
-  type: NotifType;
+  id: string;
   titre: string;
   message: string;
-  date: string;
+  type: string;
   lue: boolean;
+  lien?: string;
+  createdAt: string;
 }
 
-const ALL_NOTIFS: Notification[] = [
-  { id: 1, type: 'alerte', titre: 'Budget dépassé', message: 'Le budget du projet Santé Communautaire a atteint 94% de consommation.', date: '2026-07-10', lue: false },
-  { id: 2, type: 'rappel', titre: 'Rapport trimestriel Q2', message: 'Le rapport trimestriel Q2 est à soumettre avant le 15 juillet 2026.', date: '2026-07-10', lue: false },
-  { id: 3, type: 'info', titre: 'Nouveau membre', message: 'Aminata Traoré a rejoint l\'organisation en tant que chargée de programme.', date: '2026-07-09', lue: false },
-  { id: 4, type: 'succes', titre: 'Paiement reçu', message: 'Un don de 2 500 000 FCFA de la Fondation Orange a été enregistré.', date: '2026-07-09', lue: true },
-  { id: 5, type: 'alerte', titre: 'Cotisations en retard', message: '3 membres ont des cotisations impayées depuis plus de 90 jours.', date: '2026-07-08', lue: true },
-  { id: 6, type: 'info', titre: 'Mise à jour système', message: 'ANOUANZÊ ERP a été mis à jour vers la version 2.4.0.', date: '2026-07-07', lue: true },
-  { id: 7, type: 'succes', titre: 'Audit validé', message: 'L\'audit interne du 1er semestre a été validé sans réserve.', date: '2026-07-06', lue: true },
-  { id: 8, type: 'rappel', titre: 'Renouvellement agrément', message: 'L\'agrément ONG expire le 01/09/2026. Initier le renouvellement.', date: '2026-07-05', lue: true },
-];
-
-const typeConfig: Record<NotifType, { icon: typeof Bell; color: string; bg: string; dot: string }> = {
-  alerte: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', dot: 'bg-red-500' },
-  info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', dot: 'bg-blue-500' },
-  succes: { icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-500' },
-  rappel: { icon: Bell, color: 'text-orange-500', bg: 'bg-orange-50', dot: 'bg-orange-400' },
+const TYPE_ICONS: Record<string, string> = {
+  ALERTE: '🔴',
+  INFO: '🔵',
+  SUCCES: '🟢',
+  RAPPEL: '🟡',
+  AVERTISSEMENT: '🟠',
 };
 
-const PAGE_SIZE = 5;
-
-function groupByDate(notifs: Notification[]): Record<string, Notification[]> {
-  return notifs.reduce<Record<string, Notification[]>>((acc, n) => {
-    const key = new Date(n.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(n);
-    return acc;
-  }, {});
-}
+const TYPE_COLORS: Record<string, string> = {
+  ALERTE: 'border-l-red-400',
+  INFO: 'border-l-blue-400',
+  SUCCES: 'border-l-green-400',
+  RAPPEL: 'border-l-yellow-400',
+  AVERTISSEMENT: 'border-l-orange-400',
+};
 
 export default function NotificationsPage() {
-  const [notifs, setNotifs] = useState<Notification[]>(ALL_NOTIFS);
-  const [page, setPage] = useState(1);
+  const qc = useQueryClient();
+  const [filtreLue, setFiltreLue] = useState<'all' | 'non-lues'>('all');
 
-  function markAllRead() {
-    setNotifs((prev) => prev.map((n) => ({ ...n, lue: true })));
-  }
+  const { data, isLoading, refetch } = useQuery<{ data: Notification[]; meta: { nonLues: number } }>({
+    queryKey: ['notifications', filtreLue],
+    queryFn: () => api.get('/notifications', { params: { lue: filtreLue === 'non-lues' ? false : undefined, limit: 50 } }).then((r: any) => r.data),
+  });
 
-  const paginated = notifs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const grouped = groupByDate(paginated);
-  const unreadCount = notifs.filter((n) => !n.lue).length;
+  const marquerLue = useMutation({
+    mutationFn: (id: string) => api.patch(`/notifications/${id}/lue`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const marquerToutesLues = useMutation({
+    mutationFn: () => api.patch('/notifications/marquer-toutes-lues'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const supprimer = useMutation({
+    mutationFn: (id: string) => api.delete(`/notifications/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const notifications = data?.data ?? [];
+  const nonLues = data?.meta?.nonLues ?? 0;
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Notifications</h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            {unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Tout est à jour'}
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          {nonLues > 0 && <p className="text-sm text-gray-500 mt-1">{nonLues} non lue{nonLues > 1 ? 's' : ''}</p>}
         </div>
-        {unreadCount > 0 && (
-          <button onClick={markAllRead} className="btn-secondary flex items-center gap-2 text-sm">
-            <Check className="w-4 h-4" />
-            Tout marquer comme lu
+        <div className="flex gap-2">
+          <button onClick={() => refetch()} className="p-2 border border-gray-300 rounded-lg text-gray-500 hover:text-gray-700">
+            <RefreshCw className="w-4 h-4" />
           </button>
-        )}
+          {nonLues > 0 && (
+            <button onClick={() => marquerToutesLues.mutate()} disabled={marquerToutesLues.isPending} className="flex items-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-60">
+              <CheckCheck className="w-4 h-4" /> Tout marquer lu
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {Object.entries(grouped).map(([date, items]) => (
-          <div key={date} className="space-y-2">
-            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{date}</p>
-            <div className="space-y-2">
-              {items.map((n) => {
-                const config = typeConfig[n.type];
-                const Icon = config.icon;
-                return (
-                  <div
-                    key={n.id}
-                    className={cn(
-                      'card flex items-start gap-4 transition-colors',
-                      !n.lue && 'bg-primary-50/40 border border-primary-100',
-                    )}
-                  >
-                    <div className={cn('p-2 rounded-xl shrink-0', config.bg)}>
-                      <Icon className={cn('w-4 h-4', config.color)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-neutral-800">{n.titre}</p>
-                        {!n.lue && <span className={cn('w-2 h-2 rounded-full shrink-0', config.dot)} />}
-                      </div>
-                      <p className="text-sm text-neutral-500 mt-0.5">{n.message}</p>
-                    </div>
-                    {!n.lue && (
-                      <button
-                        onClick={() => setNotifs((prev) => prev.map((x) => x.id === n.id ? { ...x, lue: true } : x))}
-                        className="text-xs text-neutral-400 hover:text-neutral-600 shrink-0 whitespace-nowrap"
-                      >
-                        Marquer lu
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      {/* Filtres */}
+      <div className="flex gap-2">
+        {(['all', 'non-lues'] as const).map(f => (
+          <button key={f} onClick={() => setFiltreLue(f)} className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${filtreLue === f ? 'bg-primary text-white border-primary' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+            {f === 'all' ? 'Toutes' : 'Non lues'}
+          </button>
         ))}
       </div>
 
-      {notifs.length > PAGE_SIZE && (
-        <Pagination total={notifs.length} page={page} limit={PAGE_SIZE} onChange={setPage} />
-      )}
+      {/* Liste */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="divide-y divide-gray-100">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="p-4 animate-pulse">
+                <div className="h-4 bg-gray-100 rounded w-1/3 mb-2" />
+                <div className="h-3 bg-gray-100 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Aucune notification</p>
+            <p className="text-sm mt-1">{filtreLue === 'non-lues' ? 'Tout est à jour !' : "Vous n'avez pas encore reçu de notifications."}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {notifications.map((n) => (
+              <div key={n.id} className={`p-4 flex items-start gap-4 border-l-4 transition-colors ${TYPE_COLORS[n.type] ?? 'border-l-gray-300'} ${n.lue ? 'bg-white' : 'bg-blue-50/30'}`}>
+                <span className="text-xl mt-0.5">{TYPE_ICONS[n.type] ?? '🔔'}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-sm ${n.lue ? 'text-gray-700' : 'text-gray-900 font-semibold'}`}>{n.titre}</p>
+                    <span className="text-xs text-gray-400 whitespace-nowrap">{new Date(n.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' } as any)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
+                  {n.lien && <a href={n.lien} className="text-xs text-primary hover:underline mt-1 block">Voir le détail →</a>}
+                </div>
+                <div className="flex items-center gap-1">
+                  {!n.lue && (
+                    <button onClick={() => marquerLue.mutate(n.id)} title="Marquer comme lue" className="p-1.5 text-gray-400 hover:text-primary rounded-lg hover:bg-gray-100">
+                      <CheckCheck className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button onClick={() => supprimer.mutate(n.id)} title="Supprimer" className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
