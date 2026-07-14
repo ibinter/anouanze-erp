@@ -24,8 +24,7 @@ function KpiCard({
   unite,
   format,
   icon: Icon,
-  couleur,
-  bg,
+  gradient,
   loading,
 }: {
   titre: string;
@@ -33,25 +32,26 @@ function KpiCard({
   unite?: string;
   format?: string;
   icon: React.ElementType;
-  couleur: string;
-  bg: string;
+  gradient: string;
   loading?: boolean;
 }) {
   const display = format === 'montant' ? formatMontant(valeur) : String(valeur);
   return (
-    <div className="stat-card flex items-center gap-4">
-      <div className={`p-3 rounded-xl ${bg} shrink-0`}>
-        <Icon className={`w-6 h-6 ${couleur}`} />
+    <div className="stat-card group relative overflow-hidden">
+      {/* halo décoratif */}
+      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br ${gradient} opacity-[0.07] group-hover:opacity-[0.12] transition-opacity`} />
+      <div className="flex items-start justify-between">
+        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradient} shadow-sm`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
       </div>
-      <div>
-        <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{titre}</p>
-        {loading ? (
-          <Loader2 className="w-5 h-5 animate-spin text-neutral-300 mt-1" />
-        ) : (
-          <p className={`text-2xl font-bold ${couleur}`}>{display}</p>
-        )}
-        {unite && !loading && <p className="text-xs text-neutral-400">{unite}</p>}
-      </div>
+      <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mt-4">{titre}</p>
+      {loading ? (
+        <Loader2 className="w-5 h-5 animate-spin text-neutral-300 mt-1.5" />
+      ) : (
+        <p className="text-2xl font-bold text-neutral-800 mt-1 leading-tight">{display}</p>
+      )}
+      {unite && !loading && <p className="text-xs text-neutral-400 mt-0.5">{unite}</p>}
     </div>
   );
 }
@@ -72,32 +72,28 @@ export default function DashboardPage() {
       valeur: data?.membresActifs ?? 0,
       unite: 'membres',
       icon: Users,
-      couleur: 'text-primary-600',
-      bg: 'bg-primary-50',
+      gradient: 'from-primary-500 to-primary-700',
     },
     {
       titre: 'Projets en cours',
       valeur: data?.projetsEnCours ?? 0,
       unite: 'projets',
       icon: FolderOpen,
-      couleur: 'text-accent-400',
-      bg: 'bg-orange-50',
+      gradient: 'from-accent-400 to-accent-600',
     },
     {
       titre: 'Trésorerie',
       valeur: data?.soldeTresorerie ?? 0,
       format: 'montant',
       icon: Wallet,
-      couleur: 'text-primary-600',
-      bg: 'bg-primary-50',
+      gradient: 'from-emerald-500 to-teal-700',
     },
     {
       titre: 'Dons ce mois',
       valeur: data?.totalDonsMois ?? 0,
       format: 'montant',
       icon: HandHeart,
-      couleur: 'text-accent-400',
-      bg: 'bg-orange-50',
+      gradient: 'from-rose-400 to-pink-600',
     },
   ];
 
@@ -113,9 +109,14 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-800">Tableau de bord</h1>
-        <p className="text-sm text-neutral-500 mt-1">Vue d&apos;ensemble de votre organisation</p>
+      {/* Bannière de bienvenue */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-700 to-primary-600 p-6 sm:p-7 text-white shadow-card">
+        <div className="absolute -right-8 -top-8 w-48 h-48 rounded-full bg-white/10" />
+        <div className="absolute right-16 -bottom-12 w-40 h-40 rounded-full bg-accent-400/20" />
+        <div className="relative">
+          <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
+          <p className="text-sm text-primary-100 mt-1">Vue d&apos;ensemble de votre organisation en temps réel</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -129,7 +130,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Budget */}
         {!isLoading && data && (
-          <div className="card space-y-3">
+          <div className="card p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-primary-600" />
               <h2 className="font-semibold text-neutral-800">Budget {new Date().getFullYear()}</h2>
@@ -163,7 +164,7 @@ export default function DashboardPage() {
         )}
 
         {/* Alertes */}
-        <div className="card space-y-4">
+        <div className="card p-5 space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <h2 className="font-semibold text-neutral-800">Alertes critiques</h2>

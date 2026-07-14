@@ -61,41 +61,45 @@ iframe {
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-           bg-primary-600 text-white font-medium text-sm
-           hover:bg-primary-700 active:bg-primary-800
+           bg-primary-600 text-white font-medium text-sm shadow-sm shadow-primary-600/20
+           hover:bg-primary-700 hover:shadow-md hover:shadow-primary-600/25 active:bg-primary-800
            focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-200;
+           transition-all duration-200;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
            bg-white text-neutral-700 font-medium text-sm border border-neutral-200
-           hover:bg-neutral-50 active:bg-neutral-100
+           hover:bg-neutral-50 hover:border-neutral-300 active:bg-neutral-100
            focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-200;
+           transition-all duration-200;
   }
 
   .btn-accent {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-           bg-accent-400 text-white font-medium text-sm
-           hover:bg-accent-500 active:bg-accent-600
+           bg-accent-400 text-white font-medium text-sm shadow-sm shadow-accent-400/20
+           hover:bg-accent-500 hover:shadow-md active:bg-accent-600
            focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors duration-200;
+           transition-all duration-200;
   }
 
   .card {
-    @apply bg-white rounded-xl border border-neutral-100 shadow-card;
+    @apply bg-white rounded-2xl border border-neutral-100 shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 hover:border-neutral-200;
   }
 
   .input {
     @apply block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2
            text-sm text-neutral-800 placeholder-neutral-400
-           focus:border-primary-600 focus:ring-1 focus:ring-primary-600
+           focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20
            disabled:bg-neutral-50 disabled:text-neutral-500
-           transition-colors duration-200;
+           transition-all duration-200;
   }
 
   .label {
@@ -123,17 +127,25 @@ iframe {
   }
 
   .stat-card {
-    @apply card p-5 flex flex-col gap-1;
+    @apply card p-5 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
   }
 
+  /* Sidebar sombre premium */
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
-           text-neutral-600 hover:bg-primary-50 hover:text-primary-700
-           transition-colors duration-150 cursor-pointer;
+    @apply relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+           text-primary-100/70 hover:bg-white/10 hover:text-white
+           transition-all duration-150 cursor-pointer;
   }
 
   .sidebar-item-active {
-    @apply sidebar-item bg-primary-50 text-primary-700;
+    @apply relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold
+           bg-white/15 text-white cursor-pointer
+           before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2
+           before:h-5 before:w-1 before:rounded-r-full before:bg-accent-400;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-neutral-800 tracking-tight;
   }
 }
 
@@ -153,4 +165,12 @@ iframe {
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-neutral-400;
+}
+
+/* Scrollbar sidebar sombre */
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }

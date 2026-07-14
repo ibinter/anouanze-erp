@@ -42,8 +42,11 @@ function formatK(value: number) {
 export function DashboardCharts() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="card lg:col-span-2 space-y-4">
-        <h2 className="font-semibold text-neutral-800">Dépenses des 6 derniers mois</h2>
+      <div className="card p-5 lg:col-span-2 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-neutral-800">Dépenses des 6 derniers mois</h2>
+          <span className="text-xs font-medium text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded-lg">6 mois</span>
+        </div>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={DEPENSES_MOIS} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
@@ -79,7 +82,7 @@ export function DashboardCharts() {
         </ResponsiveContainer>
       </div>
 
-      <div className="card space-y-4">
+      <div className="card p-5 space-y-4">
         <h2 className="font-semibold text-neutral-800">Répartition par secteur</h2>
         <ResponsiveContainer width="100%" height={240}>
           <PieChart>
