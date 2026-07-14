@@ -1,10 +1,19 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { SessionProvider } from 'next-auth/react';
-import { useState } from 'react';
+import { SessionProvider, useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { setApiToken } from '@/lib/api';
+
+// Synchronise le token NextAuth dans le client API dès que la session change
+function TokenSync() {
+  const { data: session } = useSession();
+  useEffect(() => {
+    setApiToken((session as any)?.accessToken ?? null);
+  }, [session]);
+  return null;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Providers({ children }: { children: any }) {
@@ -13,8 +22,8 @@ export function Providers({ children }: { children: any }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,        // 1 minute
-            gcTime: 5 * 60 * 1000,       // 5 minutes
+            staleTime: 60 * 1000,
+            gcTime: 5 * 60 * 1000,
             retry: 1,
             refetchOnWindowFocus: false,
           },
@@ -24,9 +33,9 @@ export function Providers({ children }: { children: any }) {
 
   return (
     <SessionProvider>
+      <TokenSync />
       <QueryClientProvider client={queryClient}>
         {children}
-        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </SessionProvider>
   );
