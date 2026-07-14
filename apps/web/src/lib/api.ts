@@ -1,8 +1,15 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
+function resolveBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+  // Évite la duplication si l'URL inclut déjà /v1
+  if (raw.endsWith('/v1') || raw.endsWith('/v1/')) return raw.replace(/\/$/, '');
+  return raw.replace(/\/$/, '') + '/v1';
+}
+
 export const api = axios.create({
-  baseURL: (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api') + '/v1',
+  baseURL: resolveBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
 });

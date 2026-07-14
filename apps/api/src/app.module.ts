@@ -46,15 +46,10 @@ import { NotificationsModule } from './common/notifications/notifications.module
 
     ScheduleModule.forRoot(),
 
-    CacheModule.registerAsync({
+    CacheModule.register({
       isGlobal: true,
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        store: 'redis',
-        url: config.get('REDIS_URL', 'redis://localhost:6379'),
-        ttl: 300,
-      }),
+      ttl: 300000,
+      max: 1000,
     }),
 
     PrismaModule,

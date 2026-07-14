@@ -4,26 +4,25 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { InboxIcon } from 'lucide-react';
 
-export interface Column<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface Column<T = any> {
   key: string;
   header: string;
   render?: (row: T) => ReactNode;
   width?: string;
 }
 
-interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
+interface DataTableProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: Column<any>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any[];
   isLoading: boolean;
-  onRowClick?: (row: T) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onRowClick?: (row: any) => void;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
-  columns,
-  data,
-  isLoading,
-  onRowClick,
-}: DataTableProps<T>) {
+export function DataTable({ columns, data, isLoading, onRowClick }: DataTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
       <table className="w-full text-sm">

@@ -374,9 +374,9 @@ function MembresTable() {
         </select>
       </div>
 
-      <DataTable<Membre & Record<string, unknown>>
-        columns={columns as Column<Membre & Record<string, unknown>>[]}
-        data={membres as (Membre & Record<string, unknown>)[]}
+      <DataTable
+        columns={columns}
+        data={membres}
         isLoading={isLoading}
       />
 

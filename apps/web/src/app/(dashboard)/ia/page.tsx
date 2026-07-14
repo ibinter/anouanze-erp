@@ -1,36 +1,43 @@
 'use client';
 
-import { Sparkles, Lightbulb, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
+import { Sparkles, Lightbulb, AlertTriangle, CheckCircle, TrendingUp, RefreshCw } from 'lucide-react';
 import { AiChat } from './AiChat';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const INSIGHTS = [
-  { id: 1, texte: 'Vos dépenses RH ont augmenté de 18% ce trimestre par rapport au précédent.' },
-  { id: 2, texte: 'Le projet Eau Potable atteint 92% de ses objectifs MEAL — clôture recommandée.' },
-  { id: 3, texte: 'Trésorerie stable avec une réserve de 3,2 mois de charges opérationnelles.' },
-];
-
-const ALERTES = [
-  { id: 1, message: 'Dépense imprévue de 450 000 FCFA détectée sur le budget Logistique', niveau: 'Élevé' },
-  { id: 2, message: '3 cotisations membres sans versement depuis plus de 90 jours', niveau: 'Moyen' },
-];
-
-const RECOMMANDATIONS = [
-  { id: 1, texte: 'Négocier un avenant avec le bailleur AFD avant la clôture Q3 2026.' },
-  { id: 2, texte: 'Lancer une campagne de recouvrement des cotisations membres en retard.' },
-  { id: 3, texte: 'Consolider les lignes budgétaires Transports et Carburant en une seule rubrique.' },
-];
+interface IaAnalyse {
+  insights: string[];
+  recommandations: string[];
+  alertes: string[];
+}
 
 export default function IaPage() {
   const [loadingRapport, setLoadingRapport] = useState(false);
   const [loadingAnomalies, setLoadingAnomalies] = useState(false);
+  const [analyse, setAnalyse] = useState<IaAnalyse | null>(null);
+  const [loadingAnalyse, setLoadingAnalyse] = useState(true);
+
+  async function chargerAnalyse() {
+    setLoadingAnalyse(true);
+    try {
+      const res = await api.post<IaAnalyse>('/ia/analyser-tableau-bord', {});
+      setAnalyse(res.data);
+    } catch {
+      // Fallback silencieux — le composant affiche un état vide
+    } finally {
+      setLoadingAnalyse(false);
+    }
+  }
+
+  useEffect(() => {
+    chargerAnalyse();
+  }, []);
 
   async function genererRapport() {
     setLoadingRapport(true);
     try {
-      await api.post('/ia/rapport-narratif', {});
+      await api.post('/ia/rapport-narratif', { type: 'trimestriel', params: {} });
       toast.success('Rapport narratif généré avec succès');
     } catch {
       toast.error('Erreur lors de la génération du rapport');
@@ -42,7 +49,7 @@ export default function IaPage() {
   async function analyserAnomalies() {
     setLoadingAnomalies(true);
     try {
-      await api.post('/ia/analyser-anomalies', {});
+      await api.get('/ia/anomalies');
       toast.success('Analyse des anomalies terminée');
     } catch {
       toast.error('Erreur lors de l\'analyse');
@@ -50,6 +57,10 @@ export default function IaPage() {
       setLoadingAnomalies(false);
     }
   }
+
+  const insights = analyse?.insights ?? [];
+  const alertes = analyse?.alertes ?? [];
+  const recommandations = analyse?.recommandations ?? [];
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col gap-6">
@@ -78,51 +89,90 @@ export default function IaPage() {
         </div>
 
         <div className="w-full lg:w-80 flex flex-col gap-4">
+          {/* Insights */}
           <div className="card space-y-3">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-accent-400" />
-              <h2 className="font-semibold text-sm text-neutral-800">Insights IA</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-accent-400" />
+                <h2 className="font-semibold text-sm text-neutral-800">Insights IA</h2>
+              </div>
+              <button
+                onClick={chargerAnalyse}
+                disabled={loadingAnalyse}
+                className="p-1 rounded hover:bg-neutral-100 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-neutral-400 ${loadingAnalyse ? 'animate-spin' : ''}`} />
+              </button>
             </div>
-            <ul className="space-y-2">
-              {INSIGHTS.map((ins) => (
-                <li key={ins.id} className="flex gap-2 text-sm text-neutral-600">
-                  <Lightbulb className="w-3.5 h-3.5 text-accent-400 mt-0.5 shrink-0" />
-                  {ins.texte}
-                </li>
-              ))}
-            </ul>
+            {loadingAnalyse ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-4 bg-neutral-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : insights.length > 0 ? (
+              <ul className="space-y-2">
+                {insights.map((ins, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-neutral-600">
+                    <Lightbulb className="w-3.5 h-3.5 text-accent-400 mt-0.5 shrink-0" />
+                    {ins}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-neutral-400">Aucun insight disponible</p>
+            )}
           </div>
 
+          {/* Alertes */}
           <div className="card space-y-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-500" />
               <h2 className="font-semibold text-sm text-neutral-800">Alertes détectées</h2>
             </div>
-            <ul className="space-y-2">
-              {ALERTES.map((a) => (
-                <li key={a.id} className="p-3 rounded-lg bg-red-50 text-sm">
-                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded mr-2 ${a.niveau === 'Élevé' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {a.niveau}
-                  </span>
-                  <span className="text-neutral-700">{a.message}</span>
-                </li>
-              ))}
-            </ul>
+            {loadingAnalyse ? (
+              <div className="space-y-2">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-10 bg-neutral-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : alertes.length > 0 ? (
+              <ul className="space-y-2">
+                {alertes.map((a, i) => (
+                  <li key={i} className="p-3 rounded-lg bg-red-50 text-sm text-neutral-700">
+                    {a}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-neutral-400 italic">Aucune alerte critique détectée</p>
+            )}
           </div>
 
+          {/* Recommandations */}
           <div className="card space-y-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary-600" />
               <h2 className="font-semibold text-sm text-neutral-800">Recommandations</h2>
             </div>
-            <ul className="space-y-2">
-              {RECOMMANDATIONS.map((r) => (
-                <li key={r.id} className="flex gap-2 text-sm text-neutral-600">
-                  <CheckCircle className="w-3.5 h-3.5 text-primary-600 mt-0.5 shrink-0" />
-                  {r.texte}
-                </li>
-              ))}
-            </ul>
+            {loadingAnalyse ? (
+              <div className="space-y-2">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-4 bg-neutral-100 rounded animate-pulse" />
+                ))}
+              </div>
+            ) : recommandations.length > 0 ? (
+              <ul className="space-y-2">
+                {recommandations.map((r, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-neutral-600">
+                    <CheckCircle className="w-3.5 h-3.5 text-primary-600 mt-0.5 shrink-0" />
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-neutral-400">Aucune recommandation disponible</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2">

@@ -82,7 +82,10 @@ export class AuthService {
         email: user.email,
         nom: user.nom,
         prenom: user.prenom,
+        avatar: user.avatar,
+        langue: user.langue,
         organisationId: userOrg?.organisationId ?? null,
+        role: userOrg?.role ?? null,
       },
     };
   }
@@ -161,7 +164,8 @@ export class AuthService {
     const token = crypto.randomBytes(32).toString('hex');
     const expire = new Date(Date.now() + 60 * 60 * 1000); // 1 heure
 
-    await this.prisma.utilisateur.update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (this.prisma.utilisateur as any).update({
       where: { id: user.id },
       data: { tokenReinit: token, tokenReinitExpire: expire },
     });
@@ -175,15 +179,18 @@ export class AuthService {
   }
 
   async resetPassword(token: string, nouveauMotDePasse: string): Promise<void> {
-    const user = await this.prisma.utilisateur.findUnique({ where: { tokenReinit: token } });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await (this.prisma.utilisateur as any).findUnique({ where: { tokenReinit: token } });
 
-    if (!user || !user.tokenReinitExpire || user.tokenReinitExpire < new Date()) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!user || !(user as any).tokenReinitExpire || (user as any).tokenReinitExpire < new Date()) {
       throw new BadRequestException('Lien de réinitialisation invalide ou expiré');
     }
 
     const motDePasseHash = await bcrypt.hash(nouveauMotDePasse, 12);
 
-    await this.prisma.utilisateur.update({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (this.prisma.utilisateur as any).update({
       where: { id: user.id },
       data: { motDePasseHash, tokenReinit: null, tokenReinitExpire: null },
     });

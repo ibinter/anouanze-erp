@@ -45,7 +45,7 @@ export function AiChat() {
 
     try {
       const historique = messages.map((m) => ({ role: m.role, content: m.content }));
-      const res = await api.post<{ reponse: string }>('/v1/ia/chat', {
+      const res = await api.post<{ reponse: string }>('/ia/chat', {
         message: content,
         historique,
       });

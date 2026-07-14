@@ -58,7 +58,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/ia') ||
     pathname.startsWith('/meal') ||
     pathname.startsWith('/profil') ||
-    pathname.startsWith('/notifications')
+    pathname.startsWith('/notifications') ||
+    pathname.startsWith('/aide')
   ) {
     if (!token) {
       const loginUrl = new URL('/login', request.url);

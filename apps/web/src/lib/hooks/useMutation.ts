@@ -35,11 +35,13 @@ export function useApiMutation<TData = unknown, TVariables = unknown>(
     },
     onSuccess: (data, variables, context) => {
       toast.success(successMessage ?? 'Opération réussie');
-      onSuccess?.(data, variables, context);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (onSuccess as any)?.(data, variables, context);
     },
     onError: (error, variables, context) => {
       toast.error(errorMessage ?? error.message ?? 'Une erreur est survenue');
-      onError?.(error, variables, context);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (onError as any)?.(error, variables, context);
     },
     ...rest,
   });

@@ -56,19 +56,14 @@ export class ReportingService {
       0,
     );
 
-    const alertesBudgets = budgets.filter((b) => {
-      const prevu = b.lignes.reduce((s, l) => s + Number(l.montantPrevu), 0);
-      const realise = b.lignes.reduce((s, l) => s + Number(l.montantRealise), 0);
-      return prevu > 0 && realise / prevu > 0.8;
-    });
-
-    const alertes: string[] = [];
-    if (cotisationsEnRetard.length > 0) {
-      alertes.push(`${cotisationsEnRetard.length} cotisation(s) en retard`);
-    }
-    for (const b of alertesBudgets) {
-      alertes.push(`Budget "${b.nom}" dépasse 80% de consommation`);
-    }
+    const alertesBudgets = budgets
+      .map((b) => {
+        const prevu = b.lignes.reduce((s, l) => s + Number(l.montantPrevu), 0);
+        const realise = b.lignes.reduce((s, l) => s + Number(l.montantRealise), 0);
+        const taux = prevu > 0 ? Math.round((realise / prevu) * 100) : 0;
+        return { nom: b.nom, taux };
+      })
+      .filter((b) => b.taux >= 80);
 
     return {
       membresActifs,
@@ -78,7 +73,9 @@ export class ReportingService {
       budgetPrevu,
       budgetRealise,
       tauxExecution: budgetPrevu > 0 ? Math.round((budgetRealise / budgetPrevu) * 100) : 0,
-      alertes,
+      alertesBudgets,
+      cotisationsEnRetard: cotisationsEnRetard.map((c) => ({ id: c.id, montant: Number(c.montant) })),
+      prochainEvenement: null,
     };
   }
 

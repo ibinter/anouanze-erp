@@ -36,6 +36,11 @@ const authOptions: NextAuthOptions = {
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
             organisationId: data.user?.organisationId,
+            role: data.user?.role,
+            nom: data.user?.nom,
+            prenom: data.user?.prenom,
+            avatar: data.user?.avatar,
+            langue: data.user?.langue ?? 'fr',
           };
         } catch {
           return null;
@@ -49,13 +54,24 @@ const authOptions: NextAuthOptions = {
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.organisationId = (user as any).organisationId;
+        token.role = (user as any).role;
+        token.nom = (user as any).nom;
+        token.prenom = (user as any).prenom;
+        token.avatar = (user as any).avatar;
+        token.langue = (user as any).langue ?? 'fr';
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;
-      (session as any).organisationId = token.organisationId;
+      (session.user as any).id = token.sub;
+      (session.user as any).organisationId = token.organisationId;
+      (session.user as any).role = token.role;
+      (session.user as any).nom = token.nom;
+      (session.user as any).prenom = token.prenom;
+      (session.user as any).avatar = token.avatar;
+      (session.user as any).langue = token.langue ?? 'fr';
       return session;
     },
   },

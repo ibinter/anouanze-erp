@@ -220,7 +220,7 @@ export default function AchatsPage() {
               <option value="RECUE">Reçue</option>
             </select>
           </div>
-          <DataTable columns={colonnesCommandes as Column<Record<string, unknown>>[]} data={commandes as unknown as Record<string, unknown>[]} isLoading={cmdLoading} />
+          <DataTable columns={colonnesCommandes as Column[]} data={commandes} isLoading={cmdLoading} />
           {totalCmd > limit && <Pagination total={totalCmd} page={pageCmd} limit={limit} onChange={setPageCmd} />}
         </>
       )}

@@ -1,34 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { User, Camera, Shield, Monitor, Building2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from 'sonner';
 import Link from 'next/link';
-
-const SESSIONS = [
-  { id: 1, appareil: 'Chrome — Windows 10', lieu: 'Abidjan, Côte d\'Ivoire', derniere: '2026-07-10 09:42', actuelle: true },
-  { id: 2, appareil: 'Safari — iPhone 14', lieu: 'Abidjan, Côte d\'Ivoire', derniere: '2026-07-09 18:15', actuelle: false },
-  { id: 3, appareil: 'Firefox — Ubuntu', lieu: 'Paris, France', derniere: '2026-07-08 14:30', actuelle: false },
-];
+import { api } from '@/lib/api';
 
 export default function ProfilPage() {
+  const { data: session } = useSession();
+  const userId = (session?.user as any)?.id;
+  const userRole = (session?.user as any)?.role;
+  const userOrg = (session?.user as any)?.organisationId;
+
   const [form, setForm] = useState({
-    prenom: 'Patrice',
-    nom: 'Kouakou',
-    email: 'p.kouakou@anouanze.org',
-    telephone: '+225 07 12 34 56',
+    prenom: '',
+    nom: '',
+    email: '',
+    telephone: '',
     langue: 'fr',
   });
   const [pwModal, setPwModal] = useState(false);
   const [pwForm, setPwForm] = useState({ ancien: '', nouveau: '', confirmation: '' });
   const [saving, setSaving] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+
+  useEffect(() => {
+    if (session?.user) {
+      const u = session.user as any;
+      setForm({
+        prenom: u.prenom ?? '',
+        nom: u.nom ?? '',
+        email: u.email ?? '',
+        telephone: u.telephone ?? '',
+        langue: u.langue ?? 'fr',
+      });
+    }
+  }, [session]);
+
+  // Also fetch full user profile from API for more fields
+  useEffect(() => {
+    if (!userId) return;
+    api.get(`/utilisateurs/${userId}`).then(({ data }) => {
+      setForm((prev) => ({
+        ...prev,
+        prenom: data.prenom ?? prev.prenom,
+        nom: data.nom ?? prev.nom,
+        email: data.email ?? prev.email,
+        telephone: data.telephone ?? prev.telephone,
+        langue: data.langue ?? prev.langue,
+      }));
+    }).catch(() => {/* silence — session data is enough */});
+  }, [userId]);
 
   async function handleSave() {
+    if (!userId) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    toast.success('Profil mis à jour');
+    try {
+      await api.patch(`/utilisateurs/${userId}`, {
+        prenom: form.prenom || undefined,
+        nom: form.nom || undefined,
+        telephone: form.telephone || undefined,
+        langue: form.langue || undefined,
+      });
+      toast.success('Profil mis à jour');
+    } catch {
+      toast.error('Erreur lors de la mise à jour du profil');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleChangePw() {
@@ -36,13 +77,39 @@ export default function ProfilPage() {
       toast.error('Les mots de passe ne correspondent pas');
       return;
     }
-    await new Promise((r) => setTimeout(r, 600));
-    toast.success('Mot de passe modifié');
-    setPwModal(false);
-    setPwForm({ ancien: '', nouveau: '', confirmation: '' });
+    if (!pwForm.nouveau || pwForm.nouveau.length < 8) {
+      toast.error('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+    if (!userId) return;
+    setPwSaving(true);
+    try {
+      await api.post(`/utilisateurs/${userId}/changer-mot-de-passe`, {
+        ancienMotDePasse: pwForm.ancien,
+        nouveauMotDePasse: pwForm.nouveau,
+      });
+      toast.success('Mot de passe modifié avec succès');
+      setPwModal(false);
+      setPwForm({ ancien: '', nouveau: '', confirmation: '' });
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Erreur lors du changement de mot de passe');
+    } finally {
+      setPwSaving(false);
+    }
   }
 
-  const initiales = `${form.prenom[0]}${form.nom[0]}`.toUpperCase();
+  const initiales = `${form.prenom?.[0] ?? ''}${form.nom?.[0] ?? ''}`.toUpperCase() || 'U';
+
+  const roleLabels: Record<string, string> = {
+    SUPER_ADMIN: 'Super Administrateur',
+    ADMIN: 'Administrateur',
+    DIRECTEUR: 'Directeur',
+    COMPTABLE: 'Comptable',
+    RH: 'Responsable RH',
+    RESPONSABLE_PROJET: 'Responsable Projet',
+    AUDITEUR: 'Auditeur',
+    VIEWER: 'Observateur',
+  };
 
   return (
     <div className="p-6 max-w-3xl space-y-6">
@@ -64,7 +131,11 @@ export default function ProfilPage() {
           <div>
             <p className="font-semibold text-neutral-800 text-lg">{form.prenom} {form.nom}</p>
             <p className="text-sm text-neutral-500">{form.email}</p>
-            <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium mt-1 inline-block">Administrateur</span>
+            {userRole && (
+              <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium mt-1 inline-block">
+                {roleLabels[userRole] ?? userRole}
+              </span>
+            )}
           </div>
         </div>
 
@@ -109,43 +180,12 @@ export default function ProfilPage() {
         <div className="flex items-center justify-between py-2">
           <div>
             <p className="text-sm font-medium text-neutral-700">Mot de passe</p>
-            <p className="text-xs text-neutral-400">Dernière modification il y a 45 jours</p>
+            <p className="text-xs text-neutral-400">Minimum 8 caractères avec majuscule et chiffre</p>
           </div>
           <button onClick={() => setPwModal(true)} className="btn-secondary text-sm">
             Changer le mot de passe
           </button>
         </div>
-      </div>
-
-      <div className="card space-y-4">
-        <div className="flex items-center gap-2">
-          <Monitor className="w-5 h-5 text-neutral-600" />
-          <h2 className="font-semibold text-neutral-800">Sessions actives</h2>
-        </div>
-        <ul className="space-y-3">
-          {SESSIONS.map((s) => (
-            <li key={s.id} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
-              <div className="flex items-center gap-3">
-                <Monitor className="w-4 h-4 text-neutral-400" />
-                <div>
-                  <p className="text-sm font-medium text-neutral-700 flex items-center gap-2">
-                    {s.appareil}
-                    {s.actuelle && <span className="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Session actuelle</span>}
-                  </p>
-                  <p className="text-xs text-neutral-400">{s.lieu} · {s.derniere}</p>
-                </div>
-              </div>
-              {!s.actuelle && (
-                <button
-                  onClick={() => toast.success('Session révoquée')}
-                  className="text-xs text-red-600 hover:underline"
-                >
-                  Révoquer
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
       </div>
 
       <div className="card space-y-3">
@@ -155,8 +195,12 @@ export default function ProfilPage() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-neutral-700">ANOUANZÊ ONG</p>
-            <p className="text-xs text-neutral-400">Abidjan, Côte d&apos;Ivoire · ID: ORG-2024-001</p>
+            <p className="text-sm font-medium text-neutral-700">
+              {(session?.user as any)?.orgNom ?? 'Organisation'}
+            </p>
+            <p className="text-xs text-neutral-400">
+              {userOrg ? `ID: ${userOrg.slice(0, 8).toUpperCase()}` : ''}
+            </p>
           </div>
           <Link href="/parametres" className="text-sm text-primary-600 hover:underline">
             Paramètres organisation
@@ -172,7 +216,9 @@ export default function ProfilPage() {
         footer={
           <>
             <button onClick={() => setPwModal(false)} className="btn-secondary">Annuler</button>
-            <button onClick={handleChangePw} className="btn-primary">Confirmer</button>
+            <button onClick={handleChangePw} disabled={pwSaving} className="btn-primary disabled:opacity-60">
+              {pwSaving ? 'Modification...' : 'Confirmer'}
+            </button>
           </>
         }
       >

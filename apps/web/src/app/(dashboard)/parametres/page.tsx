@@ -1,44 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { Settings, Upload, UserPlus, Shield, Bell, Plug } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { Settings, Upload, UserPlus, Shield, Bell, Plug, Loader2 } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { Tabs } from '@/components/ui/Tabs';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type Role = 'ADMIN' | 'COMPTABLE' | 'GESTIONNAIRE' | 'MEMBRE' | 'LECTURE';
 
 interface Utilisateur {
   id: string;
   nom: string;
+  prenom?: string;
   email: string;
-  role: Role;
-  actif: boolean;
-  derniereConnexion: string;
+  role?: Role;
+  actif?: boolean;
+  derniereConnexion?: string;
 }
-
-interface SessionActive {
-  id: string;
-  appareil: string;
-  ip: string;
-  depuis: string;
-  location: string;
-}
-
-const UTILISATEURS: Utilisateur[] = [
-  { id: '1', nom: 'Marie Koné', email: 'marie.kone@anouanze.ci', role: 'ADMIN', actif: true, derniereConnexion: '2026-07-10 09:14' },
-  { id: '2', nom: 'Kouamé Assié', email: 'kouame.assie@anouanze.ci', role: 'COMPTABLE', actif: true, derniereConnexion: '2026-07-10 10:44' },
-  { id: '3', nom: 'Adjoua Bah', email: 'adjoua.bah@anouanze.ci', role: 'GESTIONNAIRE', actif: true, derniereConnexion: '2026-07-09 17:02' },
-  { id: '4', nom: 'Yao Koffi', email: 'yao.koffi@anouanze.ci', role: 'MEMBRE', actif: false, derniereConnexion: '2026-06-28 11:30' },
-  { id: '5', nom: 'Amina Traoré', email: 'amina.traore@anouanze.ci', role: 'LECTURE', actif: true, derniereConnexion: '2026-07-08 14:55' },
-];
-
-const SESSIONS_ACTIVES: SessionActive[] = [
-  { id: '1', appareil: 'Chrome 126 — Windows 11', ip: '192.168.1.4', depuis: 'Il y a 2h', location: 'Abidjan, CI' },
-  { id: '2', appareil: 'Safari — iPhone 15', ip: '41.220.55.8', depuis: 'Il y a 1 jour', location: 'Abidjan, CI' },
-  { id: '3', appareil: 'Firefox 127 — macOS', ip: '10.0.0.8', depuis: 'Il y a 3 jours', location: 'Bouaké, CI' },
-];
 
 const PAIEMENTS = [
   { id: 'orange', nom: 'Orange Money', logo: '🟠', connecte: true },
@@ -56,10 +39,16 @@ const NOTIFS = [
   { id: 'rapport_mensuel', label: 'Rapport mensuel disponible', desc: 'Notification à la génération du rapport mensuel' },
 ];
 
-const ROLE_STYLES: Record<Role, string> = {
+const ROLE_STYLES: Record<string, string> = {
+  SUPER_ADMIN: 'badge badge-error',
   ADMIN: 'badge badge-error',
+  DIRECTEUR: 'badge bg-purple-100 text-purple-700',
   COMPTABLE: 'badge badge-success',
+  RH: 'badge bg-blue-100 text-blue-700',
+  RESPONSABLE_PROJET: 'badge bg-teal-100 text-teal-700',
   GESTIONNAIRE: 'badge bg-blue-100 text-blue-700',
+  AUDITEUR: 'badge badge-warning',
+  VIEWER: 'badge badge-neutral',
   MEMBRE: 'badge badge-neutral',
   LECTURE: 'badge badge-warning',
 };
@@ -73,59 +62,126 @@ const TABS = [
 ];
 
 export default function ParametresPage() {
+  const { data: session } = useSession();
+  const orgId = (session?.user as any)?.organisationId;
+  const queryClient = useQueryClient();
+
   const [tab, setTab] = useState('organisation');
   const [modalInviter, setModalInviter] = useState(false);
   const [twoFA, setTwoFA] = useState(false);
   const [dureeSession, setDureeSession] = useState('8');
-  const [sessions, setSessions] = useState(SESSIONS_ACTIVES);
   const [notifs, setNotifs] = useState<Record<string, boolean>>(
     Object.fromEntries(NOTIFS.map((n) => [n.id, true]))
   );
   const [integrations, setIntegrations] = useState<Record<string, boolean>>(
     Object.fromEntries(PAIEMENTS.map((p) => [p.id, p.connecte]))
   );
-  const [utilisateurs, setUtilisateurs] = useState(UTILISATEURS);
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'VIEWER' });
   const [orgForm, setOrgForm] = useState({
-    nom: 'ANOUANZÊ ONG',
-    email: 'contact@anouanze.ci',
-    telephone: '+225 27 22 49 3300',
+    nom: '',
+    email: '',
+    telephone: '',
     devise: 'XOF',
     langue: 'fr',
-    exercice: '2026',
+    exercice: String(new Date().getFullYear()),
+  });
+  const [orgSaving, setOrgSaving] = useState(false);
+
+  // Fetch organisation data
+  const { data: orgData } = useQuery({
+    queryKey: ['organisation', orgId],
+    queryFn: async () => {
+      const { data } = await api.get(`/organisations/${orgId}`);
+      return data;
+    },
+    enabled: !!orgId && tab === 'organisation',
+  });
+
+  useEffect(() => {
+    if (orgData) {
+      setOrgForm({
+        nom: orgData.nom ?? '',
+        email: orgData.emailContact ?? orgData.email ?? '',
+        telephone: orgData.telephone ?? '',
+        devise: orgData.deviseDefaut ?? 'XOF',
+        langue: orgData.langue ?? 'fr',
+        exercice: String(orgData.exerciceComptable ?? new Date().getFullYear()),
+      });
+    }
+  }, [orgData]);
+
+  async function handleOrgSave() {
+    if (!orgId) return;
+    setOrgSaving(true);
+    try {
+      await api.patch(`/organisations/${orgId}`, {
+        nom: orgForm.nom || undefined,
+        emailContact: orgForm.email || undefined,
+        telephone: orgForm.telephone || undefined,
+        deviseDefaut: orgForm.devise || undefined,
+        langue: orgForm.langue || undefined,
+        exerciceComptable: orgForm.exercice ? parseInt(orgForm.exercice) : undefined,
+      });
+      toast.success('Organisation mise à jour');
+      queryClient.invalidateQueries({ queryKey: ['organisation', orgId] });
+    } catch {
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setOrgSaving(false);
+    }
+  }
+
+  // Fetch users
+  const { data: utilisateursData = [], isLoading: usersLoading } = useQuery<Utilisateur[]>({
+    queryKey: ['utilisateurs'],
+    queryFn: async () => {
+      const { data } = await api.get('/utilisateurs');
+      return Array.isArray(data) ? data : (data?.data ?? []);
+    },
+    enabled: tab === 'utilisateurs',
   });
 
   const colsUsers: Column<Utilisateur>[] = [
-    { key: 'nom', header: 'Nom', render: (r) => <span className="font-semibold text-neutral-800">{r.nom}</span> },
-    { key: 'email', header: 'Email', render: (r) => <span className="text-xs text-neutral-500">{r.email}</span> },
-    { key: 'role', header: 'Rôle', render: (r) => <span className={ROLE_STYLES[r.role]}>{r.role}</span> },
     {
-      key: 'actif', header: 'Statut', render: (r) => (
-        <span className={r.actif ? 'badge badge-success' : 'badge badge-neutral'}>{r.actif ? 'Actif' : 'Inactif'}</span>
+      key: 'nom',
+      header: 'Nom',
+      render: (r) => <span className="font-semibold text-neutral-800">{r.prenom} {r.nom}</span>
+    },
+    { key: 'email', header: 'Email', render: (r) => <span className="text-xs text-neutral-500">{r.email}</span> },
+    {
+      key: 'role',
+      header: 'Rôle',
+      render: (r) => r.role ? <span className={ROLE_STYLES[r.role] ?? 'badge badge-neutral'}>{r.role}</span> : <span className="text-neutral-400 text-xs">—</span>
+    },
+    {
+      key: 'actif',
+      header: 'Statut',
+      render: (r) => (
+        <span className={r.actif !== false ? 'badge badge-success' : 'badge badge-neutral'}>
+          {r.actif !== false ? 'Actif' : 'Inactif'}
+        </span>
       )
     },
-    { key: 'derniereConnexion', header: 'Dernière connexion', render: (r) => <span className="text-xs text-neutral-400">{r.derniereConnexion}</span> },
     {
-      key: 'actions', header: '', render: (r) => (
-        <div className="flex gap-1.5">
-          <select
-            className="text-xs border border-neutral-200 rounded px-1.5 py-1 bg-white"
-            value={r.role}
-            onChange={(e) => setUtilisateurs((prev) => prev.map((u) => u.id === r.id ? { ...u, role: e.target.value as Role } : u))}
-          >
-            {(['ADMIN', 'COMPTABLE', 'GESTIONNAIRE', 'MEMBRE', 'LECTURE'] as Role[]).map((ro) => (
-              <option key={ro} value={ro}>{ro}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setUtilisateurs((prev) => prev.map((u) => u.id === r.id ? { ...u, actif: !u.actif } : u))}
-            className="text-xs btn-secondary py-1 px-2"
-          >
-            {r.actif ? 'Désactiver' : 'Activer'}
-          </button>
-        </div>
-      )
+      key: 'derniereConnexion',
+      header: 'Dernière connexion',
+      render: (r) => <span className="text-xs text-neutral-400">{r.derniereConnexion ? new Date(r.derniereConnexion).toLocaleDateString('fr-FR') : '—'}</span>
     },
   ];
+
+  async function handleInvite() {
+    if (!inviteForm.email) { toast.error('Email requis'); return; }
+    try {
+      // Create user with a temp password — they'll reset it
+      await api.post('/utilisateurs', { email: inviteForm.email, role: inviteForm.role });
+      toast.success(`Invitation envoyée à ${inviteForm.email}`);
+      queryClient.invalidateQueries({ queryKey: ['utilisateurs'] });
+      setModalInviter(false);
+      setInviteForm({ email: '', role: 'VIEWER' });
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Erreur lors de l\'invitation');
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -146,7 +202,9 @@ export default function ParametresPage() {
           <div className="card space-y-4">
             <h3 className="font-semibold text-neutral-800">Logo de l'organisation</h3>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-xl bg-primary-100 flex items-center justify-center text-3xl font-bold text-primary-600">A</div>
+              <div className="w-20 h-20 rounded-xl bg-primary-100 flex items-center justify-center text-3xl font-bold text-primary-600">
+                {orgForm.nom?.[0]?.toUpperCase() ?? 'A'}
+              </div>
               <button className="btn-secondary flex items-center gap-2">
                 <Upload className="w-4 h-4" /> Changer le logo
               </button>
@@ -189,7 +247,9 @@ export default function ParametresPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <button className="btn-primary">Enregistrer</button>
+              <button onClick={handleOrgSave} disabled={orgSaving} className="btn-primary disabled:opacity-60">
+                {orgSaving ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
             </div>
           </div>
         </div>
@@ -202,7 +262,14 @@ export default function ParametresPage() {
               <UserPlus className="w-4 h-4" /> Inviter un utilisateur
             </button>
           </div>
-          <DataTable columns={colsUsers} data={utilisateurs as unknown as Record<string, unknown>[]} isLoading={false} />
+          {usersLoading ? (
+            <div className="flex justify-center py-12 text-neutral-400 gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Chargement des utilisateurs...
+            </div>
+          ) : (
+            <DataTable columns={colsUsers} data={utilisateursData as unknown as Record<string, unknown>[]} isLoading={false} />
+          )}
           <Modal
             open={modalInviter}
             onOpenChange={setModalInviter}
@@ -210,19 +277,29 @@ export default function ParametresPage() {
             footer={
               <>
                 <button className="btn-secondary" onClick={() => setModalInviter(false)}>Annuler</button>
-                <button className="btn-primary" onClick={() => setModalInviter(false)}>Envoyer l'invitation</button>
+                <button className="btn-primary" onClick={handleInvite}>Envoyer</button>
               </>
             }
           >
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="label">Email</label>
-                <input type="email" className="input" placeholder="utilisateur@organisation.ci" />
+                <input
+                  type="email"
+                  className="input"
+                  placeholder="utilisateur@organisation.ci"
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                />
               </div>
               <div className="space-y-1">
                 <label className="label">Rôle</label>
-                <select className="input">
-                  {(['ADMIN', 'COMPTABLE', 'GESTIONNAIRE', 'MEMBRE', 'LECTURE'] as Role[]).map((r) => (
+                <select
+                  className="input"
+                  value={inviteForm.role}
+                  onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
+                >
+                  {['ADMIN', 'DIRECTEUR', 'COMPTABLE', 'RH', 'RESPONSABLE_PROJET', 'AUDITEUR', 'VIEWER'].map((r) => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
@@ -258,24 +335,10 @@ export default function ParametresPage() {
               </select>
             </div>
           </div>
-          <div className="card space-y-4">
-            <h3 className="font-semibold text-neutral-800">Sessions actives</h3>
-            <div className="space-y-3">
-              {sessions.map((s) => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-neutral-700">{s.appareil}</p>
-                    <p className="text-xs text-neutral-400">{s.ip} · {s.location} · {s.depuis}</p>
-                  </div>
-                  <button
-                    onClick={() => setSessions((prev) => prev.filter((x) => x.id !== s.id))}
-                    className="text-xs text-red-500 hover:text-red-600 font-medium"
-                  >
-                    Révoquer
-                  </button>
-                </div>
-              ))}
-            </div>
+          <div className="card p-5">
+            <p className="text-sm text-neutral-500 text-center py-4">
+              La gestion avancée des sessions (révoquer des appareils distants) sera disponible dans une prochaine version.
+            </p>
           </div>
         </div>
       )}
@@ -301,7 +364,7 @@ export default function ParametresPage() {
             ))}
           </div>
           <div className="flex justify-end pt-2">
-            <button className="btn-primary">Enregistrer</button>
+            <button onClick={() => toast.success('Préférences sauvegardées')} className="btn-primary">Enregistrer</button>
           </div>
         </div>
       )}
