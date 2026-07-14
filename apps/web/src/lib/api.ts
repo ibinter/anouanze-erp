@@ -3,7 +3,6 @@ import { getSession } from 'next-auth/react';
 
 function resolveBaseUrl() {
   const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
-  // Évite la duplication si l'URL inclut déjà /v1
   if (raw.endsWith('/v1') || raw.endsWith('/v1/')) return raw.replace(/\/$/, '');
   return raw.replace(/\/$/, '') + '/v1';
 }
@@ -14,12 +13,25 @@ export const api = axios.create({
   timeout: 30000,
 });
 
+// Cache de session — évite N appels getSession() simultanés
+let _sessionCache: { token: string; exp: number } | null = null;
+
+async function getToken(): Promise<string | null> {
+  const now = Date.now();
+  if (_sessionCache && now < _sessionCache.exp) return _sessionCache.token;
+  const session = await Promise.race([
+    getSession(),
+    new Promise<null>((res) => setTimeout(() => res(null), 3000)),
+  ]);
+  const token = (session as any)?.accessToken ?? null;
+  if (token) _sessionCache = { token, exp: now + 55 * 1000 };
+  return token;
+}
+
 // Injecter le token JWT avant chaque requête
 api.interceptors.request.use(async (config) => {
-  const session = await getSession();
-  if (session?.accessToken) {
-    config.headers.Authorization = `Bearer ${session.accessToken}`;
-  }
+  const token = await getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
