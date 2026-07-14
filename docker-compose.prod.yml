@@ -43,6 +43,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       PORT: 4000
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
     ports:
       - "4000:4000"
     depends_on:
