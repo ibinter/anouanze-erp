@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { Plus, TrendingUp, Landmark, FileSpreadsheet } from 'lucide-react';
 import { exportDocument, tresorerieExportDef } from '@/lib/pdf-engine';
 import { Modal } from '@/components/ui/Modal';
-import { formatMontant, formatDate, cn } from '@/lib/utils';
+import { formatMontant, formatDate, toNum, cn } from '@/lib/utils';
 
 interface CompteBancaire {
   id: string;
@@ -80,7 +80,7 @@ export default function TresoreriePage() {
   });
 
   const mouvements: Mouvement[] = mouvementsData?.data ?? mouvementsData ?? [];
-  const totalTresorerie = comptes.reduce((s, c) => s + (c.solde ?? 0), 0);
+  const totalTresorerie = comptes.reduce((s, c) => s + toNum(c.solde), 0);
 
   const handleExportMouvements = async () => {
     if (!selectedCompte) return;
@@ -125,12 +125,17 @@ export default function TresoreriePage() {
         </div>
       </div>
 
-      <div className="card p-5 flex items-center justify-between">
+      <div className="stat-card flex items-center justify-between">
         <div>
           <p className="text-sm text-neutral-500">Trésorerie totale</p>
           <p className="text-3xl font-bold text-neutral-800 mt-1">{comptesLoading ? '—' : formatMontant(totalTresorerie)}</p>
+          {!comptesLoading && (
+            <p className="text-xs text-neutral-400 mt-1">
+              {comptes.length} compte{comptes.length > 1 ? 's' : ''} bancaire{comptes.length > 1 ? 's' : ''}
+            </p>
+          )}
         </div>
-        <div className="p-3 rounded-xl bg-primary-50">
+        <div className="p-3 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 shrink-0">
           <Landmark className="w-8 h-8 text-primary-600" />
         </div>
       </div>
@@ -145,9 +150,12 @@ export default function TresoreriePage() {
             <button
               key={compte.id}
               onClick={() => setSelectedCompteId(compte.id)}
+              aria-pressed={selectedCompte?.id === compte.id}
               className={cn(
-                'card p-4 text-left transition-all border-2',
-                selectedCompte?.id === compte.id ? 'border-primary-600' : 'border-transparent hover:border-neutral-200',
+                'card p-4 text-left transition-all duration-200 border-2 hover:-translate-y-0.5 hover:shadow-card-hover',
+                selectedCompte?.id === compte.id
+                  ? 'border-primary-600 ring-2 ring-primary-600/15 shadow-card-hover'
+                  : 'border-transparent hover:border-neutral-200',
               )}
             >
               <div className="flex items-start justify-between">
@@ -156,11 +164,14 @@ export default function TresoreriePage() {
                   <p className="font-semibold text-neutral-800 mt-0.5">{compte.nom}</p>
                   {compte.numeroCarte && <p className="text-xs text-neutral-400 mt-0.5 font-mono">{compte.numeroCarte}</p>}
                 </div>
-                <div className="flex items-center gap-0.5 text-xs font-medium text-neutral-400">
-                  <TrendingUp className="w-3 h-3" />
+                <div className={cn(
+                  'flex items-center justify-center rounded-full p-1.5 transition-colors',
+                  selectedCompte?.id === compte.id ? 'bg-primary-50 text-primary-600' : 'bg-neutral-100 text-neutral-400',
+                )}>
+                  <TrendingUp className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <p className="text-xl font-bold text-primary-600 mt-3">{formatMontant(compte.solde ?? 0)}</p>
+              <p className="text-xl font-bold text-primary-600 mt-3">{formatMontant(compte.solde)}</p>
             </button>
           ))}
         </div>
@@ -191,20 +202,22 @@ export default function TresoreriePage() {
                   <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucun mouvement</td></tr>
                 )}
                 {mouvements.map((m) => {
-                  const isDebit = m.type === 'DEBIT' || (m.debit ?? 0) > 0;
-                  const montant = m.montant ?? m.debit ?? m.credit ?? 0;
+                  const isDebit = m.type === 'DEBIT' || toNum(m.debit) > 0;
+                  const montant = toNum(m.montant ?? m.debit ?? m.credit);
                   return (
-                    <tr key={m.id} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
-                      <td className="px-4 py-3 text-neutral-600">{formatDate(m.date)}</td>
+                    <tr key={m.id} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-default">
+                      <td className="px-4 py-3 text-neutral-600 whitespace-nowrap">{formatDate(m.date)}</td>
                       <td className="px-4 py-3 text-neutral-800">{m.libelle}</td>
-                      <td className="px-4 py-3 text-right font-mono text-red-600">
+                      <td className="px-4 py-3 text-right font-mono text-red-600 whitespace-nowrap">
                         {isDebit ? formatMontant(montant) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-green-600">
+                      <td className="px-4 py-3 text-right font-mono text-green-600 whitespace-nowrap">
                         {!isDebit ? formatMontant(montant) : '—'}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <input type="checkbox" checked={m.rapproche ?? false} readOnly className="w-4 h-4 accent-primary-600" />
+                        {m.rapproche
+                          ? <span className="badge badge-success">Rapproché</span>
+                          : <span className="badge badge-neutral">En attente</span>}
                       </td>
                     </tr>
                   );

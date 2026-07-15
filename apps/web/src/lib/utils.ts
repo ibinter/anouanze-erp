@@ -5,7 +5,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatMontant(montant: number, devise = 'XOF'): string {
+/**
+ * Coercition numérique sûre. Les Decimal Prisma arrivent en JSON sous forme
+ * de CHAÎNES ("22000000") — les additionner avec `+` les concatène. Utiliser
+ * toNum() dans tout reduce/somme de montants pour éviter la corruption.
+ */
+export function toNum(value: unknown): number {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'string') {
+    const n = Number(value.replace(/\s/g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+export function formatMontant(montant: number | string | null | undefined, devise = 'XOF'): string {
   const locales: Record<string, string> = {
     XOF: 'fr-CI',
     XAF: 'fr-CM',
@@ -18,7 +32,7 @@ export function formatMontant(montant: number, devise = 'XOF'): string {
     currency: devise,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(montant);
+  }).format(toNum(montant));
 }
 
 export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {

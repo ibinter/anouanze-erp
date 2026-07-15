@@ -11,7 +11,7 @@ import {
 import { Tabs } from '@/components/ui/Tabs';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
-import { formatMontant, formatDate, cn } from '@/lib/utils';
+import { formatMontant, formatDate, toNum, cn } from '@/lib/utils';
 
 const TABS = [
   { id: 'plan', label: 'Plan comptable' },
@@ -150,11 +150,15 @@ function TableauEcritures() {
             {isLoading && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">Chargement…</td></tr>}
             {!isLoading && ecritures.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucune écriture.</td></tr>}
             {ecritures.map((e) => {
-              const debit = e.montantDebit ?? e.lignes?.reduce((s, l) => s + (l.debit ?? 0), 0) ?? 0;
-              const credit = e.montantCredit ?? e.lignes?.reduce((s, l) => s + (l.credit ?? 0), 0) ?? 0;
+              const debit = e.montantDebit != null
+                ? toNum(e.montantDebit)
+                : (e.lignes?.reduce((s, l) => s + toNum(l.debit), 0) ?? 0);
+              const credit = e.montantCredit != null
+                ? toNum(e.montantCredit)
+                : (e.lignes?.reduce((s, l) => s + toNum(l.credit), 0) ?? 0);
               return (
-                <tr key={e.id} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
-                  <td className="px-4 py-3 text-neutral-600">{formatDate(e.date ?? e.createdAt ?? '')}</td>
+                <tr key={e.id} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-default">
+                  <td className="px-4 py-3 text-neutral-600 whitespace-nowrap">{formatDate(e.date ?? e.createdAt ?? '')}</td>
                   <td className="px-4 py-3">
                     <span className="badge badge-neutral font-mono">{getJournalCode(e)}</span>
                   </td>
@@ -206,12 +210,12 @@ function Balance() {
           {isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Chargement…</td></tr>}
           {!isLoading && lignes.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucune donnée pour l&apos;exercice {exercice}.</td></tr>}
           {lignes.map((ligne, i) => {
-            const debit = ligne.debitCumul ?? ligne.totalDebit ?? 0;
-            const credit = ligne.creditCumul ?? ligne.totalCredit ?? 0;
-            const solde = ligne.solde ?? (debit - credit);
+            const debit = toNum(ligne.debitCumul ?? ligne.totalDebit);
+            const credit = toNum(ligne.creditCumul ?? ligne.totalCredit);
+            const solde = ligne.solde != null ? toNum(ligne.solde) : debit - credit;
             return (
-              <tr key={i} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
-                <td className="px-4 py-3 font-mono text-neutral-500">{ligne.compte ?? ligne.numero}</td>
+              <tr key={i} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors cursor-default">
+                <td className="px-4 py-3 font-mono text-neutral-500 whitespace-nowrap">{ligne.compte ?? ligne.numero}</td>
                 <td className="px-4 py-3 text-neutral-800">{ligne.libelle}</td>
                 <td className="px-4 py-3 text-right font-mono text-neutral-700">{formatMontant(debit)}</td>
                 <td className="px-4 py-3 text-right font-mono text-neutral-700">{formatMontant(credit)}</td>

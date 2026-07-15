@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { CalendarDays, Plus, MapPin, Users, List, LayoutGrid } from 'lucide-react';
+import { CalendarDays, Plus, MapPin, Users, List, LayoutGrid, UserCheck, Percent } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { cn } from '@/lib/utils';
+import { cn, toNum } from '@/lib/utils';
 
 type TypeEvenement = 'AG' | 'REUNION' | 'FORMATION' | 'ATELIER';
 
@@ -50,6 +50,7 @@ export default function EvenementsPage() {
   const [modalNouvel, setModalNouvel] = useState(false);
   const [form, setForm] = useState(FORM_INIT);
   const [error, setError] = useState('');
+  const [detail, setDetail] = useState<Evenement | null>(null);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -81,6 +82,20 @@ export default function EvenementsPage() {
 
   const evenements: Evenement[] = data?.data ?? data ?? [];
   const grouped = groupByMonth(evenements);
+
+  // Sommes : inscriptions et capacités peuvent arriver en chaînes → toNum
+  // avant toute addition, sinon `+` concatène et fausse les totaux.
+  const totalInscrits = evenements.reduce((s, e) => s + toNum(e._count?.inscriptions), 0);
+  const totalCapacite = evenements.reduce((s, e) => s + toNum(e.capacite), 0);
+  const placesDispo = Math.max(0, totalCapacite - totalInscrits);
+  const tauxRemplissage = totalCapacite > 0 ? Math.round((totalInscrits / totalCapacite) * 100) : 0;
+
+  const KPIS = [
+    { label: 'Événements', value: evenements.length, icon: CalendarDays, tint: 'bg-primary-50', color: 'text-primary-600' },
+    { label: 'Total inscrits', value: totalInscrits, icon: UserCheck, tint: 'bg-blue-50', color: 'text-blue-500' },
+    { label: 'Places disponibles', value: placesDispo, icon: Users, tint: 'bg-orange-50', color: 'text-orange-500' },
+    { label: 'Taux de remplissage', value: `${tauxRemplissage}%`, icon: Percent, tint: 'bg-green-50', color: 'text-green-600' },
+  ];
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -115,6 +130,20 @@ export default function EvenementsPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {KPIS.map((kpi) => (
+          <div key={kpi.label} className="stat-card flex items-center gap-3">
+            <div className={cn('p-2 rounded-lg', kpi.tint)}>
+              <kpi.icon className={cn('w-5 h-5', kpi.color)} />
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">{kpi.label}</p>
+              <p className={cn('text-xl font-bold', kpi.color)}>{isLoading ? '—' : kpi.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => <div key={i} className="card p-4 h-40 animate-pulse bg-neutral-100" />)}
@@ -133,7 +162,11 @@ export default function EvenementsPage() {
                   const pct = capacite > 0 ? Math.round((nb / capacite) * 100) : 0;
                   const complet = capacite > 0 && nb >= capacite;
                   return (
-                    <div key={evt.id} className="card space-y-3">
+                    <div
+                      key={evt.id}
+                      onClick={() => setDetail(evt)}
+                      className="card card-hover space-y-3 p-5 cursor-pointer"
+                    >
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-neutral-800 text-sm leading-snug">{evt.titre}</h3>
                         <span className={cn('flex-shrink-0', TYPE_STYLES[evt.type] ?? 'badge badge-neutral')}>{evt.type}</span>
@@ -168,11 +201,12 @@ export default function EvenementsPage() {
                       <div className="flex gap-2 pt-1">
                         <button
                           disabled={complet}
+                          onClick={(e) => e.stopPropagation()}
                           className={cn('flex-1 btn-primary text-xs py-1.5', complet && 'opacity-50 cursor-not-allowed')}
                         >
                           {complet ? 'Complet' : "S'inscrire"}
                         </button>
-                        <button className="btn-secondary text-xs py-1.5 px-3">Gérer</button>
+                        <button onClick={(e) => { e.stopPropagation(); setDetail(evt); }} className="btn-secondary text-xs py-1.5 px-3">Gérer</button>
                       </div>
                     </div>
                   );
@@ -193,7 +227,7 @@ export default function EvenementsPage() {
             const capacite = evt.capacite ?? 0;
             const pct = capacite > 0 ? Math.round((nb / capacite) * 100) : 0;
             return (
-              <div key={evt.id} className="flex items-center gap-4 py-3 px-1">
+              <div key={evt.id} onClick={() => setDetail(evt)} className="flex items-center gap-4 py-3 px-2 -mx-1 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors">
                 <div className="w-12 text-center flex-shrink-0">
                   <p className="text-lg font-bold text-primary-600">{new Date(evt.dateDebut).getDate()}</p>
                   <p className="text-xs text-neutral-400">{new Date(evt.dateDebut).toLocaleDateString('fr-FR', { month: 'short' })}</p>
@@ -212,12 +246,52 @@ export default function EvenementsPage() {
                     <span className={cn('ml-1 text-xs font-medium', pct >= 90 ? 'text-red-500' : 'text-neutral-400')}>{pct}%</span>
                   </div>
                 )}
-                <button className="btn-primary text-xs py-1.5 px-3 flex-shrink-0">S'inscrire</button>
+                <button onClick={(e) => e.stopPropagation()} className="btn-primary text-xs py-1.5 px-3 flex-shrink-0">S'inscrire</button>
               </div>
             );
           })}
         </div>
       )}
+
+      <Modal open={!!detail} onOpenChange={(o) => !o && setDetail(null)} title="Détail de l'événement" size="lg">
+        {detail && (() => {
+          const nb = toNum(detail._count?.inscriptions);
+          const cap = toNum(detail.capacite);
+          const pct = cap > 0 ? Math.round((nb / cap) * 100) : 0;
+          return (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-semibold text-neutral-800">{detail.titre}</h3>
+                <span className={cn('flex-shrink-0', TYPE_STYLES[detail.type] ?? 'badge badge-neutral')}>{detail.type}</span>
+              </div>
+              {detail.description && <p className="text-sm text-neutral-600">{detail.description}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-neutral-500">Date</p>
+                  <p className="text-sm font-medium text-neutral-800">{new Date(detail.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500">Lieu</p>
+                  <p className="text-sm font-medium text-neutral-800">{detail.lieu ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500">Inscrits</p>
+                  <p className="text-sm font-medium text-neutral-800">{nb}{cap > 0 ? ` / ${cap}` : ''}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500">Remplissage</p>
+                  <p className="text-sm font-medium text-neutral-800">{cap > 0 ? `${pct}%` : '—'}</p>
+                </div>
+              </div>
+              {cap > 0 && (
+                <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                  <div className={cn('h-full rounded-full', pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-orange-400' : 'bg-primary-600')} style={{ width: `${pct}%` }} />
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </Modal>
 
       <Modal
         open={modalNouvel}

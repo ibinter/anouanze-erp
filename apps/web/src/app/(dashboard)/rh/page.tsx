@@ -8,7 +8,7 @@ import { Tabs } from '@/components/ui/Tabs';
 import { Modal } from '@/components/ui/Modal';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
-import { formatMontant, formatDate } from '@/lib/utils';
+import { formatMontant, formatDate, toNum } from '@/lib/utils';
 
 const TABS = [
   { id: 'employes', label: 'Employés' },
@@ -70,6 +70,7 @@ const VOLONTAIRE_INIT = { nom: '', prenom: '', competences: '', dateDebut: '' };
 function EmployesTab() {
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [detail, setDetail] = useState<Employe | null>(null);
   const [form, setForm] = useState(EMPLOYE_INIT);
   const [error, setError] = useState('');
   const limit = 10;
@@ -132,10 +133,20 @@ function EmployesTab() {
     },
     {
       key: 'actions', header: 'Actions', width: '130px',
-      render: () => (
+      render: (r) => (
         <div className="flex items-center gap-2">
-          <button className="text-xs text-primary-600 hover:underline font-medium">Voir</button>
-          <button className="text-xs text-neutral-500 hover:underline">Modifier</button>
+          <button
+            className="text-xs text-primary-600 hover:underline font-medium"
+            onClick={(e) => { e.stopPropagation(); setDetail(r); }}
+          >
+            Voir
+          </button>
+          <button
+            className="text-xs text-neutral-500 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Modifier
+          </button>
         </div>
       ),
     },
@@ -148,8 +159,43 @@ function EmployesTab() {
           <Plus className="w-4 h-4" /> Nouvel employé
         </button>
       </div>
-      <DataTable columns={columns as Column<Employe & Record<string, unknown>>[]} data={employes as (Employe & Record<string, unknown>)[]} isLoading={isLoading} />
+      <DataTable columns={columns as Column<Employe & Record<string, unknown>>[]} data={employes as (Employe & Record<string, unknown>)[]} isLoading={isLoading} onRowClick={(r) => setDetail(r as Employe)} />
       {total > limit && <Pagination total={total} page={page} limit={limit} onChange={setPage} />}
+
+      <Modal open={!!detail} onOpenChange={(o) => !o && setDetail(null)} title="Fiche employé" size="lg">
+        {detail && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center font-semibold">
+                {(detail.prenom?.[0] ?? '') + (detail.nom?.[0] ?? '')}
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">{detail.prenom} {detail.nom}</p>
+                <p className="text-sm text-neutral-500">{detail.poste ?? '—'}</p>
+              </div>
+              <span className={`badge ml-auto ${CONTRAT_COLORS[detail.typeContrat ?? ''] ?? 'badge-neutral'}`}>{detail.typeContrat ?? '—'}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-neutral-500">Matricule</p>
+                <p className="text-sm font-medium text-neutral-800 font-mono">{detail.matricule ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-neutral-500">Département</p>
+                <p className="text-sm font-medium text-neutral-800">{detail.departement ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-neutral-500">Date d'embauche</p>
+                <p className="text-sm font-medium text-neutral-800">{detail.dateEmbauche ? formatDate(detail.dateEmbauche) : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-neutral-500">Salaire de base</p>
+                <p className="text-sm font-semibold text-primary-700">{detail.salaireBase != null ? formatMontant(detail.salaireBase) : '—'}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         open={modalOpen}
@@ -470,6 +516,12 @@ export default function RHPage() {
 
   const employes: Employe[] = employesData?.data ?? [];
 
+  // Somme monétaire : les salaires arrivent en chaînes (Decimal Prisma) → toNum
+  // avant addition, sinon `+` concatène et corrompt la masse salariale.
+  const masseSalarialeCalc = employes.reduce((sum, e) => sum + toNum(e.salaireBase), 0);
+  const masseSalariale = statsData?.masseSalariale != null ? toNum(statsData.masseSalariale) : masseSalarialeCalc;
+  const totalEmployes = statsData?.totalEmployes ?? employes.length;
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div>
@@ -484,7 +536,7 @@ export default function RHPage() {
           </div>
           <div>
             <p className="text-xs text-neutral-500">Total employés</p>
-            <p className="text-xl font-bold text-neutral-800">{statsData?.totalEmployes ?? '—'}</p>
+            <p className="text-xl font-bold text-neutral-800">{totalEmployes}</p>
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
@@ -511,7 +563,7 @@ export default function RHPage() {
           </div>
           <div>
             <p className="text-xs text-neutral-500">Masse salariale</p>
-            <p className="text-lg font-bold text-green-600">{statsData?.masseSalariale != null ? formatMontant(statsData.masseSalariale) : '—'}</p>
+            <p className="text-lg font-bold text-green-600">{formatMontant(masseSalariale)}</p>
           </div>
         </div>
       </div>

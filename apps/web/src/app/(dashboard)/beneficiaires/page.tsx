@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Plus, Search, Users, UserCheck, FolderOpen } from 'lucide-react';
+import { Plus, Search, Users, UserCheck, User, FolderOpen, Eye, Phone, Hash } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
+import { SlideOver } from '@/components/ui/SlideOver';
 import { Pagination } from '@/components/ui/Pagination';
-import { formatDate } from '@/lib/utils';
+import { formatDate, toNum, initiales } from '@/lib/utils';
 
 interface Beneficiaire {
   id: string;
@@ -19,12 +20,15 @@ interface Beneficiaire {
   _count?: { projets: number };
   dateEnregistrement?: string;
   createdAt?: string;
+  vulnerabilites?: string[];
+  notes?: string;
 }
 
 export default function BeneficiairesPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selected, setSelected] = useState<Beneficiaire | null>(null);
   const [form, setForm] = useState({ nom: '', prenom: '', genre: 'F', telephone: '' });
   const [error, setError] = useState('');
   const limit = 10;
@@ -57,9 +61,22 @@ export default function BeneficiairesPage() {
     },
   });
 
+  const { data: detail, isLoading: detailLoading } = useQuery<Beneficiaire>({
+    queryKey: ['beneficiaire', selected?.id],
+    queryFn: async () => {
+      const { data } = await api.get(`/beneficiaires/${selected!.id}`);
+      return data;
+    },
+    enabled: !!selected?.id,
+    initialData: selected ?? undefined,
+  });
+
   const beneficiaires: Beneficiaire[] = data?.data ?? data ?? [];
   const total = data?.meta?.total ?? beneficiaires.length;
   const totalFemmes = beneficiaires.filter((b) => b.genre === 'F').length;
+  const totalHommes = beneficiaires.filter((b) => b.genre === 'M').length;
+  const totalProjets = beneficiaires.reduce((s, b) => s + toNum(b._count?.projets), 0);
+  const fiche = detail ?? selected;
 
   const columns: Column<Beneficiaire>[] = [
     {
@@ -93,11 +110,13 @@ export default function BeneficiairesPage() {
     },
     {
       key: 'actions', header: 'Actions', width: '100px',
-      render: () => (
-        <div className="flex items-center gap-2">
-          <button className="text-xs text-primary-600 hover:underline font-medium">Voir</button>
-          <button className="text-xs text-neutral-500 hover:underline">Modifier</button>
-        </div>
+      render: (r) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); setSelected(r); }}
+          className="flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium"
+        >
+          <Eye className="w-3 h-3" /> Détails
+        </button>
       ),
     },
   ];
@@ -115,10 +134,10 @@ export default function BeneficiairesPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary-50">
-            <Users className="w-5 h-5 text-primary-600" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-sm">
+            <Users className="w-5 h-5 text-white" />
           </div>
           <div>
             <p className="text-xs text-neutral-500">Total bénéficiaires</p>
@@ -126,21 +145,30 @@ export default function BeneficiairesPage() {
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-50">
-            <UserCheck className="w-5 h-5 text-green-600" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-sm">
+            <UserCheck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Femmes</p>
-            <p className="text-xl font-bold text-green-600">{isLoading ? '—' : totalFemmes}</p>
+            <p className="text-xs text-neutral-500">Femmes (page)</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalFemmes}</p>
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50">
-            <FolderOpen className="w-5 h-5 text-blue-500" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm">
+            <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Page courante</p>
-            <p className="text-xl font-bold text-blue-600">{isLoading ? '—' : beneficiaires.length}</p>
+            <p className="text-xs text-neutral-500">Hommes (page)</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalHommes}</p>
+          </div>
+        </div>
+        <div className="stat-card flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-400 to-green-600 shadow-sm">
+            <FolderOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-neutral-500">Accompagnements (page)</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalProjets}</p>
           </div>
         </div>
       </div>
@@ -160,11 +188,71 @@ export default function BeneficiairesPage() {
         columns={columns as Column<Beneficiaire & Record<string, unknown>>[]}
         data={beneficiaires as (Beneficiaire & Record<string, unknown>)[]}
         isLoading={isLoading}
+        onRowClick={(r) => setSelected(r as Beneficiaire)}
       />
 
       {total > limit && (
         <Pagination total={total} page={page} limit={limit} onChange={setPage} />
       )}
+
+      <SlideOver
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        title={fiche ? `${fiche.prenom ?? ''} ${fiche.nom}`.trim() : 'Bénéficiaire'}
+      >
+        {fiche && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 pb-4 border-b border-neutral-100">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white font-semibold">
+                {initiales(fiche.nom, fiche.prenom)}
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">{fiche.prenom} {fiche.nom}</p>
+                <span className={`badge ${fiche.genre === 'F' ? 'badge-warning' : 'badge-neutral'}`}>{fiche.genre === 'F' ? 'Femme' : 'Homme'}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-neutral-100 p-3">
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><Hash className="w-3 h-3" /> Code</p>
+                <p className="font-mono text-sm text-neutral-800 mt-1">{fiche.code ?? '—'}</p>
+              </div>
+              <div className="rounded-xl border border-neutral-100 p-3">
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><FolderOpen className="w-3 h-3" /> Projets</p>
+                <p className="text-sm font-semibold text-neutral-800 mt-1">{toNum(fiche._count?.projets)}</p>
+              </div>
+              <div className="rounded-xl border border-neutral-100 p-3">
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><Phone className="w-3 h-3" /> Téléphone</p>
+                <p className="text-sm text-neutral-800 mt-1">{fiche.telephone ?? '—'}</p>
+              </div>
+              <div className="rounded-xl border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Enregistrement</p>
+                <p className="text-sm text-neutral-800 mt-1">{fiche.dateEnregistrement || fiche.createdAt ? formatDate((fiche.dateEnregistrement ?? fiche.createdAt) as string) : '—'}</p>
+              </div>
+            </div>
+
+            {fiche.vulnerabilites && fiche.vulnerabilites.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-neutral-600 mb-2">Vulnérabilités</p>
+                <div className="flex flex-wrap gap-2">
+                  {fiche.vulnerabilites.map((v) => (
+                    <span key={v} className="badge badge-warning text-xs">{v}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {fiche.notes && (
+              <div>
+                <p className="text-xs font-medium text-neutral-600 mb-1">Notes</p>
+                <p className="text-sm text-neutral-600">{fiche.notes}</p>
+              </div>
+            )}
+
+            {detailLoading && <p className="text-sm text-neutral-400 text-center py-2">Chargement…</p>}
+          </div>
+        )}
+      </SlideOver>
 
       <Modal
         open={modalOpen}

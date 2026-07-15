@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { ShoppingCart, Plus, Clock, Package, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Clock, Package, Wallet } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { Tabs } from '@/components/ui/Tabs';
 import { StatCard } from '@/components/ui/StatCard';
 import { Pagination } from '@/components/ui/Pagination';
+import { toNum, formatMontant, formatDate } from '@/lib/utils';
 
 type StatutCmd = 'BROUILLON' | 'VALIDEE' | 'RECUE';
 
@@ -43,10 +44,6 @@ const STATUT_LABELS: Record<string, string> = {
   RECUE: 'Reçue',
 };
 
-function fmtXOF(n: number) {
-  return new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(n);
-}
-
 const TABS = [
   { id: 'commandes', label: 'Commandes' },
   { id: 'fournisseurs', label: 'Fournisseurs' },
@@ -55,6 +52,7 @@ const TABS = [
 export default function AchatsPage() {
   const [tab, setTab] = useState('commandes');
   const [modalNvCmd, setModalNvCmd] = useState(false);
+  const [detailCmd, setDetailCmd] = useState<Commande | null>(null);
   const [pageCmd, setPageCmd] = useState(1);
   const [pageFrn, setPageFrn] = useState(1);
   const [filtreStatut, setFiltreStatut] = useState('');
@@ -66,7 +64,7 @@ export default function AchatsPage() {
 
   const createCommande = useMutation({
     mutationFn: () => {
-      const montantTotal = articles.reduce((s, a) => s + a.quantite * a.prixUnit, 0);
+      const montantTotal = articles.reduce((s, a) => s + toNum(a.quantite) * toNum(a.prixUnit), 0);
       const numero = `CMD-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`;
       return api.post('/achats/commandes', {
         fournisseurId: cmdForm.fournisseurId,
@@ -138,7 +136,7 @@ export default function AchatsPage() {
     },
     {
       key: 'montantTotal', header: 'Montant',
-      render: (r) => <span className="font-semibold">{r.montantTotal != null ? fmtXOF(r.montantTotal) : '—'}</span>,
+      render: (r) => <span className="font-semibold">{r.montantTotal != null ? formatMontant(r.montantTotal) : '—'}</span>,
     },
     {
       key: 'statut', header: 'Statut',
@@ -149,10 +147,10 @@ export default function AchatsPage() {
       render: (r) => (
         <div className="flex gap-2">
           {r.statut === 'BROUILLON' && (
-            <button className="text-xs btn-primary py-1 px-2">Valider</button>
+            <button onClick={(e) => e.stopPropagation()} className="text-xs btn-primary py-1 px-2">Valider</button>
           )}
           {r.statut === 'VALIDEE' && (
-            <button className="text-xs btn-secondary py-1 px-2">Réceptionner</button>
+            <button onClick={(e) => e.stopPropagation()} className="text-xs btn-secondary py-1 px-2">Réceptionner</button>
           )}
         </div>
       ),
@@ -179,7 +177,7 @@ export default function AchatsPage() {
   ];
 
   const enAttente = statsData?.enAttente ?? commandes.filter((c) => c.statut === 'BROUILLON' || c.statut === 'VALIDEE').length;
-  const montantTotal = statsData?.montantTotal ?? commandes.reduce((s, c) => s + (c.montantTotal ?? 0), 0);
+  const montantTotal = toNum(statsData?.montantTotal ?? commandes.reduce((s, c) => s + toNum(c.montantTotal), 0));
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -199,9 +197,9 @@ export default function AchatsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard titre="Total commandes" valeur={totalCmd} icone={<Package className="w-5 h-5" />} couleur="blue" />
-        <StatCard titre="En attente" valeur={enAttente} icone={<Clock className="w-5 h-5" />} couleur="orange" />
-        <StatCard titre="Montant total" valeur={fmtXOF(montantTotal)} icone={<CheckCircle className="w-5 h-5" />} couleur="green" />
+        <StatCard titre="Total commandes" valeur={totalCmd} icone={<Package className="w-5 h-5" />} couleur="blue" description="Toutes commandes" />
+        <StatCard titre="En attente" valeur={enAttente} icone={<Clock className="w-5 h-5" />} couleur="orange" description="Brouillon ou validée" />
+        <StatCard titre="Montant total" valeur={formatMontant(montantTotal)} icone={<Wallet className="w-5 h-5" />} couleur="green" description="Achats cumulés" />
       </div>
 
       <Tabs tabs={TABS} activeTab={tab} onChange={setTab} />
@@ -220,7 +218,7 @@ export default function AchatsPage() {
               <option value="RECUE">Reçue</option>
             </select>
           </div>
-          <DataTable columns={colonnesCommandes as Column[]} data={commandes} isLoading={cmdLoading} />
+          <DataTable columns={colonnesCommandes as Column[]} data={commandes} isLoading={cmdLoading} onRowClick={(r) => setDetailCmd(r as Commande)} />
           {totalCmd > limit && <Pagination total={totalCmd} page={pageCmd} limit={limit} onChange={setPageCmd} />}
         </>
       )}
@@ -285,10 +283,46 @@ export default function AchatsPage() {
           </div>
           <div className="flex justify-end">
             <p className="text-sm font-semibold text-neutral-700">
-              Total : {fmtXOF(articles.reduce((s, a) => s + a.quantite * a.prixUnit, 0))}
+              Total : {formatMontant(articles.reduce((s, a) => s + toNum(a.quantite) * toNum(a.prixUnit), 0))}
             </p>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!detailCmd}
+        onOpenChange={(o) => !o && setDetailCmd(null)}
+        title={detailCmd ? `Commande ${detailCmd.numero}` : ''}
+        description={detailCmd ? getFournisseurNom(detailCmd) : undefined}
+      >
+        {detailCmd && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Statut</p>
+                <p className="mt-1"><span className={STATUT_STYLES[detailCmd.statut] ?? 'badge badge-neutral'}>{STATUT_LABELS[detailCmd.statut] ?? detailCmd.statut}</span></p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Date</p>
+                <p className="mt-1 font-semibold text-neutral-800">
+                  {detailCmd.dateCommande ? formatDate(detailCmd.dateCommande) : detailCmd.createdAt ? formatDate(detailCmd.createdAt) : '—'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Fournisseur</p>
+                <p className="mt-1 font-semibold text-neutral-800">{getFournisseurNom(detailCmd)}</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Numéro</p>
+                <p className="mt-1 font-mono text-sm text-primary-600">{detailCmd.numero}</p>
+              </div>
+            </div>
+            <div className="rounded-xl bg-primary-50 border border-primary-100 p-4 flex items-center justify-between">
+              <span className="text-sm font-medium text-primary-700">Montant total</span>
+              <span className="text-lg font-bold text-primary-700">{detailCmd.montantTotal != null ? formatMontant(detailCmd.montantTotal) : '—'}</span>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

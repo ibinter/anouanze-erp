@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
+import { DecimalSerializerInterceptor } from './common/interceptors/decimal-serializer.interceptor';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -94,6 +95,7 @@ import { NotificationsModule } from './common/notifications/notifications.module
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: DecimalSerializerInterceptor },
     Reflector,
     OrganisationGuard,
   ],

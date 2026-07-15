@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { BarChart2, Download, FileText } from 'lucide-react';
 import { Tabs } from '@/components/ui/Tabs';
 import { ReportingCharts } from './ReportingCharts';
-import { cn } from '@/lib/utils';
+import { cn, toNum, formatMontant } from '@/lib/utils';
 
 interface LigneFinanciere {
   libelle: string;
@@ -25,10 +25,6 @@ const EXPORTS = [
   { label: 'Balance générale', description: 'Soldes de tous les comptes', icon: FileText, formats: ['PDF', 'Excel'] },
   { label: 'Rapport bailleur', description: 'Rapport d\'utilisation des fonds par bailleur', icon: FileText, formats: ['PDF'] },
 ];
-
-function fmtXOF(n: number) {
-  return new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(n);
-}
 
 const TABS = [
   { id: 'bi', label: 'Tableau de bord BI' },
@@ -61,14 +57,14 @@ export default function ReportingPage() {
 
   const produits: LigneFinanciere[] = rapportData?.produits ?? [];
   const charges: LigneFinanciere[] = rapportData?.charges ?? [];
-  const totalProduits = rapportData?.totalProduits ?? produits.reduce((s: number, r: LigneFinanciere) => s + r.montant, 0);
-  const totalCharges = rapportData?.totalCharges ?? charges.reduce((s: number, r: LigneFinanciere) => s + r.montant, 0);
-  const resultat = rapportData?.resultat ?? (totalProduits - totalCharges);
+  const totalProduits = toNum(rapportData?.totalProduits ?? produits.reduce((s: number, r: LigneFinanciere) => s + toNum(r.montant), 0));
+  const totalCharges = toNum(rapportData?.totalCharges ?? charges.reduce((s: number, r: LigneFinanciere) => s + toNum(r.montant), 0));
+  const resultat = toNum(rapportData?.resultat ?? (totalProduits - totalCharges));
 
   const actif: LigneBilan[] = bilanData?.actif ?? [];
   const passif: LigneBilan[] = bilanData?.passif ?? [];
-  const totalActif = bilanData?.totalActif ?? actif.reduce((s: number, r: LigneBilan) => s + r.montant, 0);
-  const totalPassif = bilanData?.totalPassif ?? passif.reduce((s: number, r: LigneBilan) => s + r.montant, 0);
+  const totalActif = toNum(bilanData?.totalActif ?? actif.reduce((s: number, r: LigneBilan) => s + toNum(r.montant), 0));
+  const totalPassif = toNum(bilanData?.totalPassif ?? passif.reduce((s: number, r: LigneBilan) => s + toNum(r.montant), 0));
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -98,7 +94,7 @@ export default function ReportingPage() {
                   {produits.map((r) => (
                     <tr key={r.libelle} className="border-b border-neutral-50">
                       <td className="py-2 text-neutral-600">{r.libelle}</td>
-                      <td className="py-2 text-right font-medium text-neutral-800">{fmtXOF(r.montant)}</td>
+                      <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
                   {produits.length === 0 && (
@@ -106,7 +102,7 @@ export default function ReportingPage() {
                   )}
                   <tr className="bg-neutral-50">
                     <td className="py-2.5 font-semibold text-neutral-800">Total produits</td>
-                    <td className="py-2.5 text-right font-bold text-primary-600">{fmtXOF(totalProduits)}</td>
+                    <td className="py-2.5 text-right font-bold text-primary-600">{formatMontant(totalProduits)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -123,7 +119,7 @@ export default function ReportingPage() {
                   {charges.map((r) => (
                     <tr key={r.libelle} className="border-b border-neutral-50">
                       <td className="py-2 text-neutral-600">{r.libelle}</td>
-                      <td className="py-2 text-right font-medium text-neutral-800">{fmtXOF(r.montant)}</td>
+                      <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
                   {charges.length === 0 && (
@@ -131,7 +127,7 @@ export default function ReportingPage() {
                   )}
                   <tr className="bg-neutral-50">
                     <td className="py-2.5 font-semibold text-neutral-800">Total charges</td>
-                    <td className="py-2.5 text-right font-bold text-red-500">{fmtXOF(totalCharges)}</td>
+                    <td className="py-2.5 text-right font-bold text-red-500">{formatMontant(totalCharges)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -146,7 +142,7 @@ export default function ReportingPage() {
                   <p className="text-xs text-neutral-400 mt-0.5">Total produits − Total charges</p>
                 </div>
                 <p className={cn('text-2xl font-bold', resultat >= 0 ? 'text-green-700' : 'text-red-600')}>
-                  {resultat >= 0 ? '+' : ''}{fmtXOF(resultat)}
+                  {resultat >= 0 ? '+' : ''}{formatMontant(resultat)}
                 </p>
               </div>
             </div>
@@ -166,13 +162,13 @@ export default function ReportingPage() {
                   {actif.map((r) => (
                     <tr key={r.poste} className="border-b border-neutral-50">
                       <td className="py-2 text-neutral-600">{r.poste}</td>
-                      <td className="py-2 text-right font-medium text-neutral-800">{fmtXOF(r.montant)}</td>
+                      <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
                   {actif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>}
                   <tr className="bg-primary-50">
                     <td className="py-2.5 font-bold text-primary-700">Total Actif</td>
-                    <td className="py-2.5 text-right font-bold text-primary-700">{fmtXOF(totalActif)}</td>
+                    <td className="py-2.5 text-right font-bold text-primary-700">{formatMontant(totalActif)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -189,13 +185,13 @@ export default function ReportingPage() {
                   {passif.map((r) => (
                     <tr key={r.poste} className="border-b border-neutral-50">
                       <td className="py-2 text-neutral-600">{r.poste}</td>
-                      <td className="py-2 text-right font-medium text-neutral-800">{fmtXOF(r.montant)}</td>
+                      <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
                   {passif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>}
                   <tr className="bg-primary-50">
                     <td className="py-2.5 font-bold text-primary-700">Total Passif</td>
-                    <td className="py-2.5 text-right font-bold text-primary-700">{fmtXOF(totalPassif)}</td>
+                    <td className="py-2.5 text-right font-bold text-primary-700">{formatMontant(totalPassif)}</td>
                   </tr>
                 </tbody>
               </table>

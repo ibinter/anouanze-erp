@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Package, AlertTriangle, Search, ArrowDownCircle, ArrowUpCircle, Bell } from 'lucide-react';
+import { Package, AlertTriangle, Search, ArrowDownCircle, ArrowUpCircle, Bell, Boxes, Wallet } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { StatCard } from '@/components/ui/StatCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { cn } from '@/lib/utils';
+import { cn, toNum, formatMontant } from '@/lib/utils';
 
 interface Article {
   id: string;
@@ -23,8 +23,8 @@ interface Article {
 
 type MouvType = 'entree' | 'sortie';
 
-function fmtXOF(n: number) {
-  return new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(n);
+function estEnAlerte(a: Article) {
+  return toNum(a.stockActuel) < toNum(a.stockMinimum);
 }
 
 export default function StocksPage() {
@@ -32,6 +32,7 @@ export default function StocksPage() {
   const [alertesOnly, setAlertesOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [mouvModal, setMouvModal] = useState<{ article: Article; type: MouvType } | null>(null);
+  const [detail, setDetail] = useState<Article | null>(null);
   const [form, setForm] = useState({ quantite: 1, motif: '' });
   const [mouvError, setMouvError] = useState('');
   const limit = 20;
@@ -70,10 +71,10 @@ export default function StocksPage() {
 
   const articles: Article[] = data?.data ?? [];
   const total = data?.meta?.total ?? 0;
-  const enAlerte = alertesData?.length ?? articles.filter((a) => a.stockActuel < a.stockMinimum).length;
-  const valeurTotale = articles.reduce((s, a) => s + (a.stockActuel ?? 0) * (a.prixUnitaire ?? 0), 0);
+  const enAlerte = alertesData?.length ?? articles.filter(estEnAlerte).length;
+  const valeurTotale = articles.reduce((s, a) => s + toNum(a.stockActuel) * toNum(a.prixUnitaire), 0);
 
-  const displayed = alertesOnly ? articles.filter((a) => a.stockActuel < a.stockMinimum) : articles;
+  const displayed = alertesOnly ? articles.filter(estEnAlerte) : articles;
 
   const columns: Column<Article>[] = [
     {
@@ -91,39 +92,44 @@ export default function StocksPage() {
     {
       key: 'stockActuel', header: 'Stock actuel',
       render: (r) => {
-        const alerte = r.stockActuel < r.stockMinimum;
+        const alerte = estEnAlerte(r);
         return (
-          <span className={cn('font-bold', alerte ? 'text-red-600' : 'text-neutral-800')}>
-            {r.stockActuel} {alerte && <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1 align-middle" />}
+          <span className={cn('inline-flex items-center gap-1.5 font-bold', alerte ? 'text-red-600' : 'text-neutral-800')}>
+            {toNum(r.stockActuel)}
+            {alerte && <span className="badge badge-error">Bas</span>}
           </span>
         );
       },
     },
     {
       key: 'stockMinimum', header: 'Stock min.',
-      render: (r) => <span className="text-neutral-500">{r.stockMinimum}</span>,
+      render: (r) => <span className="text-neutral-500">{toNum(r.stockMinimum)}</span>,
     },
     { key: 'unite', header: 'Unité' },
     {
       key: 'prixUnitaire', header: 'Prix unit.',
-      render: (r) => <span className="text-xs">{fmtXOF(r.prixUnitaire)}</span>,
+      render: (r) => <span className="text-xs">{formatMontant(r.prixUnitaire)}</span>,
+    },
+    {
+      key: 'valeur', header: 'Valeur',
+      render: (r) => <span className="text-xs font-semibold text-neutral-700">{formatMontant(toNum(r.stockActuel) * toNum(r.prixUnitaire))}</span>,
     },
     {
       key: 'alerte', header: 'Alerte',
-      render: (r) => r.stockActuel < r.stockMinimum ? <AlertTriangle className="w-4 h-4 text-red-500" /> : null,
+      render: (r) => estEnAlerte(r) ? <AlertTriangle className="w-4 h-4 text-red-500" /> : null,
     },
     {
       key: 'actions', header: '',
       render: (r) => (
         <div className="flex gap-1.5">
           <button
-            onClick={() => { setMouvModal({ article: r, type: 'entree' }); setForm({ quantite: 1, motif: '' }); }}
+            onClick={(e) => { e.stopPropagation(); setMouvModal({ article: r, type: 'entree' }); setForm({ quantite: 1, motif: '' }); }}
             className="text-xs btn-primary py-1 px-2 flex items-center gap-1"
           >
             <ArrowDownCircle className="w-3 h-3" /> Entrée
           </button>
           <button
-            onClick={() => { setMouvModal({ article: r, type: 'sortie' }); setForm({ quantite: 1, motif: '' }); }}
+            onClick={(e) => { e.stopPropagation(); setMouvModal({ article: r, type: 'sortie' }); setForm({ quantite: 1, motif: '' }); }}
             className="text-xs btn-secondary py-1 px-2 flex items-center gap-1"
           >
             <ArrowUpCircle className="w-3 h-3" /> Sortie
@@ -146,9 +152,9 @@ export default function StocksPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard titre="Total articles" valeur={isLoading ? '—' : total} icone={<Package className="w-5 h-5" />} couleur="blue" />
+        <StatCard titre="Total articles" valeur={isLoading ? '—' : total} icone={<Boxes className="w-5 h-5" />} couleur="blue" description="Références en catalogue" />
         <StatCard titre="En alerte" valeur={enAlerte} icone={<AlertTriangle className="w-5 h-5" />} couleur="red" description="Stock sous le minimum" />
-        <StatCard titre="Valeur totale stock" valeur={fmtXOF(valeurTotale)} icone={<Package className="w-5 h-5" />} couleur="green" />
+        <StatCard titre="Valeur totale stock" valeur={formatMontant(valeurTotale)} icone={<Wallet className="w-5 h-5" />} couleur="green" description="Stock actuel × prix unitaire" />
       </div>
 
       <div className="flex items-center gap-3">
@@ -171,11 +177,61 @@ export default function StocksPage() {
         </button>
       </div>
 
-      <DataTable columns={columns} data={displayed as unknown as Record<string, unknown>[]} isLoading={isLoading} />
+      <DataTable columns={columns} data={displayed as unknown as Record<string, unknown>[]} isLoading={isLoading} onRowClick={(r) => setDetail(r as Article)} />
 
       {total > limit && !alertesOnly && (
         <Pagination total={total} page={page} limit={limit} onChange={setPage} />
       )}
+
+      <Modal
+        open={!!detail}
+        onOpenChange={(o) => !o && setDetail(null)}
+        title={detail?.designation ?? ''}
+        description={detail?.reference}
+      >
+        {detail && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Catégorie</p>
+                <p className="mt-1"><span className="badge badge-neutral">{detail.categorie}</span></p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Stock actuel</p>
+                <p className={cn('mt-1 font-bold', estEnAlerte(detail) ? 'text-red-600' : 'text-neutral-800')}>
+                  {toNum(detail.stockActuel)} {detail.unite}
+                </p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Stock minimum</p>
+                <p className="mt-1 font-semibold text-neutral-800">{toNum(detail.stockMinimum)} {detail.unite}</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Prix unitaire</p>
+                <p className="mt-1 font-semibold text-neutral-800">{formatMontant(detail.prixUnitaire)}</p>
+              </div>
+            </div>
+            <div className="rounded-xl bg-primary-50 border border-primary-100 p-4 flex items-center justify-between">
+              <span className="text-sm font-medium text-primary-700">Valeur du stock</span>
+              <span className="text-lg font-bold text-primary-700">{formatMontant(toNum(detail.stockActuel) * toNum(detail.prixUnitaire))}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setMouvModal({ article: detail, type: 'entree' }); setForm({ quantite: 1, motif: '' }); setDetail(null); }}
+                className="btn-primary flex-1 flex items-center justify-center gap-1"
+              >
+                <ArrowDownCircle className="w-4 h-4" /> Entrée
+              </button>
+              <button
+                onClick={() => { setMouvModal({ article: detail, type: 'sortie' }); setForm({ quantite: 1, motif: '' }); setDetail(null); }}
+                className="btn-secondary flex-1 flex items-center justify-center gap-1"
+              >
+                <ArrowUpCircle className="w-4 h-4" /> Sortie
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         open={!!mouvModal}

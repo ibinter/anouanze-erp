@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Plus, TrendingDown } from 'lucide-react';
+import { Building2, Plus, TrendingDown, Wallet } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { StatCard } from '@/components/ui/StatCard';
-import { cn } from '@/lib/utils';
+import { cn, toNum, formatMontant, formatDate } from '@/lib/utils';
 
 type StatutImmo = 'EN_SERVICE' | 'CEDE' | 'REBUTE';
 type CategorieImmo = 'Matériel informatique' | 'Mobilier' | 'Véhicule' | 'Équipement' | 'Bâtiment';
@@ -51,21 +51,17 @@ const CAT_STYLES: Record<CategorieImmo, string> = {
   'Bâtiment': 'badge bg-teal-100 text-teal-700',
 };
 
-function fmtXOF(n: number) {
-  return new Intl.NumberFormat('fr-CI', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(n);
-}
-
 function calcValeurNette(immo: Immobilisation): number {
   const debut = new Date(immo.dateAcquisition);
   const annees = (Date.now() - debut.getTime()) / (1000 * 60 * 60 * 24 * 365);
-  const cumul = Math.min(annees * immo.tauxAmortissement / 100, 1);
-  return Math.max(0, immo.valeurAcquisition * (1 - cumul));
+  const cumul = Math.min(annees * toNum(immo.tauxAmortissement) / 100, 1);
+  return Math.max(0, toNum(immo.valeurAcquisition) * (1 - cumul));
 }
 
 function calcPctAmorti(immo: Immobilisation): number {
   const debut = new Date(immo.dateAcquisition);
   const annees = (Date.now() - debut.getTime()) / (1000 * 60 * 60 * 24 * 365);
-  return Math.min(100, Math.round(annees * immo.tauxAmortissement));
+  return Math.min(100, Math.round(annees * toNum(immo.tauxAmortissement)));
 }
 
 const FORM_INIT = {
@@ -79,23 +75,26 @@ const FORM_INIT = {
 
 export default function ImmobilisationsPage() {
   const [modalNv, setModalNv] = useState(false);
+  const [detail, setDetail] = useState<Immobilisation | null>(null);
   const [form, setForm] = useState(FORM_INIT);
 
-  const vnTotal = IMMOBILISATIONS.filter((i) => i.statut === 'EN_SERVICE').reduce((s, i) => s + calcValeurNette(i), 0);
-  const amortMois = IMMOBILISATIONS.filter((i) => i.statut === 'EN_SERVICE').reduce((s, i) => s + (i.valeurAcquisition * i.tauxAmortissement / 100 / 12), 0);
+  const enService = IMMOBILISATIONS.filter((i) => i.statut === 'EN_SERVICE');
+  const vaTotal = IMMOBILISATIONS.reduce((s, i) => s + toNum(i.valeurAcquisition), 0);
+  const vnTotal = enService.reduce((s, i) => s + calcValeurNette(i), 0);
+  const amortMois = enService.reduce((s, i) => s + (toNum(i.valeurAcquisition) * toNum(i.tauxAmortissement) / 100 / 12), 0);
 
   const columns: Column<Immobilisation>[] = [
     { key: 'reference', header: 'Référence', render: (r) => <span className="font-mono text-xs text-neutral-500">{r.reference}</span> },
     { key: 'designation', header: 'Désignation', render: (r) => <span className="font-semibold text-neutral-800 text-sm">{r.designation}</span> },
     { key: 'categorie', header: 'Catégorie', render: (r) => <span className={CAT_STYLES[r.categorie]}>{r.categorie}</span> },
     { key: 'dateAcquisition', header: 'Acquisition', render: (r) => <span className="text-xs text-neutral-500">{r.dateAcquisition}</span> },
-    { key: 'valeurAcquisition', header: 'Valeur acq.', render: (r) => <span className="text-xs">{fmtXOF(r.valeurAcquisition)}</span> },
+    { key: 'valeurAcquisition', header: 'Valeur acq.', render: (r) => <span className="text-xs">{formatMontant(r.valeurAcquisition)}</span> },
     {
       key: 'valeurNette', header: 'Valeur nette', render: (r) => (
-        <span className="font-semibold text-primary-600 text-sm">{fmtXOF(calcValeurNette(r))}</span>
+        <span className="font-semibold text-primary-600 text-sm">{formatMontant(calcValeurNette(r))}</span>
       )
     },
-    { key: 'tauxAmortissement', header: 'Taux', render: (r) => <span className="text-xs text-neutral-500">{r.tauxAmortissement}%</span> },
+    { key: 'tauxAmortissement', header: 'Taux', render: (r) => <span className="text-xs text-neutral-500">{toNum(r.tauxAmortissement)}%</span> },
     {
       key: 'progression', header: 'Amorti', render: (r) => {
         const pct = calcPctAmorti(r);
@@ -136,13 +135,14 @@ export default function ImmobilisationsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard titre="Total immobilisations" valeur={IMMOBILISATIONS.length} icone={<Building2 className="w-5 h-5" />} couleur="blue" />
-        <StatCard titre="Valeur nette comptable" valeur={fmtXOF(vnTotal)} icone={<Building2 className="w-5 h-5" />} couleur="green" description="Actifs en service" />
-        <StatCard titre="Amortissements ce mois" valeur={fmtXOF(amortMois)} icone={<TrendingDown className="w-5 h-5" />} couleur="orange" />
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <StatCard titre="Total immobilisations" valeur={IMMOBILISATIONS.length} icone={<Building2 className="w-5 h-5" />} couleur="blue" description={`${enService.length} en service`} />
+        <StatCard titre="Valeur d'acquisition" valeur={formatMontant(vaTotal)} icone={<Wallet className="w-5 h-5" />} couleur="purple" description="Brut, tous statuts" />
+        <StatCard titre="Valeur nette comptable" valeur={formatMontant(vnTotal)} icone={<Building2 className="w-5 h-5" />} couleur="green" description="Actifs en service" />
+        <StatCard titre="Amortissements ce mois" valeur={formatMontant(amortMois)} icone={<TrendingDown className="w-5 h-5" />} couleur="orange" />
       </div>
 
-      <DataTable columns={columns} data={IMMOBILISATIONS as unknown as Record<string, unknown>[]} isLoading={false} />
+      <DataTable columns={columns} data={IMMOBILISATIONS as unknown as Record<string, unknown>[]} isLoading={false} onRowClick={(r) => setDetail(r as Immobilisation)} />
 
       <Modal
         open={modalNv}
@@ -198,6 +198,52 @@ export default function ImmobilisationsPage() {
             </select>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!detail}
+        onOpenChange={(o) => !o && setDetail(null)}
+        title={detail?.designation ?? ''}
+        description={detail?.reference}
+      >
+        {detail && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <span className={CAT_STYLES[detail.categorie]}>{detail.categorie}</span>
+              <span className={STATUT_STYLES[detail.statut]}>{STATUT_LABELS[detail.statut]}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Date d'acquisition</p>
+                <p className="mt-1 font-semibold text-neutral-800">{formatDate(detail.dateAcquisition)}</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Taux d'amortissement</p>
+                <p className="mt-1 font-semibold text-neutral-800">{toNum(detail.tauxAmortissement)}%</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Valeur d'acquisition</p>
+                <p className="mt-1 font-semibold text-neutral-800">{formatMontant(detail.valeurAcquisition)}</p>
+              </div>
+              <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
+                <p className="text-xs text-neutral-500">Amortissement</p>
+                <p className="mt-1 font-semibold text-neutral-800">{calcPctAmorti(detail)}%</p>
+              </div>
+            </div>
+            <div>
+              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full', calcPctAmorti(detail) >= 100 ? 'bg-neutral-400' : 'bg-accent-400')}
+                  style={{ width: `${calcPctAmorti(detail)}%` }}
+                />
+              </div>
+            </div>
+            <div className="rounded-xl bg-primary-50 border border-primary-100 p-4 flex items-center justify-between">
+              <span className="text-sm font-medium text-primary-700">Valeur nette comptable</span>
+              <span className="text-lg font-bold text-primary-700">{formatMontant(calcValeurNette(detail))}</span>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

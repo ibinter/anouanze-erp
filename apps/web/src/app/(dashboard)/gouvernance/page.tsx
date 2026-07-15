@@ -60,6 +60,9 @@ export default function GouvernancePage() {
   const [organeForm, setOrganeForm] = useState({ nom: '', typeOrgane: 'CONSEIL_ADMINISTRATION', nombreMembres: '', description: '' });
   const [resolutionForm, setResolutionForm] = useState({ titre: '', description: '', responsable: '' });
   const [reunionForm, setReunionForm] = useState({ titre: '', dateReunion: '', lieu: '', ordreJour: '' });
+  const [detailOrgane, setDetailOrgane] = useState<Organe | null>(null);
+  const [detailReunion, setDetailReunion] = useState<any | null>(null);
+  const [detailResolution, setDetailResolution] = useState<Resolution | null>(null);
 
   const { data: stats } = useQuery<GouvernanceStats>({
     queryKey: ['gouvernance-stats'],
@@ -116,17 +119,17 @@ export default function GouvernancePage() {
         </div>
         <div className="flex gap-2">
           {tab === 'organes' && (
-            <button onClick={() => setShowOrganeModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
+            <button onClick={() => setShowOrganeModal(true)} className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-700">
               <Plus className="w-4 h-4" /> Nouvel organe
             </button>
           )}
           {tab === 'reunions' && (
-            <button onClick={() => setShowReunionModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90" disabled={!selectedOrganeId}>
+            <button onClick={() => setShowReunionModal(true)} className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-700" disabled={!selectedOrganeId}>
               <Plus className="w-4 h-4" /> Planifier réunion
             </button>
           )}
           {tab === 'resolutions' && (
-            <button onClick={() => setShowResolutionModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
+            <button onClick={() => setShowResolutionModal(true)} className="flex items-center gap-2 bg-primary-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-700">
               <Plus className="w-4 h-4" /> Nouvelle résolution
             </button>
           )}
@@ -136,17 +139,19 @@ export default function GouvernancePage() {
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Organes actifs', value: stats?.organeActifs ?? '—', icon: Building2, color: 'text-primary' },
-          { label: 'Membres totaux', value: stats?.totalMembres ?? '—', icon: Users, color: 'text-blue-600' },
-          { label: 'Résolutions en cours', value: stats?.resolutionsParStatut?.EN_COURS ?? 0, icon: FileText, color: 'text-orange-500' },
-          { label: 'Prochaine réunion', value: stats?.prochainReunion ? new Date(stats.prochainReunion).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—', icon: Calendar, color: 'text-purple-600' },
+          { label: 'Organes actifs', value: stats?.organeActifs ?? '—', icon: Building2, tint: 'bg-primary-50', color: 'text-primary-600' },
+          { label: 'Membres totaux', value: stats?.totalMembres ?? '—', icon: Users, tint: 'bg-blue-50', color: 'text-blue-600' },
+          { label: 'Résolutions en cours', value: stats?.resolutionsParStatut?.EN_COURS ?? 0, icon: FileText, tint: 'bg-orange-50', color: 'text-orange-500' },
+          { label: 'Prochaine réunion', value: stats?.prochainReunion ? new Date(stats.prochainReunion).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—', icon: Calendar, tint: 'bg-purple-50', color: 'text-purple-600' },
         ].map((kpi) => (
-          <div key={kpi.label} className="bg-white border border-gray-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500">{kpi.label}</span>
-              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+          <div key={kpi.label} className="stat-card flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${kpi.tint}`}>
+              <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+            <div>
+              <p className="text-xs text-neutral-500">{kpi.label}</p>
+              <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -158,7 +163,7 @@ export default function GouvernancePage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${tab === t ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-6 py-3 text-sm font-medium transition-colors ${tab === t ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               {t === 'organes' ? 'Organes' : t === 'reunions' ? 'Réunions' : 'Résolutions'}
             </button>
@@ -178,7 +183,11 @@ export default function GouvernancePage() {
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
                 {organes.map((o) => (
-                  <div key={o.id} className="border border-gray-200 rounded-xl p-4 hover:border-primary/30 transition-colors">
+                  <div
+                    key={o.id}
+                    onClick={() => setDetailOrgane(o)}
+                    className="border border-gray-200 rounded-2xl p-4 cursor-pointer hover:border-primary-300 hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-gray-900">{o.nom}</h3>
                       <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Actif</span>
@@ -189,7 +198,7 @@ export default function GouvernancePage() {
                       <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {o._count?.reunions ?? 0} réunions</span>
                     </div>
                     {o.prochainReunion && (
-                      <p className="text-xs text-primary mt-2">Prochaine réunion : {new Date(o.prochainReunion).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs text-primary-600 mt-2">Prochaine réunion : {new Date(o.prochainReunion).toLocaleDateString('fr-FR')}</p>
                     )}
                   </div>
                 ))}
@@ -202,9 +211,9 @@ export default function GouvernancePage() {
             <div className="space-y-4">
               {organes.length > 0 && (
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => setSelectedOrganeId(null)} className={`px-3 py-1.5 rounded-full text-xs border ${!selectedOrganeId ? 'bg-primary text-white border-primary' : 'border-gray-300 text-gray-600'}`}>Tous</button>
+                  <button onClick={() => setSelectedOrganeId(null)} className={`px-3 py-1.5 rounded-full text-xs border ${!selectedOrganeId ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 text-gray-600'}`}>Tous</button>
                   {organes.map((o) => (
-                    <button key={o.id} onClick={() => setSelectedOrganeId(o.id)} className={`px-3 py-1.5 rounded-full text-xs border ${selectedOrganeId === o.id ? 'bg-primary text-white border-primary' : 'border-gray-300 text-gray-600'}`}>{o.nom}</button>
+                    <button key={o.id} onClick={() => setSelectedOrganeId(o.id)} className={`px-3 py-1.5 rounded-full text-xs border ${selectedOrganeId === o.id ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 text-gray-600'}`}>{o.nom}</button>
                   ))}
                 </div>
               )}
@@ -219,7 +228,7 @@ export default function GouvernancePage() {
               ) : (
                 <div className="divide-y divide-gray-100">
                   {reunions.map((r: any) => (
-                    <div key={r.id} className="py-3 flex items-center justify-between">
+                    <div key={r.id} onClick={() => setDetailReunion(r)} className="py-3 px-2 -mx-2 rounded-lg flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
                       <div>
                         <p className="font-medium text-gray-900">{r.titre}</p>
                         <p className="text-sm text-gray-500">{r.lieu} · {new Date(r.dateReunion).toLocaleDateString('fr-FR')}</p>
@@ -246,7 +255,7 @@ export default function GouvernancePage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {resolutions.map((r) => (
-                  <div key={r.id} className="py-4 flex items-start justify-between gap-4">
+                  <div key={r.id} onClick={() => setDetailResolution(r)} className="py-4 px-2 -mx-2 rounded-lg flex items-start justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{r.titre}</p>
                       {r.description && <p className="text-sm text-gray-500 mt-0.5">{r.description}</p>}
@@ -255,7 +264,7 @@ export default function GouvernancePage() {
                     <div className="flex items-center gap-2">
                       <span className={`text-xs px-2 py-1 rounded-full ${STATUT_COLORS[r.statut] ?? 'bg-gray-100 text-gray-600'}`}>{STATUT_LABELS[r.statut] ?? r.statut}</span>
                       {r.statut === 'EN_ATTENTE' && (
-                        <button onClick={() => updateResolution.mutate({ id: r.id, statut: 'APPROUVEE' })} className="text-xs text-primary underline">Approuver</button>
+                        <button onClick={(e) => { e.stopPropagation(); updateResolution.mutate({ id: r.id, statut: 'APPROUVEE' }); }} className="text-xs text-primary-600 underline">Approuver</button>
                       )}
                     </div>
                   </div>
@@ -289,7 +298,7 @@ export default function GouvernancePage() {
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowOrganeModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
-              <button onClick={() => createOrgane.mutate({ ...organeForm, nombreMembres: organeForm.nombreMembres ? parseInt(organeForm.nombreMembres) : undefined })} disabled={!organeForm.nom || createOrgane.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+              <button onClick={() => createOrgane.mutate({ ...organeForm, nombreMembres: organeForm.nombreMembres ? parseInt(organeForm.nombreMembres) : undefined })} disabled={!organeForm.nom || createOrgane.isPending} className="flex-1 bg-primary-600 text-white rounded-lg py-2 text-sm disabled:opacity-60 hover:bg-primary-700 transition-colors">
                 {createOrgane.isPending ? 'Création...' : 'Créer'}
               </button>
             </div>
@@ -312,7 +321,7 @@ export default function GouvernancePage() {
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowResolutionModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
-              <button onClick={() => createResolution.mutate(resolutionForm)} disabled={!resolutionForm.titre || createResolution.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
+              <button onClick={() => createResolution.mutate(resolutionForm)} disabled={!resolutionForm.titre || createResolution.isPending} className="flex-1 bg-primary-600 text-white rounded-lg py-2 text-sm disabled:opacity-60 hover:bg-primary-700 transition-colors">
                 {createResolution.isPending ? 'Création...' : 'Créer'}
               </button>
             </div>
@@ -343,10 +352,113 @@ export default function GouvernancePage() {
               <button
                 onClick={() => selectedOrganeId && createReunion.mutate({ organeId: selectedOrganeId, data: { ...reunionForm, ordreJour: reunionForm.ordreJour.split('\n').filter(Boolean) } })}
                 disabled={!selectedOrganeId || !reunionForm.titre || createReunion.isPending}
-                className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60"
+                className="flex-1 bg-primary-600 text-white rounded-lg py-2 text-sm disabled:opacity-60 hover:bg-primary-700 transition-colors"
               >
                 {createReunion.isPending ? 'Création...' : 'Planifier'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail: Organe */}
+      {detailOrgane && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setDetailOrgane(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{detailOrgane.nom}</h2>
+              <button onClick={() => setDetailOrgane(null)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Actif</span>
+              {detailOrgane.description && <p className="text-sm text-gray-600">{detailOrgane.description}</p>}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <p className="text-xs text-gray-500">Type d'organe</p>
+                  <p className="text-sm font-medium text-gray-900">{detailOrgane.typeOrgane?.replace(/_/g, ' ') ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Membres</p>
+                  <p className="text-sm font-medium text-gray-900">{detailOrgane.nombreMembres ?? 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Réunions</p>
+                  <p className="text-sm font-medium text-gray-900">{detailOrgane._count?.reunions ?? 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Prochaine réunion</p>
+                  <p className="text-sm font-medium text-gray-900">{detailOrgane.prochainReunion ? new Date(detailOrgane.prochainReunion).toLocaleDateString('fr-FR') : '—'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail: Réunion */}
+      {detailReunion && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setDetailReunion(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{detailReunion.titre}</h2>
+              <button onClick={() => setDetailReunion(null)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <span className={`text-xs px-2 py-1 rounded-full ${detailReunion.statut === 'TENUE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                {detailReunion.statut === 'TENUE' ? 'Tenue' : 'Planifiée'}
+              </span>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <p className="text-xs text-gray-500">Date</p>
+                  <p className="text-sm font-medium text-gray-900">{detailReunion.dateReunion ? new Date(detailReunion.dateReunion).toLocaleDateString('fr-FR') : '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Lieu</p>
+                  <p className="text-sm font-medium text-gray-900">{detailReunion.lieu ?? '—'}</p>
+                </div>
+              </div>
+              {Array.isArray(detailReunion.ordreJour) && detailReunion.ordreJour.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs text-gray-500 mb-1">Ordre du jour</p>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-0.5">
+                    {detailReunion.ordreJour.map((pt: string, i: number) => <li key={i}>{pt}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail: Résolution */}
+      {detailResolution && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setDetailResolution(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{detailResolution.titre}</h2>
+              <button onClick={() => setDetailResolution(null)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <span className={`text-xs px-2 py-1 rounded-full ${STATUT_COLORS[detailResolution.statut] ?? 'bg-gray-100 text-gray-600'}`}>{STATUT_LABELS[detailResolution.statut] ?? detailResolution.statut}</span>
+              {detailResolution.description && <p className="text-sm text-gray-600">{detailResolution.description}</p>}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <p className="text-xs text-gray-500">Responsable</p>
+                  <p className="text-sm font-medium text-gray-900">{detailResolution.responsable ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Date d'adoption</p>
+                  <p className="text-sm font-medium text-gray-900">{detailResolution.dateAdoption ? new Date(detailResolution.dateAdoption).toLocaleDateString('fr-FR') : '—'}</p>
+                </div>
+              </div>
+              {detailResolution.statut === 'EN_ATTENTE' && (
+                <button
+                  onClick={() => { updateResolution.mutate({ id: detailResolution.id, statut: 'APPROUVEE' }); setDetailResolution(null); }}
+                  className="w-full bg-primary-600 text-white rounded-lg py-2 text-sm hover:bg-primary-700 transition-colors mt-2"
+                >
+                  Approuver la résolution
+                </button>
+              )}
             </div>
           </div>
         </div>

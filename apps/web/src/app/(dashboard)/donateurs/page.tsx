@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Search, Plus, Heart, TrendingUp, Calendar, Eye, X } from 'lucide-react';
+import { Search, Plus, Heart, TrendingUp, Calendar, Eye, X, Coins } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { SlideOver } from '@/components/ui/SlideOver';
 import { Pagination } from '@/components/ui/Pagination';
-import { formatMontant, formatDate } from '@/lib/utils';
+import { formatMontant, formatDate, toNum } from '@/lib/utils';
 
 interface Donateur {
   id: string;
@@ -259,20 +259,20 @@ export default function DonateursPage() {
     },
     {
       key: 'totalDons', header: 'Montant total',
-      render: (r) => <span className="font-mono font-semibold">{formatMontant((r as any).totalDons ?? 0)}</span>,
+      render: (r) => <span className="font-mono font-semibold">{formatMontant(toNum((r as any).totalDons))}</span>,
     },
     {
       key: 'actions', header: 'Actions', width: '160px',
       render: (r) => (
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setSelected(r)}
+            onClick={(e) => { e.stopPropagation(); setSelected(r); }}
             className="flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium"
           >
             <Eye className="w-3 h-3" /> Historique
           </button>
           <button
-            onClick={() => setDonForModal(r)}
+            onClick={(e) => { e.stopPropagation(); setDonForModal(r); }}
             className="flex items-center gap-1 text-xs text-accent-400 hover:underline font-medium"
           >
             <Plus className="w-3 h-3" /> Don
@@ -298,32 +298,41 @@ export default function DonateursPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary-50">
-            <Heart className="w-5 h-5 text-primary-600" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-sm">
+            <Heart className="w-5 h-5 text-white" />
           </div>
           <div>
             <p className="text-xs text-neutral-500">Total donateurs</p>
-            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : total}</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : (statsData?.totalDonateurs ?? total)}</p>
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50">
-            <TrendingUp className="w-5 h-5 text-blue-500" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm">
+            <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Total dons</p>
+            <p className="text-xs text-neutral-500">Nombre de dons</p>
             <p className="text-xl font-bold text-neutral-800">{statsData?.totalDons ?? '—'}</p>
           </div>
         </div>
         <div className="stat-card flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-green-50">
-            <Calendar className="w-5 h-5 text-green-600" />
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-sm">
+            <Coins className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Montant ce mois</p>
-            <p className="text-lg font-bold text-green-600">{statsData?.montantMois != null ? formatMontant(statsData.montantMois) : '—'}</p>
+            <p className="text-xs text-neutral-500">Total collecté</p>
+            <p className="text-lg font-bold text-neutral-800">{statsData?.montantTotal != null ? formatMontant(toNum(statsData.montantTotal)) : '—'}</p>
+          </div>
+        </div>
+        <div className="stat-card flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-green-400 to-green-600 shadow-sm">
+            <Calendar className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-neutral-500">Collecté ce mois</p>
+            <p className="text-lg font-bold text-green-600">{statsData?.montantCeMois != null ? formatMontant(toNum(statsData.montantCeMois)) : '—'}</p>
           </div>
         </div>
       </div>
@@ -354,6 +363,7 @@ export default function DonateursPage() {
         columns={columns as Column<Donateur & Record<string, unknown>>[]}
         data={donateurs as (Donateur & Record<string, unknown>)[]}
         isLoading={isLoading}
+        onRowClick={(r) => setSelected(r as Donateur)}
       />
 
       {total > limit && (
@@ -375,7 +385,10 @@ export default function DonateursPage() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-sm font-semibold text-neutral-700">{(selected as any)._count?.dons ?? 0} don(s)</p>
+              <div>
+                <p className="text-sm font-semibold text-neutral-700">{(selected as any)._count?.dons ?? dons.length} don(s)</p>
+                <p className="text-xs text-neutral-500">Total : <span className="font-mono font-semibold text-primary-700">{formatMontant(dons.reduce((s, d) => s + toNum(d.montant), 0))}</span></p>
+              </div>
               <button
                 onClick={() => { setDonForModal(selected); setSelected(null); }}
                 className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"

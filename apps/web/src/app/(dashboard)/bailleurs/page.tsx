@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Search, Globe, Plus } from 'lucide-react';
+import { Search, Globe, Plus, Building2, FileText, MapPin } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { formatMontant } from '@/lib/utils';
+import { formatMontant, toNum } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 interface Bailleur {
@@ -22,10 +22,11 @@ interface Convention {
   id: string;
   reference: string;
   titre: string;
-  montant: number;
+  montantTotal: number | string;
   dateDebut: string;
   dateFin: string;
-  montantDecaisse: number;
+  montantDecaisse?: number | string;
+  _count?: { decaissements: number };
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -87,6 +88,10 @@ export default function BailleursPage() {
   const bailleurs: Bailleur[] = data?.data ?? [];
   const conventions: Convention[] = conventionsData ?? [];
 
+  const totalBailleurs = data?.meta?.total ?? bailleurs.length;
+  const totalConventions = bailleurs.reduce((s, b) => s + toNum((b as any)._count?.conventions), 0);
+  const paysCount = new Set(bailleurs.map((b) => b.pays).filter(Boolean)).size;
+
   const columns: Column<Bailleur>[] = [
     {
       key: 'nom', header: 'Bailleur',
@@ -118,7 +123,7 @@ export default function BailleursPage() {
       key: 'actions', header: '', width: '100px',
       render: (r) => (
         <button
-          onClick={() => setSelected(selected?.id === r.id ? null : r)}
+          onClick={(e) => { e.stopPropagation(); setSelected(selected?.id === r.id ? null : r); }}
           className={cn('text-xs font-medium', selected?.id === r.id ? 'text-accent-400' : 'text-primary-600 hover:underline')}
         >
           {selected?.id === r.id ? 'Masquer' : 'Conventions'}
@@ -139,6 +144,36 @@ export default function BailleursPage() {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="stat-card flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-sm">
+            <Building2 className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-neutral-500">Total bailleurs</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalBailleurs}</p>
+          </div>
+        </div>
+        <div className="stat-card flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-sm">
+            <FileText className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-neutral-500">Conventions</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalConventions}</p>
+          </div>
+        </div>
+        <div className="stat-card flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm">
+            <MapPin className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-neutral-500">Pays représentés</p>
+            <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : paysCount}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
@@ -154,6 +189,7 @@ export default function BailleursPage() {
         columns={columns as Column<Bailleur & Record<string, unknown>>[]}
         data={bailleurs as (Bailleur & Record<string, unknown>)[]}
         isLoading={isLoading}
+        onRowClick={(r) => setSelected(selected?.id === (r as Bailleur).id ? null : (r as Bailleur))}
       />
 
       {selected && (
@@ -165,9 +201,11 @@ export default function BailleursPage() {
           {convLoading && <p className="text-sm text-neutral-400">Chargement des conventions…</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {conventions.map((conv) => {
-              const tauxDecaissement = conv.montant > 0 ? Math.round((conv.montantDecaisse / conv.montant) * 100) : 0;
+              const montant = toNum(conv.montantTotal);
+              const decaisse = toNum(conv.montantDecaisse);
+              const tauxDecaissement = montant > 0 ? Math.round((decaisse / montant) * 100) : 0;
               return (
-                <div key={conv.id} className="card p-4 space-y-3">
+                <div key={conv.id} className="card-hover p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-xs font-mono text-neutral-400">{conv.reference}</p>
@@ -176,7 +214,7 @@ export default function BailleursPage() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-neutral-500">Montant</span>
-                    <span className="font-mono font-semibold text-neutral-800">{formatMontant(conv.montant)}</span>
+                    <span className="font-mono font-semibold text-neutral-800">{formatMontant(montant)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-neutral-500">
                     <span>{conv.dateDebut?.slice(0, 7).replace('-', '/')}</span>
@@ -196,7 +234,7 @@ export default function BailleursPage() {
                         style={{ width: `${tauxDecaissement}%` }}
                       />
                     </div>
-                    <p className="text-xs text-neutral-400 mt-1">{formatMontant(conv.montantDecaisse)} / {formatMontant(conv.montant)}</p>
+                    <p className="text-xs text-neutral-400 mt-1">{formatMontant(decaisse)} / {formatMontant(montant)}</p>
                   </div>
                 </div>
               );

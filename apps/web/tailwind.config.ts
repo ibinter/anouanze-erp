@@ -12,6 +12,7 @@ const config: Config = {
       colors: {
         // Charte graphique ANOUANZÊ ERP
         primary: {
+          DEFAULT: '#146C43', // évite les classes `bg-primary`/`text-primary` sans couleur
           50:  '#f0faf4',
           100: '#d8f3e3',
           200: '#b3e6c9',
@@ -24,6 +25,7 @@ const config: Config = {
           900: '#0c3d27',
         },
         accent: {
+          DEFAULT: '#f28c25',
           50:  '#fff8f0',
           100: '#ffecd3',
           200: '#ffd5a3',

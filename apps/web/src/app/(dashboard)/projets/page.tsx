@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { formatDate, formatMontant, cn } from '@/lib/utils';
+import { formatDate, formatMontant, toNum, cn } from '@/lib/utils';
 import { Search, FolderOpen, CheckCircle2, TrendingUp, ArrowRight } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 
@@ -62,17 +62,21 @@ function StatutBadge({ statut }: { statut: string }) {
   return <span className={entry.cls}>{entry.label}</span>;
 }
 
-function ProjetCard({ projet }: { projet: Projet }) {
-  const budgetPrev = projet.budgetPrevisionnel ?? projet.budgetTotal ?? projet.budget ?? 0;
-  const budgetReal = projet.budgetRealise ?? projet.depenses ?? 0;
+function ProjetCard({ projet, onClick }: { projet: Projet; onClick: () => void }) {
+  const budgetPrev = toNum(projet.budgetPrevisionnel ?? projet.budgetTotal ?? projet.budget);
+  const budgetReal = toNum(projet.budgetRealise ?? projet.depenses);
   const pct = budgetPrev > 0
     ? Math.min(100, Math.round((budgetReal / budgetPrev) * 100))
     : 0;
 
   return (
-    <div className="card flex flex-col gap-4 hover:shadow-md transition-shadow">
+    <button
+      type="button"
+      onClick={onClick}
+      className="card-hover rounded-2xl p-5 flex flex-col gap-4 text-left w-full cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary-600/30"
+    >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-neutral-800 leading-snug">{projet.nom}</h3>
+        <h3 className="font-semibold text-neutral-800 leading-snug group-hover:text-primary-700 transition-colors">{projet.nom}</h3>
         <StatutBadge statut={projet.statut} />
       </div>
 
@@ -116,10 +120,73 @@ function ProjetCard({ projet }: { projet: Projet }) {
         </div>
       )}
 
-      <button className="btn-secondary flex items-center justify-center gap-2 mt-auto">
+      <span className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-primary-600 group-hover:gap-3 transition-all">
         Voir détails
         <ArrowRight className="w-3.5 h-3.5" />
-      </button>
+      </span>
+    </button>
+  );
+}
+
+function ProjetDetail({ projet }: { projet: Projet }) {
+  const budgetPrev = toNum(projet.budgetPrevisionnel ?? projet.budgetTotal ?? projet.budget);
+  const budgetReal = toNum(projet.budgetRealise ?? projet.depenses);
+  const reste = budgetPrev - budgetReal;
+  const pct = budgetPrev > 0 ? Math.min(100, Math.round((budgetReal / budgetPrev) * 100)) : 0;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-2">
+        <StatutBadge statut={projet.statut} />
+        {(projet.dateDebut || projet.dateFin) && (
+          <span className="text-xs text-neutral-500">
+            {projet.dateDebut ? formatDate(projet.dateDebut) : '—'} → {projet.dateFin ? formatDate(projet.dateFin) : '—'}
+          </span>
+        )}
+      </div>
+
+      {projet.description && (
+        <p className="text-sm text-neutral-600 leading-relaxed">{projet.description}</p>
+      )}
+
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl bg-neutral-50 p-3">
+          <p className="text-xs text-neutral-500">Budget prévisionnel</p>
+          <p className="text-sm font-bold text-neutral-800 mt-0.5">{formatMontant(budgetPrev)}</p>
+        </div>
+        <div className="rounded-xl bg-neutral-50 p-3">
+          <p className="text-xs text-neutral-500">Budget réalisé</p>
+          <p className="text-sm font-bold text-accent-500 mt-0.5">{formatMontant(budgetReal)}</p>
+        </div>
+        <div className="rounded-xl bg-neutral-50 p-3">
+          <p className="text-xs text-neutral-500">Reste disponible</p>
+          <p className={cn('text-sm font-bold mt-0.5', reste >= 0 ? 'text-primary-600' : 'text-red-600')}>{formatMontant(reste)}</p>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-xs text-neutral-500">
+          <span>Taux d&apos;exécution budgétaire</span>
+          <span className="font-medium text-neutral-700">{pct}%</span>
+        </div>
+        <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
+          <div
+            className={cn('h-full rounded-full transition-all', pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-accent-400' : 'bg-primary-600')}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      {(projet.secteurs ?? []).length > 0 && (
+        <div>
+          <p className="text-xs text-neutral-500 mb-1.5">Secteurs</p>
+          <div className="flex flex-wrap gap-1.5">
+            {(projet.secteurs ?? []).map((s) => (
+              <span key={s} className="badge badge-neutral text-xs">{s}</span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -131,6 +198,7 @@ export default function ProjetsPage() {
   const [statut, setStatut] = useState('');
   const [secteur, setSecteur] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProjet, setSelectedProjet] = useState<Projet | null>(null);
   const [form, setForm] = useState(PROJET_INIT);
   const [error, setError] = useState('');
   const queryClient = useQueryClient();
@@ -171,7 +239,7 @@ export default function ProjetsPage() {
   const projets = data?.data ?? [];
   const enCours = projets.filter((p) => p.statut === 'EN_COURS').length;
   const termines = projets.filter((p) => p.statut === 'CLOTURE').length;
-  const budgetTotal = projets.reduce((s, p) => s + (p.budgetPrevisionnel ?? p.budgetTotal ?? p.budget ?? 0), 0);
+  const budgetTotal = projets.reduce((s, p) => s + toNum(p.budgetPrevisionnel ?? p.budgetTotal ?? p.budget), 0);
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -262,7 +330,7 @@ export default function ProjetsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projets.map((projet) => (
-            <ProjetCard key={projet.id} projet={projet} />
+            <ProjetCard key={projet.id} projet={projet} onClick={() => setSelectedProjet(projet)} />
           ))}
         </div>
       )}
@@ -316,6 +384,15 @@ export default function ProjetsPage() {
             </div>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={selectedProjet !== null}
+        onOpenChange={(open) => { if (!open) setSelectedProjet(null); }}
+        title={selectedProjet?.nom ?? 'Détail du projet'}
+        size="lg"
+      >
+        {selectedProjet && <ProjetDetail projet={selectedProjet} />}
       </Modal>
     </div>
   );
