@@ -17,33 +17,45 @@ export const api = axios.create({
 let _token: string | null = null;
 export function setApiToken(t: string | null) { _token = t; }
 
-// Fallback : une seule promesse getSession() partagée, jamais en rafale
+// Récupère le token depuis NextAuth (déclenche le refresh serveur si expiré).
+// Une seule promesse partagée → pas de rafale de requêtes concurrentes.
 let _sessionPromise: Promise<string | null> | null = null;
-async function resolveToken(): Promise<string | null> {
-  if (_token) return _token;                       // voie rapide
+async function fetchToken(force = false): Promise<string | null> {
+  if (_token && !force) return _token;             // voie rapide
   if (!_sessionPromise) {
     _sessionPromise = getSession()
       .then((s) => {
         const t = (s as any)?.accessToken ?? null;
-        if (t) _token = t;
+        _token = t;
         return t;
       })
       .finally(() => { _sessionPromise = null; });
   }
-  return _sessionPromise;                           // requêtes concurrentes partagent la même promesse
+  return _sessionPromise;
 }
 
 // Injecter le token JWT avant chaque requête
 api.interceptors.request.use(async (config) => {
-  const token = await resolveToken();
+  const token = await fetchToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Gestion globale des erreurs — pas de redirection brutale (évite les boucles)
+// Sur 401 : le token a probablement expiré → on force un refresh et on réessaie une fois
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const original = error.config;
+    if (error.response?.status === 401 && original && !original._retry) {
+      original._retry = true;
+      _token = null;                               // invalide le cache
+      const fresh = await fetchToken(true);        // force getSession → refresh serveur
+      if (fresh) {
+        original.headers = original.headers ?? {};
+        original.headers.Authorization = `Bearer ${fresh}`;
+        return api(original);
+      }
+    }
     const message = error.response?.data?.message ?? 'Une erreur est survenue';
     return Promise.reject(new Error(message));
   },

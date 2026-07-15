@@ -1,6 +1,34 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
+const ACCESS_TOKEN_TTL = 15 * 60 * 1000; // 15 min (aligné sur l'API)
+
+function apiBase() {
+  return (process.env.API_URL ?? 'http://localhost:4000/api/v1').replace(/\/api\/v1$/, '');
+}
+
+// Rafraîchit le token d'accès via le refreshToken (7j)
+async function refreshAccessToken(token: any) {
+  try {
+    const res = await fetch(`${apiBase()}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: token.refreshToken }),
+    });
+    if (!res.ok) throw new Error('refresh failed');
+    const data = await res.json();
+    if (!data.accessToken) throw new Error('no accessToken');
+    return {
+      ...token,
+      accessToken: data.accessToken,
+      accessTokenExpires: Date.now() + ACCESS_TOKEN_TTL,
+      refreshToken: data.refreshToken ?? token.refreshToken,
+    };
+  } catch {
+    return { ...token, error: 'RefreshAccessTokenError' };
+  }
+}
+
 const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -50,15 +78,29 @@ const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // Connexion initiale : on stocke tokens + date d'expiration
       if (user) {
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
+        token.accessTokenExpires = Date.now() + ACCESS_TOKEN_TTL;
         token.organisationId = (user as any).organisationId;
         token.role = (user as any).role;
         token.nom = (user as any).nom;
         token.prenom = (user as any).prenom;
         token.avatar = (user as any).avatar;
         token.langue = (user as any).langue ?? 'fr';
+        return token;
+      }
+
+      // Token encore valide (marge de 60s) → on le garde
+      const expires = (token as any).accessTokenExpires as number | undefined;
+      if (expires && Date.now() < expires - 60 * 1000) {
+        return token;
+      }
+
+      // Token expiré → refresh via le refreshToken
+      if ((token as any).refreshToken) {
+        return await refreshAccessToken(token);
       }
       return token;
     },
