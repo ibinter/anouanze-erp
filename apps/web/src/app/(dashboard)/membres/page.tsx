@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { Search, UserPlus, Users, UserCheck, UserX, X, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
-import { exportXLSX, exportPDF } from '@/lib/export';
+import { exportDocument, membresExportDef } from '@/lib/pdf-engine';
 
 interface Membre {
   id: string;
@@ -215,21 +215,12 @@ function MembresTable() {
   const totalActifs = membres.filter((m) => m.statutMembre === 'ACTIF').length;
   const totalInactifs = membres.filter((m) => m.statutMembre !== 'ACTIF').length;
 
-  const exportColumns = [
-    { key: 'numero', header: 'N°', width: 10 },
-    { key: 'nom', header: 'Nom', width: 20 },
-    { key: 'prenom', header: 'Prénom', width: 20 },
-    { key: 'email', header: 'Email', width: 28 },
-    { key: 'telephone', header: 'Téléphone', width: 18 },
-    { key: 'statutMembre', header: 'Statut', width: 12 },
-    { key: 'dateAdhesion', header: 'Date adhésion', width: 16, format: 'date' as const },
-  ];
-
   const handleExportXLSX = async () => {
     setExporting(true);
     try {
       const { data: allData } = await (await import('@/lib/api')).api.get('/membres', { params: { limit: 9999 } });
-      await exportXLSX({ filename: 'membres', sheetName: 'Membres', columns: exportColumns, data: allData.data ?? membres, title: 'Liste des membres', subtitle: `Total : ${total} membres` });
+      const def = membresExportDef({ filtersSummary: `Total : ${total} membres` });
+      await exportDocument(def, allData.data ?? membres, 'xlsx');
     } finally { setExporting(false); }
   };
 
@@ -237,25 +228,8 @@ function MembresTable() {
     setExporting(true);
     try {
       const { data: allData } = await (await import('@/lib/api')).api.get('/membres', { params: { limit: 9999 } });
-      const rows = (allData.data ?? membres).map((m: Membre) => ({
-        numero: m.numero, nom: m.nom, prenom: m.prenom, email: m.email,
-        telephone: m.telephone, statut: m.statutMembre,
-        adhesion: m.dateAdhesion ? new Date(m.dateAdhesion).toLocaleDateString('fr-CI') : '—',
-      }));
-      await exportPDF({
-        filename: 'membres', title: 'Liste des membres', subtitle: `Total : ${total} membres — Actifs : ${totalActifs}`,
-        orientation: 'landscape',
-        columns: [
-          { header: 'N°', dataKey: 'numero', width: 15 },
-          { header: 'Nom', dataKey: 'nom', width: 30 },
-          { header: 'Prénom', dataKey: 'prenom', width: 30 },
-          { header: 'Email', dataKey: 'email', width: 50 },
-          { header: 'Téléphone', dataKey: 'telephone', width: 28 },
-          { header: 'Statut', dataKey: 'statut', width: 18 },
-          { header: 'Adhésion', dataKey: 'adhesion', width: 22 },
-        ],
-        data: rows,
-      });
+      const def = membresExportDef({ filtersSummary: `Total : ${total} membres — Actifs : ${totalActifs}` });
+      await exportDocument(def, allData.data ?? membres, 'pdf');
     } finally { setExporting(false); }
   };
 

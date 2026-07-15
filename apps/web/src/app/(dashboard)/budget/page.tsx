@@ -8,7 +8,7 @@ import {
   Wallet, Plus, CheckCircle, Clock, ChevronDown, ChevronUp, X,
   TrendingUp, AlertTriangle, Loader2, FileText as FilePdf,
 } from 'lucide-react';
-import { exportPDF } from '@/lib/export';
+import { exportDocument, budgetExportDef } from '@/lib/pdf-engine';
 
 interface LigneBudget {
   id: string;
@@ -358,28 +358,16 @@ export default function BudgetPage() {
           exercice: String(b.exercice),
           statut: b.statut === 'APPROUVE' ? 'Approuvé' : 'Brouillon',
           categorie: l.categorie,
-          description: l.description ?? '—',
-          prevu: Number(l.montantPrevu).toLocaleString('fr-CI') + ' FCFA',
-          realise: Number(l.montantRealise ?? 0).toLocaleString('fr-CI') + ' FCFA',
-          ecart: (Number(l.montantRealise ?? 0) - Number(l.montantPrevu)).toLocaleString('fr-CI') + ' FCFA',
+          prevu: Number(l.montantPrevu),
+          realise: Number(l.montantRealise ?? 0),
+          ecart: Number(l.montantRealise ?? 0) - Number(l.montantPrevu),
         })),
       );
-      await exportPDF({
-        filename: `budgets_${exercice}`,
-        title: `Rapport budgétaire — Exercice ${exercice}`,
-        subtitle: `${budgets.length} budget(s) — Prévu total : ${totalPrevu.toLocaleString('fr-CI')} FCFA`,
-        orientation: 'landscape',
-        columns: [
-          { header: 'Budget', dataKey: 'budget', width: 35 },
-          { header: 'Exercice', dataKey: 'exercice', width: 16 },
-          { header: 'Statut', dataKey: 'statut', width: 18 },
-          { header: 'Catégorie', dataKey: 'categorie', width: 28 },
-          { header: 'Prévu', dataKey: 'prevu', width: 28 },
-          { header: 'Réalisé', dataKey: 'realise', width: 28 },
-          { header: 'Écart', dataKey: 'ecart', width: 28 },
-        ],
-        data: rows,
+      const def = budgetExportDef({
+        periode: `Exercice ${exercice}`,
+        filtersSummary: `${budgets.length} budget(s) — Prévu total : ${totalPrevu.toLocaleString('fr-CI')} FCFA`,
       });
+      await exportDocument(def, rows, 'pdf');
     } finally { setExporting(false); }
   };
 

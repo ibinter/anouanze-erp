@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, ChevronRight, ChevronDown, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
-import { exportXLSX, exportPDF } from '@/lib/export';
+import {
+  exportDocument, comptabiliteExportDef, ANOUANZE_BRANDING, formatFCFA,
+  type DocumentExportDefinition,
+} from '@/lib/pdf-engine';
 import { Tabs } from '@/components/ui/Tabs';
 import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
@@ -386,7 +389,7 @@ export default function ComptabilitePage() {
     try {
       const { data } = await api.get('/comptabilite/ecritures', { params: { limit: 9999 } });
       const rows = (data?.data ?? []).map((e: Ecriture) => ({
-        date: e.date ? new Date(e.date).toLocaleDateString('fr-CI') : '—',
+        date: e.date ?? null,
         journal: typeof e.journal === 'string' ? e.journal : (e.journal?.code ?? '—'),
         libelle: e.libelle,
         debit: e.montantDebit ?? e.lignes?.reduce((s, l) => s + (l.debit ?? 0), 0) ?? 0,
@@ -394,19 +397,7 @@ export default function ComptabilitePage() {
         statut: e.statut ?? '—',
       }));
       if (activeTab === 'ecritures') {
-        await exportXLSX({
-          filename: 'ecritures_comptables', sheetName: 'Écritures',
-          title: 'Journal des écritures comptables',
-          columns: [
-            { key: 'date', header: 'Date', width: 14 },
-            { key: 'journal', header: 'Journal', width: 12 },
-            { key: 'libelle', header: 'Libellé', width: 40 },
-            { key: 'debit', header: 'Débit (FCFA)', width: 16, format: 'currency' },
-            { key: 'credit', header: 'Crédit (FCFA)', width: 16, format: 'currency' },
-            { key: 'statut', header: 'Statut', width: 12 },
-          ],
-          data: rows,
-        });
+        await exportDocument(comptabiliteExportDef({ filtersSummary: `${rows.length} écriture(s)` }), rows, 'xlsx');
       } else if (activeTab === 'balance') {
         const { data: balData } = await api.get('/comptabilite/balance');
         const balRows = (balData?.data ?? balData ?? []).map((b: BalanceLigne) => ({
@@ -416,18 +407,21 @@ export default function ComptabilitePage() {
           credit: b.creditCumul ?? b.totalCredit ?? 0,
           solde: b.solde ?? 0,
         }));
-        await exportPDF({
-          filename: 'balance_comptable', title: 'Balance comptable SYCEBNL',
-          orientation: 'landscape',
+        const balDef: DocumentExportDefinition = {
+          title: 'Balance comptable SYCEBNL',
+          subtitle: 'Balance générale des comptes',
+          documentType: 'financial-statement',
+          branding: ANOUANZE_BRANDING,
+          lang: 'fr',
           columns: [
-            { header: 'Compte', dataKey: 'compte', width: 20 },
-            { header: 'Libellé', dataKey: 'libelle', width: 60 },
-            { header: 'Débit cumulé', dataKey: 'debit', width: 30 },
-            { header: 'Crédit cumulé', dataKey: 'credit', width: 30 },
-            { header: 'Solde', dataKey: 'solde', width: 25 },
+            { key: 'compte', label: 'Compte', type: 'code', priority: 'essential', nowrap: true },
+            { key: 'libelle', label: 'Libellé', type: 'long-description', priority: 'essential' },
+            { key: 'debit', label: 'Débit cumulé', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
+            { key: 'credit', label: 'Crédit cumulé', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
+            { key: 'solde', label: 'Solde', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
           ],
-          data: balRows,
-        });
+        };
+        await exportDocument(balDef, balRows, 'pdf');
       }
     } finally { setExporting(false); }
   };

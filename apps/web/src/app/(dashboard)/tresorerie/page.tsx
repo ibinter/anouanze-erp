@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, TrendingUp, Landmark, FileSpreadsheet } from 'lucide-react';
-import { exportXLSX } from '@/lib/export';
+import { exportDocument, tresorerieExportDef } from '@/lib/pdf-engine';
 import { Modal } from '@/components/ui/Modal';
 import { formatMontant, formatDate, cn } from '@/lib/utils';
 
@@ -88,28 +88,19 @@ export default function TresoreriePage() {
     try {
       const { data } = await api.get(`/tresorerie/comptes/${selectedCompte.id}/mouvements`, { params: { limit: 9999 } });
       const rows = (data?.data ?? data ?? mouvements).map((m: Mouvement) => ({
-        date: m.date ? new Date(m.date).toLocaleDateString('fr-CI') : '—',
+        date: m.date ?? null,
         libelle: m.libelle,
         debit: m.debit ?? (m.type === 'debit' ? m.montant : 0) ?? 0,
         credit: m.credit ?? (m.type === 'credit' ? m.montant : 0) ?? 0,
-        rapproche: m.rapproche ? 'Oui' : 'Non',
-        soldeApres: m.soldeApres ?? '',
+        rapproche: m.rapproche ?? false,
+        soldeApres: m.soldeApres ?? null,
       }));
-      await exportXLSX({
-        filename: `tresorerie_${selectedCompte.nom.replace(/\s+/g, '_')}`,
-        sheetName: 'Mouvements',
-        title: `Relevé de compte — ${selectedCompte.nom}`,
-        subtitle: `${selectedCompte.banque} — Solde : ${selectedCompte.solde?.toLocaleString('fr-CI')} FCFA`,
-        columns: [
-          { key: 'date', header: 'Date', width: 14 },
-          { key: 'libelle', header: 'Libellé', width: 42 },
-          { key: 'debit', header: 'Débit (FCFA)', width: 18, format: 'currency' },
-          { key: 'credit', header: 'Crédit (FCFA)', width: 18, format: 'currency' },
-          { key: 'rapproche', header: 'Rapproché', width: 13 },
-          { key: 'soldeApres', header: 'Solde après', width: 18, format: 'currency' },
-        ],
-        data: rows,
+      const def = tresorerieExportDef({
+        organisation: selectedCompte.nom,
+        filtersSummary: `${selectedCompte.banque} — Solde : ${selectedCompte.solde?.toLocaleString('fr-CI')} FCFA`,
       });
+      def.title = `Relevé de compte — ${selectedCompte.nom}`;
+      await exportDocument(def, rows, 'xlsx');
     } finally { setExporting(false); }
   };
 
