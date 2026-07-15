@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 
 function resolveBaseUrl() {
   const raw = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
@@ -12,26 +13,38 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-// Token stocké par le SessionProvider — lecture synchrone, pas d'HTTP call
+// Token en mémoire — poussé par le SessionProvider (voie rapide synchrone)
 let _token: string | null = null;
 export function setApiToken(t: string | null) { _token = t; }
 
-// Injecter le token JWT avant chaque requête (synchrone)
-api.interceptors.request.use((config) => {
-  if (_token) config.headers.Authorization = `Bearer ${_token}`;
+// Fallback : une seule promesse getSession() partagée, jamais en rafale
+let _sessionPromise: Promise<string | null> | null = null;
+async function resolveToken(): Promise<string | null> {
+  if (_token) return _token;                       // voie rapide
+  if (!_sessionPromise) {
+    _sessionPromise = getSession()
+      .then((s) => {
+        const t = (s as any)?.accessToken ?? null;
+        if (t) _token = t;
+        return t;
+      })
+      .finally(() => { _sessionPromise = null; });
+  }
+  return _sessionPromise;                           // requêtes concurrentes partagent la même promesse
+}
+
+// Injecter le token JWT avant chaque requête
+api.interceptors.request.use(async (config) => {
+  const token = await resolveToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Gestion globale des erreurs
+// Gestion globale des erreurs — pas de redirection brutale (évite les boucles)
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
+  (error) => {
     const message = error.response?.data?.message ?? 'Une erreur est survenue';
-
-    if (error.response?.status === 401) {
-      window.location.href = '/login';
-    }
-
     return Promise.reject(new Error(message));
   },
 );
