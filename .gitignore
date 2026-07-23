@@ -55,3 +55,9 @@ tmp/
 *.pem
 *.key
 *.cert
+
+# Artefacts de compilation TypeScript (ne doivent pas être versionnés :
+# ils bloquent les git pull sur le VPS)
+*.tsbuildinfo
+apps/api/prisma/seed.js
+apps/api/prisma/seed.js.map
