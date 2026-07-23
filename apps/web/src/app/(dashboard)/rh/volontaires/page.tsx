@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Heart, Plus, Search } from 'lucide-react';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
@@ -27,6 +28,7 @@ const VOLONTAIRES: Volontaire[] = [
 const FORM_INIT = { nom: '', email: '', competences: '', disponibilites: '', actif: true };
 
 export default function VolontairesPage() {
+  const t = useTranslations('activites.volontaires');
   const [search, setSearch] = useState('');
   const [modalNv, setModalNv] = useState(false);
   const [form, setForm] = useState(FORM_INIT);
@@ -41,10 +43,10 @@ export default function VolontairesPage() {
   );
 
   const columns: Column<Volontaire>[] = [
-    { key: 'nom', header: 'Nom', render: (r) => <span className="font-semibold text-neutral-800">{r.nom}</span> },
-    { key: 'email', header: 'Email', render: (r) => <span className="text-xs text-neutral-500">{r.email}</span> },
+    { key: 'nom', header: t('colNom'), render: (r) => <span className="font-semibold text-neutral-800">{r.nom}</span> },
+    { key: 'email', header: t('colEmail'), render: (r) => <span className="text-xs text-neutral-500">{r.email}</span> },
     {
-      key: 'competences', header: 'Compétences', render: (r) => (
+      key: 'competences', header: t('colCompetences'), render: (r) => (
         <div className="flex flex-wrap gap-1">
           {r.competences.map((c) => (
             <span key={c} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100">{c}</span>
@@ -52,11 +54,11 @@ export default function VolontairesPage() {
         </div>
       )
     },
-    { key: 'disponibilites', header: 'Disponibilités', render: (r) => <span className="text-xs text-neutral-500">{r.disponibilites}</span> },
+    { key: 'disponibilites', header: t('colDisponibilites'), render: (r) => <span className="text-xs text-neutral-500">{r.disponibilites}</span> },
     {
-      key: 'actif', header: 'Statut', render: (r) => (
+      key: 'actif', header: t('colStatut'), render: (r) => (
         <span className={statuts[r.id] ? 'badge badge-success' : 'badge badge-neutral'}>
-          {statuts[r.id] ? 'Actif' : 'Inactif'}
+          {statuts[r.id] ? t('actif') : t('inactif')}
         </span>
       )
     },
@@ -66,7 +68,7 @@ export default function VolontairesPage() {
           onClick={() => setStatuts((prev) => ({ ...prev, [r.id]: !prev[r.id] }))}
           className="text-xs btn-secondary py-1 px-2"
         >
-          {statuts[r.id] ? 'Désactiver' : 'Activer'}
+          {statuts[r.id] ? t('desactiver') : t('activer')}
         </button>
       )
     },
@@ -80,12 +82,12 @@ export default function VolontairesPage() {
             <Heart className="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-800">Volontaires</h1>
-            <p className="text-sm text-neutral-500">{VOLONTAIRES.filter((v) => statuts[v.id]).length} volontaires actifs</p>
+            <h1 className="text-xl font-bold text-neutral-800">{t('titre')}</h1>
+            <p className="text-sm text-neutral-500">{t('actifs', { count: VOLONTAIRES.filter((v) => statuts[v.id]).length })}</p>
           </div>
         </div>
         <button onClick={() => setModalNv(true)} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Nouveau volontaire
+          <Plus className="w-4 h-4" /> {t('nouveau')}
         </button>
       </div>
 
@@ -94,7 +96,7 @@ export default function VolontairesPage() {
         <input
           type="text"
           className="input pl-9"
-          placeholder="Nom, email, compétence..."
+          placeholder={t('recherche')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -105,30 +107,30 @@ export default function VolontairesPage() {
       <Modal
         open={modalNv}
         onOpenChange={setModalNv}
-        title="Nouveau volontaire"
+        title={t('modal.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalNv(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalNv(false)}>Enregistrer</button>
+            <button className="btn-secondary" onClick={() => setModalNv(false)}>{t('modal.annuler')}</button>
+            <button className="btn-primary" onClick={() => setModalNv(false)}>{t('modal.enregistrer')}</button>
           </>
         }
       >
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="label">Nom complet</label>
-            <input className="input" placeholder="Prénom Nom" value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} />
+            <label className="label">{t('modal.nom')}</label>
+            <input className="input" placeholder={t('modal.nomPlaceholder')} value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="label">Email</label>
-            <input type="email" className="input" placeholder="email@domaine.com" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            <label className="label">{t('modal.email')}</label>
+            <input type="email" className="input" placeholder={t('modal.emailPlaceholder')} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="label">Compétences (séparées par des virgules)</label>
-            <input className="input" placeholder="Formation, Santé, Informatique..." value={form.competences} onChange={(e) => setForm((f) => ({ ...f, competences: e.target.value }))} />
+            <label className="label">{t('modal.competences')}</label>
+            <input className="input" placeholder={t('modal.competencesPlaceholder')} value={form.competences} onChange={(e) => setForm((f) => ({ ...f, competences: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="label">Disponibilités</label>
-            <input className="input" placeholder="Ex: Week-ends, lundis et vendredis..." value={form.disponibilites} onChange={(e) => setForm((f) => ({ ...f, disponibilites: e.target.value }))} />
+            <label className="label">{t('modal.disponibilites')}</label>
+            <input className="input" placeholder={t('modal.disponibilitesPlaceholder')} value={form.disponibilites} onChange={(e) => setForm((f) => ({ ...f, disponibilites: e.target.value }))} />
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -138,7 +140,7 @@ export default function VolontairesPage() {
               onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))}
               className="h-4 w-4 rounded border-neutral-300 text-primary-600"
             />
-            <label htmlFor="actif" className="text-sm text-neutral-700">Actif dès l'inscription</label>
+            <label htmlFor="actif" className="text-sm text-neutral-700">{t('modal.actifDesInscription')}</label>
           </div>
         </div>
       </Modal>

@@ -65,7 +65,7 @@ export default function NotificationsPage() {
               disabled={marquerToutesLues.isPending}
               className="flex items-center gap-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200 px-3 py-2 rounded-lg text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:opacity-60"
             >
-              <CheckCheck className="w-4 h-4" /> Tout marquer lu
+              <CheckCheck className="w-4 h-4" /> {t('toutMarquerLu')}
             </button>
           )}
         </div>
@@ -77,20 +77,19 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-2 mb-3">
             <Lock className="w-4 h-4 text-neutral-400" />
             <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
-              Préférences de notification
+              {t('prefsTitre')}
             </h2>
             <span className="text-[11px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-accent-100 text-accent-700">
-              Bientôt disponible
+              {t('bientotDisponible')}
             </span>
           </div>
           <p className="text-sm text-neutral-500 mb-4">
-            {prefs?.message ??
-              'La personnalisation des préférences de notification sera disponible prochainement.'}
+            {prefs?.message ?? t('prefsMessage')}
           </p>
           <ul className="space-y-2">
             {(prefs?.canaux ?? [
-              { cle: 'interne', libelle: "Notifications dans l'application", actif: true, modifiable: false },
-              { cle: 'email', libelle: 'Notifications par email', actif: true, modifiable: false },
+              { cle: 'interne', libelle: t('canalInterne'), actif: true, modifiable: false },
+              { cle: 'email', libelle: t('canalEmail'), actif: true, modifiable: false },
             ]).map((c) => (
               <li
                 key={c.cle}
@@ -98,7 +97,8 @@ export default function NotificationsPage() {
               >
                 <span className="text-neutral-700 dark:text-neutral-200">{c.libelle}</span>
                 <span className="text-xs text-neutral-400">
-                  {c.actif ? 'Activé' : 'Désactivé'}{!c.modifiable && ' · non modifiable'}
+                  {c.actif ? t('canalActif') : t('canalInactif')}
+                  {!c.modifiable && t('canalNonModifiable')}
                 </span>
               </li>
             ))}
@@ -118,7 +118,11 @@ export default function NotificationsPage() {
                 : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700'
             }`}
           >
-            {f === 'all' ? 'Toutes' : `Non lues${nonLues > 0 ? ` (${nonLues})` : ''}`}
+            {f === 'all'
+              ? t('filtreToutes')
+              : nonLues > 0
+                ? t('filtreNonLuesCompte', { count: nonLues })
+                : t('filtreNonLues')}
           </button>
         ))}
       </div>
@@ -137,11 +141,9 @@ export default function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="text-center py-16 text-neutral-400">
             <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">Aucune notification</p>
+            <p className="font-medium">{t('videTitre')}</p>
             <p className="text-sm mt-1">
-              {filtre === 'non-lues'
-                ? 'Tout est à jour !'
-                : "Vous n'avez pas encore reçu de notifications."}
+              {filtre === 'non-lues' ? t('videAJour') : t('videJamais')}
             </p>
           </div>
         ) : (
@@ -168,7 +170,7 @@ export default function NotificationsPage() {
                         {n.titre}
                       </p>
                       <span className="text-xs text-neutral-400 whitespace-nowrap">
-                        {tempsRelatif(n.createdAt)}
+                        {tempsRelatif(n.createdAt, tTemps, locale)}
                       </span>
                     </div>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{n.message}</p>
@@ -180,7 +182,7 @@ export default function NotificationsPage() {
                         }}
                         className="text-xs text-primary-600 hover:underline mt-1 block"
                       >
-                        Voir le détail →
+                        {t('voirDetail')}
                       </button>
                     )}
                   </div>
@@ -188,7 +190,8 @@ export default function NotificationsPage() {
                     {!n.lue && (
                       <button
                         onClick={() => marquerLue.mutate(n.id)}
-                        title="Marquer comme lue"
+                        title={t('marquerLue')}
+                        aria-label={t('marquerLue')}
                         className="p-1.5 text-neutral-400 hover:text-primary-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
                       >
                         <CheckCheck className="w-4 h-4" />
@@ -196,7 +199,8 @@ export default function NotificationsPage() {
                     )}
                     <button
                       onClick={() => supprimer.mutate(n.id)}
-                      title="Supprimer"
+                      title={t('supprimer')}
+                      aria-label={t('supprimer')}
                       className="p-1.5 text-neutral-400 hover:text-red-500 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
                     >
                       <Trash2 className="w-4 h-4" />

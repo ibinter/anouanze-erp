@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Section, BientotDisponible, LigneOption } from './primitives';
 
-/** Fournisseurs de paiement câblés côté API — repris de l'ancien écran Paramètres. */
+/** Fournisseurs de paiement câblés côté API — noms commerciaux, non traduits. */
 const PAIEMENTS = [
   { id: 'orange', nom: 'Orange Money', logo: '🟠', webhook: 'POST /api/v1/paiements/webhook/orange-money' },
   { id: 'cinetpay', nom: 'CinetPay', logo: '🔵', webhook: 'POST /api/v1/paiements/webhook/cinetpay' },
@@ -11,22 +12,22 @@ const PAIEMENTS = [
   { id: 'wave', nom: 'Wave', logo: '🌊', webhook: null },
 ];
 
+/** `cle` renvoie vers `shell.parametres.integrations.fonctionsIa.*`. */
 const FONCTIONS_IA = [
-  { titre: 'Analyse du tableau de bord', endpoint: 'POST /api/v1/ia/analyser-tableau-bord' },
-  { titre: 'Rapport narratif', endpoint: 'POST /api/v1/ia/rapport-narratif' },
-  { titre: 'Proposition de budget', endpoint: 'POST /api/v1/ia/proposer-budget' },
-  { titre: 'Détection d’anomalies', endpoint: 'GET /api/v1/ia/anomalies' },
-  { titre: 'Assistant conversationnel SARA', endpoint: 'POST /api/v1/ia/chat' },
-  { titre: 'Traduction de contenu', endpoint: 'POST /api/v1/ia/traduire' },
+  { cle: 'analyseTableauBord', endpoint: 'POST /api/v1/ia/analyser-tableau-bord' },
+  { cle: 'rapportNarratif', endpoint: 'POST /api/v1/ia/rapport-narratif' },
+  { cle: 'propositionBudget', endpoint: 'POST /api/v1/ia/proposer-budget' },
+  { cle: 'detectionAnomalies', endpoint: 'GET /api/v1/ia/anomalies' },
+  { cle: 'assistantSara', endpoint: 'POST /api/v1/ia/chat' },
+  { cle: 'traduction', endpoint: 'POST /api/v1/ia/traduire' },
 ];
 
 export function IntegrationsSettings() {
+  const t = useTranslations('shell.parametres.integrations');
+
   return (
     <div className="max-w-3xl space-y-6">
-      <Section
-        titre="Paiements mobiles"
-        description="Encaissement des cotisations et des dons par mobile money."
-      >
+      <Section titre={t('paiementsTitre')} description={t('paiementsDesc')}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PAIEMENTS.map((p) => (
             <div key={p.id} className="flex items-center gap-3 rounded-xl border border-neutral-200 p-3">

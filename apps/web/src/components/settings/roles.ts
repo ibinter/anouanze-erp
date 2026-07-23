@@ -1,3 +1,8 @@
+'use client';
+
+import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
+
 /**
  * Les 11 rôles de l'enum Prisma `RoleUtilisateur`
  * (apps/api/prisma/schema.prisma). Ordre = du plus large au plus restreint.
@@ -21,20 +26,6 @@ export const ROLES = [
 
 export type Role = (typeof ROLES)[number];
 
-export const ROLE_LABELS: Record<Role, string> = {
-  SUPER_ADMIN: 'Super administrateur',
-  ADMIN_ORGANISATION: "Administrateur de l'organisation",
-  DIRECTEUR: 'Directeur',
-  COMPTABLE: 'Comptable',
-  GESTIONNAIRE_PROJET: 'Gestionnaire de projet',
-  CHARGE_RH: 'Chargé RH',
-  AUDITEUR: 'Auditeur',
-  MEMBRE: 'Membre',
-  DONATEUR: 'Donateur',
-  BAILLEUR: 'Bailleur',
-  LECTEUR: 'Lecteur',
-};
-
 export const ROLE_BADGES: Record<Role, string> = {
   SUPER_ADMIN: 'badge bg-red-100 text-red-700',
   ADMIN_ORGANISATION: 'badge bg-red-50 text-red-600',
@@ -56,10 +47,26 @@ export function estRoleConnu(valeur?: string | null): valeur is Role {
   return !!valeur && (ROLES as readonly string[]).includes(valeur);
 }
 
-export function libelleRole(valeur?: string | null): string {
-  return estRoleConnu(valeur) ? ROLE_LABELS[valeur] : (valeur ?? '—');
-}
-
 export function badgeRole(valeur?: string | null): string {
   return estRoleConnu(valeur) ? ROLE_BADGES[valeur] : 'badge badge-neutral';
+}
+
+/**
+ * Libellés de rôle traduits (`shell.parametres.roles.*`).
+ * Les valeurs d'enum envoyées à l'API restent inchangées : seul l'affichage
+ * est localisé. `libelle()` retombe sur la valeur brute pour un rôle inconnu.
+ */
+export function useLibellesRoles() {
+  const t = useTranslations('shell.parametres.roles');
+
+  const labels = useMemo(
+    () =>
+      Object.fromEntries(ROLES.map((r) => [r, t(r)])) as Record<Role, string>,
+    [t],
+  );
+
+  const libelle = (valeur?: string | null) =>
+    estRoleConnu(valeur) ? labels[valeur] : (valeur ?? '—');
+
+  return { labels, libelle };
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { BarChart2, Download, FileText } from 'lucide-react';
@@ -18,24 +19,21 @@ interface LigneBilan {
   montant: number;
 }
 
-const EXPORTS = [
-  { label: 'Rapport financier', description: 'Produits, charges et résultat de l\'exercice', icon: FileText, formats: ['PDF', 'Excel'] },
-  { label: 'Bilan comptable', description: 'Actif et passif de l\'organisation', icon: FileText, formats: ['PDF', 'Excel'] },
-  { label: 'Grand livre', description: 'Détail de toutes les écritures comptables', icon: FileText, formats: ['PDF', 'Excel'] },
-  { label: 'Balance générale', description: 'Soldes de tous les comptes', icon: FileText, formats: ['PDF', 'Excel'] },
-  { label: 'Rapport bailleur', description: 'Rapport d\'utilisation des fonds par bailleur', icon: FileText, formats: ['PDF'] },
-];
+const EXPORT_KEYS = [
+  { key: 'rapportFinancier', icon: FileText, formats: ['PDF', 'Excel'] },
+  { key: 'bilanComptable', icon: FileText, formats: ['PDF', 'Excel'] },
+  { key: 'grandLivre', icon: FileText, formats: ['PDF', 'Excel'] },
+  { key: 'balanceGenerale', icon: FileText, formats: ['PDF', 'Excel'] },
+  { key: 'rapportBailleur', icon: FileText, formats: ['PDF'] },
+] as const;
 
-const TABS = [
-  { id: 'bi', label: 'Tableau de bord BI' },
-  { id: 'financier', label: 'Rapport financier' },
-  { id: 'bilan', label: 'Bilan' },
-  { id: 'exports', label: 'Exports' },
-];
+const TAB_IDS = ['bi', 'financier', 'bilan', 'exports'] as const;
 
 export default function ReportingPage() {
+  const t = useTranslations('outils.reporting');
   const [tab, setTab] = useState('bi');
   const exercice = new Date().getFullYear();
+  const tabs = TAB_IDS.map((id) => ({ id, label: t(`onglets.${id}` as never) }));
 
   const { data: rapportData, isLoading: rapportLoading } = useQuery({
     queryKey: ['reporting-rapport-financier', exercice],
@@ -73,21 +71,21 @@ export default function ReportingPage() {
           <BarChart2 className="w-5 h-5 text-primary-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-neutral-800">Rapports & BI</h1>
-          <p className="text-sm text-neutral-500">Analyses financières et exports — Exercice {exercice}</p>
+          <h1 className="text-xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500">{t('sousTitre', { exercice: String(exercice) })}</p>
         </div>
       </div>
 
-      <Tabs tabs={TABS} activeTab={tab} onChange={setTab} />
+      <Tabs tabs={tabs} activeTab={tab} onChange={setTab} />
 
       {tab === 'bi' && <ReportingCharts />}
 
       {tab === 'financier' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card space-y-3">
-            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">Produits</h3>
+            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">{t('produits')}</h3>
             {rapportLoading ? (
-              <div className="text-sm text-neutral-400 text-center py-4">Chargement…</div>
+              <div className="text-sm text-neutral-400 text-center py-4">{t('chargement')}</div>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
@@ -98,10 +96,10 @@ export default function ReportingPage() {
                     </tr>
                   ))}
                   {produits.length === 0 && (
-                    <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>
+                    <tr><td colSpan={2} className="py-4 text-center text-neutral-400">{t('aucuneDonnee')}</td></tr>
                   )}
                   <tr className="bg-neutral-50">
-                    <td className="py-2.5 font-semibold text-neutral-800">Total produits</td>
+                    <td className="py-2.5 font-semibold text-neutral-800">{t('totalProduits')}</td>
                     <td className="py-2.5 text-right font-bold text-primary-600">{formatMontant(totalProduits)}</td>
                   </tr>
                 </tbody>
@@ -110,9 +108,9 @@ export default function ReportingPage() {
           </div>
 
           <div className="card space-y-3">
-            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">Charges</h3>
+            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">{t('charges')}</h3>
             {rapportLoading ? (
-              <div className="text-sm text-neutral-400 text-center py-4">Chargement…</div>
+              <div className="text-sm text-neutral-400 text-center py-4">{t('chargement')}</div>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
@@ -123,10 +121,10 @@ export default function ReportingPage() {
                     </tr>
                   ))}
                   {charges.length === 0 && (
-                    <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>
+                    <tr><td colSpan={2} className="py-4 text-center text-neutral-400">{t('aucuneDonnee')}</td></tr>
                   )}
                   <tr className="bg-neutral-50">
-                    <td className="py-2.5 font-semibold text-neutral-800">Total charges</td>
+                    <td className="py-2.5 font-semibold text-neutral-800">{t('totalCharges')}</td>
                     <td className="py-2.5 text-right font-bold text-red-500">{formatMontant(totalCharges)}</td>
                   </tr>
                 </tbody>
@@ -138,8 +136,8 @@ export default function ReportingPage() {
             <div className="lg:col-span-2">
               <div className={cn('card flex items-center justify-between', resultat >= 0 ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50')}>
                 <div>
-                  <p className="text-sm font-medium text-neutral-600">Résultat net de l&apos;exercice {exercice}</p>
-                  <p className="text-xs text-neutral-400 mt-0.5">Total produits − Total charges</p>
+                  <p className="text-sm font-medium text-neutral-600">{t('resultatNet', { exercice: String(exercice) })}</p>
+                  <p className="text-xs text-neutral-400 mt-0.5">{t('resultatFormule')}</p>
                 </div>
                 <p className={cn('text-2xl font-bold', resultat >= 0 ? 'text-green-700' : 'text-red-600')}>
                   {resultat >= 0 ? '+' : ''}{formatMontant(resultat)}
@@ -153,9 +151,9 @@ export default function ReportingPage() {
       {tab === 'bilan' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card space-y-3">
-            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">Actif</h3>
+            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">{t('actif')}</h3>
             {bilanLoading ? (
-              <div className="text-sm text-neutral-400 text-center py-4">Chargement…</div>
+              <div className="text-sm text-neutral-400 text-center py-4">{t('chargement')}</div>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
@@ -165,9 +163,9 @@ export default function ReportingPage() {
                       <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
-                  {actif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>}
+                  {actif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">{t('aucuneDonnee')}</td></tr>}
                   <tr className="bg-primary-50">
-                    <td className="py-2.5 font-bold text-primary-700">Total Actif</td>
+                    <td className="py-2.5 font-bold text-primary-700">{t('totalActif')}</td>
                     <td className="py-2.5 text-right font-bold text-primary-700">{formatMontant(totalActif)}</td>
                   </tr>
                 </tbody>
@@ -176,9 +174,9 @@ export default function ReportingPage() {
           </div>
 
           <div className="card space-y-3">
-            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">Passif</h3>
+            <h3 className="font-semibold text-neutral-700 text-sm uppercase tracking-wide">{t('passif')}</h3>
             {bilanLoading ? (
-              <div className="text-sm text-neutral-400 text-center py-4">Chargement…</div>
+              <div className="text-sm text-neutral-400 text-center py-4">{t('chargement')}</div>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
@@ -188,9 +186,9 @@ export default function ReportingPage() {
                       <td className="py-2 text-right font-medium text-neutral-800">{formatMontant(r.montant)}</td>
                     </tr>
                   ))}
-                  {passif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">Aucune donnée</td></tr>}
+                  {passif.length === 0 && <tr><td colSpan={2} className="py-4 text-center text-neutral-400">{t('aucuneDonnee')}</td></tr>}
                   <tr className="bg-primary-50">
-                    <td className="py-2.5 font-bold text-primary-700">Total Passif</td>
+                    <td className="py-2.5 font-bold text-primary-700">{t('totalPassif')}</td>
                     <td className="py-2.5 text-right font-bold text-primary-700">{formatMontant(totalPassif)}</td>
                   </tr>
                 </tbody>

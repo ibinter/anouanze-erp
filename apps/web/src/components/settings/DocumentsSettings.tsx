@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { Section, Champ, BientotDisponible, LigneOption, Toggle } from './primitives';
 
 interface DocForm {
@@ -38,6 +39,7 @@ const CLE_STOCKAGE = 'anouanze:parametres-documents';
  * ces réglages sont donc conservés localement, et c'est indiqué à l'utilisateur.
  */
 export function DocumentsSettings({ organisationId }: { organisationId?: string }) {
+  const t = useTranslations('shell.parametres.documents');
   const [form, setForm] = useState<DocForm>(DEFAUT);
   const cle = `${CLE_STOCKAGE}:${organisationId ?? 'inconnue'}`;
 
@@ -59,9 +61,9 @@ export function DocumentsSettings({ organisationId }: { organisationId?: string 
   function enregistrer() {
     try {
       window.localStorage.setItem(cle, JSON.stringify(form));
-      toast.success('Préférences enregistrées sur cet appareil');
+      toast.success(t('succes'));
     } catch {
-      toast.error("Impossible d'enregistrer les préférences");
+      toast.error(t('erreur'));
     }
   }
 
@@ -69,73 +71,72 @@ export function DocumentsSettings({ organisationId }: { organisationId?: string 
     <div className="max-w-3xl space-y-6">
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
         <p className="text-xs leading-relaxed text-neutral-600">
-          L'API ne propose pas encore d'endpoint pour la table <code className="font-mono">ParametreOrganisation</code>.
-          Ces réglages sont donc <strong>conservés sur cet appareil</strong> et ne sont pas partagés avec les autres
-          membres de l'organisation. L'en-tête des exports reprend en revanche bien le nom, le logo et les coordonnées
-          saisis dans <em>Organisation</em>.
+          {t('avertissementDebut')} <code className="font-mono">ParametreOrganisation</code>.{' '}
+          {t('avertissementSuite')} <strong>{t('avertissementConserve')}</strong> {t('avertissementFin')}{' '}
+          <em>{t('avertissementOrganisation')}</em>.
         </p>
       </div>
 
-      <Section titre="En-tête des documents" description="Bloc affiché en haut des PDF générés par l'ERP.">
-        <LigneOption titre="Afficher le logo de l'organisation" description="Repris de la catégorie Organisation.">
+      <Section titre={t('enteteTitre')} description={t('enteteDesc')}>
+        <LigneOption titre={t('afficherLogoTitre')} description={t('afficherLogoDesc')}>
           <Toggle
-            label="Afficher le logo"
+            label={t('afficherLogoLabel')}
             checked={form.enteteAfficherLogo}
             onChange={(v) => set('enteteAfficherLogo', v)}
           />
         </LigneOption>
-        <Champ label="Ligne complémentaire 1" aide="Ex. : Récépissé n° 0123/MI/DGAT du 12 mars 2015">
+        <Champ label={t('ligne1')} aide={t('ligne1Aide')}>
           <input className="input" value={form.enteteLigne1} onChange={(e) => set('enteteLigne1', e.target.value)} />
         </Champ>
-        <Champ label="Ligne complémentaire 2">
+        <Champ label={t('ligne2')}>
           <input className="input" value={form.enteteLigne2} onChange={(e) => set('enteteLigne2', e.target.value)} />
         </Champ>
       </Section>
 
-      <Section titre="Pied de page" description="Bloc affiché en bas de chaque page exportée.">
-        <Champ label="Texte du pied de page">
+      <Section titre={t('piedTitre')} description={t('piedDesc')}>
+        <Champ label={t('piedTexte')}>
           <textarea
             className="input min-h-[80px]"
             value={form.piedTexte}
             onChange={(e) => set('piedTexte', e.target.value)}
-            placeholder="Siège social · Téléphone · Email · Site web"
+            placeholder={t('piedPlaceholder')}
           />
         </Champ>
-        <LigneOption titre="Afficher la pagination" description="Numérotation « page X / Y ».">
+        <LigneOption titre={t('paginationTitre')} description={t('paginationDesc')}>
           <Toggle
-            label="Afficher la pagination"
+            label={t('paginationTitre')}
             checked={form.piedAfficherPagination}
             onChange={(v) => set('piedAfficherPagination', v)}
           />
         </LigneOption>
       </Section>
 
-      <Section titre="Numérotation" description="Préfixes utilisés pour référencer les pièces émises.">
+      <Section titre={t('numerotationTitre')} description={t('numerotationDesc')}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Champ label="Préfixe des reçus"><input className="input" value={form.prefixeRecu} onChange={(e) => set('prefixeRecu', e.target.value)} /></Champ>
-          <Champ label="Préfixe des factures"><input className="input" value={form.prefixeFacture} onChange={(e) => set('prefixeFacture', e.target.value)} /></Champ>
-          <Champ label="Préfixe des rapports"><input className="input" value={form.prefixeRapport} onChange={(e) => set('prefixeRapport', e.target.value)} /></Champ>
-          <Champ label="Compteur de départ"><input type="number" min={1} className="input" value={form.compteurDepart} onChange={(e) => set('compteurDepart', e.target.value)} /></Champ>
+          <Champ label={t('prefixeRecu')}><input className="input" value={form.prefixeRecu} onChange={(e) => set('prefixeRecu', e.target.value)} /></Champ>
+          <Champ label={t('prefixeFacture')}><input className="input" value={form.prefixeFacture} onChange={(e) => set('prefixeFacture', e.target.value)} /></Champ>
+          <Champ label={t('prefixeRapport')}><input className="input" value={form.prefixeRapport} onChange={(e) => set('prefixeRapport', e.target.value)} /></Champ>
+          <Champ label={t('compteurDepart')}><input type="number" min={1} className="input" value={form.compteurDepart} onChange={(e) => set('compteurDepart', e.target.value)} /></Champ>
         </div>
         <BientotDisponible
-          titre="Application automatique de la numérotation"
-          raison="Les références des pièces sont actuellement générées par chaque module côté serveur. Tant que ces préférences ne sont pas persistées via l'API, elles ne modifient pas la numérotation réellement appliquée."
+          titre={t('numerotationBientotTitre')}
+          raison={t('numerotationBientotRaison')}
         />
       </Section>
 
-      <Section titre="Mentions légales" description="Texte reproduit au bas des documents officiels.">
-        <Champ label="Mentions">
+      <Section titre={t('mentionsTitre')} description={t('mentionsDesc')}>
+        <Champ label={t('mentionsLabel')}>
           <textarea
             className="input min-h-[110px]"
             value={form.mentionsLegales}
             onChange={(e) => set('mentionsLegales', e.target.value)}
-            placeholder="Association déclarée · Exonération fiscale · Numéro d'immatriculation…"
+            placeholder={t('mentionsPlaceholder')}
           />
         </Champ>
       </Section>
 
       <div className="flex justify-end">
-        <button onClick={enregistrer} className="btn-primary">Enregistrer</button>
+        <button onClick={enregistrer} className="btn-primary">{t('enregistrer')}</button>
       </div>
     </div>
   );

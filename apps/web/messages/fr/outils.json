@@ -1,1 +1,269 @@
-{}
+{
+  "outils": {
+    "documents": {
+      "titre": "Gestion documentaire",
+      "sousTitre": "{total} documents — {affiches} affichés",
+      "chargement": "…",
+      "deposer": "Déposer un document",
+      "recherche": "Rechercher par nom ou tag…",
+      "categories": {
+        "Tous": "Toutes",
+        "Rapports": "Rapports",
+        "Conventions": "Conventions",
+        "Finance": "Finance",
+        "Médias": "Médias",
+        "Gouvernance": "Gouvernance",
+        "Projets": "Projets"
+      },
+      "tousStatuts": "Tous les statuts",
+      "statuts": {
+        "VALIDE": "Validé",
+        "EN_ATTENTE": "En attente",
+        "ARCHIVE": "Archivé"
+      },
+      "zoneDepot": "Glissez un fichier ici pour le déposer",
+      "qrTitre": "QR code de vérification",
+      "qrTelecharger": "Télécharger le QR",
+      "qrAlt": "QR code",
+      "vide": "Aucun document trouvé.",
+      "colNom": "Nom",
+      "colCategorie": "Catégorie",
+      "colTaille": "Taille",
+      "colDate": "Date",
+      "colStatut": "Statut",
+      "colTags": "Tags",
+      "modal": {
+        "titre": "Déposer un document",
+        "zoneDepot": "Glissez un fichier ou",
+        "parcourir": "parcourez",
+        "nom": "Nom du document",
+        "nomPlaceholder": "Nom du fichier",
+        "categorie": "Catégorie",
+        "tags": "Tags",
+        "tagsAide": "(séparés par virgule)",
+        "tagsPlaceholder": "Ex : rapport, 2026, UE",
+        "annuler": "Annuler",
+        "enregistrer": "Enregistrer"
+      }
+    },
+    "reporting": {
+      "titre": "Rapports & BI",
+      "sousTitre": "Analyses financières et exports — Exercice {exercice}",
+      "onglets": {
+        "bi": "Tableau de bord BI",
+        "financier": "Rapport financier",
+        "bilan": "Bilan",
+        "exports": "Exports"
+      },
+      "chargement": "Chargement…",
+      "aucuneDonnee": "Aucune donnée",
+      "produits": "Produits",
+      "totalProduits": "Total produits",
+      "charges": "Charges",
+      "totalCharges": "Total charges",
+      "resultatNet": "Résultat net de l'exercice {exercice}",
+      "resultatFormule": "Total produits − Total charges",
+      "actif": "Actif",
+      "totalActif": "Total actif",
+      "passif": "Passif",
+      "totalPassif": "Total passif",
+      "exports": {
+        "rapportFinancier": "Rapport financier",
+        "rapportFinancierDesc": "Produits, charges et résultat de l'exercice",
+        "bilanComptable": "Bilan comptable",
+        "bilanComptableDesc": "Actif et passif de l'organisation",
+        "grandLivre": "Grand livre",
+        "grandLivreDesc": "Détail de toutes les écritures comptables",
+        "balanceGenerale": "Balance générale",
+        "balanceGeneraleDesc": "Soldes de tous les comptes",
+        "rapportBailleur": "Rapport bailleur",
+        "rapportBailleurDesc": "Rapport d'utilisation des fonds par bailleur"
+      },
+      "graphiques": {
+        "dons12Mois": "Évolution des dons sur 12 mois",
+        "depensesProjets": "Dépenses par projet (top 8)",
+        "chargesNature": "Répartition des charges par nature (classe 6)",
+        "tresorerie6Mois": "Évolution de la trésorerie sur 6 mois",
+        "legendeDons": "Dons",
+        "legendeDepenses": "Dépenses",
+        "legendePart": "Part",
+        "legendeSolde": "Solde",
+        "mois": {
+          "jan": "Jan",
+          "fev": "Fév",
+          "mar": "Mar",
+          "avr": "Avr",
+          "mai": "Mai",
+          "jun": "Jun",
+          "jul": "Juil",
+          "aou": "Août",
+          "sep": "Sep",
+          "oct": "Oct",
+          "nov": "Nov",
+          "dec": "Déc"
+        },
+        "natures": {
+          "achats": "Achats consommés",
+          "servicesExt": "Services extérieurs",
+          "personnel": "Charges de personnel",
+          "amortissements": "Dotations aux amortissements",
+          "autres": "Autres charges"
+        }
+      }
+    },
+    "ia": {
+      "titre": "ANOUANZÊ AI",
+      "beta": "Bêta",
+      "sousTitre": "Assistant intelligent pour votre organisation",
+      "conversation": "Conversation",
+      "insights": {
+        "titre": "Insights IA",
+        "vide": "Aucun insight disponible"
+      },
+      "alertes": {
+        "titre": "Alertes détectées",
+        "vide": "Aucune alerte critique détectée"
+      },
+      "recommandations": {
+        "titre": "Recommandations",
+        "vide": "Aucune recommandation disponible"
+      },
+      "genererRapport": "Générer un rapport narratif",
+      "generation": "Génération…",
+      "analyserAnomalies": "Analyser les anomalies",
+      "analyse": "Analyse…",
+      "toasts": {
+        "rapportOk": "Rapport narratif généré avec succès",
+        "rapportErreur": "Erreur lors de la génération du rapport",
+        "anomaliesOk": "Analyse des anomalies terminée",
+        "anomaliesErreur": "Erreur lors de l'analyse"
+      },
+      "chat": {
+        "accueil": "Bonjour ! Je suis ANOUANZÊ AI. Comment puis-je vous aider à analyser vos données et à optimiser la gestion de votre organisation ?",
+        "erreur": "Je rencontre une difficulté technique. Veuillez réessayer dans quelques instants.",
+        "reflexion": "ANOUANZÊ AI réfléchit",
+        "placeholder": "Posez votre question…",
+        "suggestions": {
+          "analyser": "Analyser mon tableau de bord",
+          "rapport": "Générer un rapport narratif",
+          "anomalies": "Détecter des anomalies",
+          "budget": "Proposer un budget"
+        }
+      }
+    },
+    "import": {
+      "titre": "Import de données",
+      "sousTitre": "Importez vos données en masse depuis un fichier Excel",
+      "typeDonnees": "Type de données à importer",
+      "types": {
+        "membres": "Membres",
+        "donateurs": "Donateurs",
+        "employes": "Employés",
+        "beneficiaires": "Bénéficiaires"
+      },
+      "modeleAide": "Téléchargez d'abord le modèle Excel pour ce type",
+      "telechargerModele": "Télécharger le modèle",
+      "fichier": "Fichier à importer",
+      "choisirFichier": "Cliquez pour sélectionner un fichier Excel (.xlsx)",
+      "tailleMax": "Taille maximum : 10 Mo",
+      "valider": "Valider le fichier",
+      "validationEnCours": "Validation en cours…",
+      "fichierValide": "{count, plural, one {Fichier valide — # ligne détectée} other {Fichier valide — # lignes détectées}}",
+      "erreursDetectees": "{count, plural, one {# erreur détectée} other {# erreurs détectées}}",
+      "erreurLigneChamp": "Ligne {ligne} · {champ} : {message}",
+      "erreurLigne": "Ligne {ligne} : {message}",
+      "apercu": "Aperçu des premières lignes :",
+      "colLigne": "Ligne",
+      "colNom": "Nom",
+      "colPrenom": "Prénom",
+      "colEmail": "Email",
+      "annuler": "Annuler",
+      "importer": "{count, plural, one {Importer # ligne} other {Importer # lignes}}",
+      "importEnCours": "Import en cours…",
+      "importes": "{count, plural, one {Importé} other {Importés}}",
+      "erreursLabel": "{count, plural, one {Erreur} other {Erreurs}}",
+      "total": "Total",
+      "nouvelImport": "Nouvel import",
+      "erreurTemplate": "Erreur lors du téléchargement du modèle",
+      "erreurValidation": "Erreur de validation : {message}",
+      "erreurImport": "Erreur d'import : {message}"
+    },
+    "audit": {
+      "titre": "Audit & Traçabilité",
+      "sousTitre": "Journal des actions utilisateurs",
+      "stats": {
+        "actionsMois": "Actions ce mois",
+        "utilisateursActifs": "Utilisateurs actifs",
+        "actionsCritiques": "Actions critiques",
+        "suppressions": "Suppressions"
+      },
+      "filtres": {
+        "dateDebut": "Date de début",
+        "dateFin": "Date de fin",
+        "action": "Action",
+        "toutes": "Toutes",
+        "ressource": "Ressource",
+        "ressourcePlaceholder": "Ex : Membre, Projet…"
+      },
+      "actions": {
+        "CREATE": "Créé",
+        "UPDATE": "Modifié",
+        "DELETE": "Supprimé",
+        "LOGIN": "Connexion"
+      },
+      "colDateHeure": "Date / Heure",
+      "colUtilisateur": "Utilisateur",
+      "colAction": "Action",
+      "colRessource": "Ressource",
+      "colDetails": "Détails",
+      "voir": "Voir",
+      "detail": {
+        "titre": "Détail de l'action",
+        "dateHeure": "Date / Heure",
+        "utilisateur": "Utilisateur",
+        "action": "Action",
+        "ressource": "Ressource",
+        "etatAvant": "État avant",
+        "etatApres": "État après"
+      }
+    },
+    "tickets": {
+      "titre": "Support & Tickets",
+      "sousTitre": "Contactez l'équipe support ANOUANZÊ",
+      "nouveau": "Nouveau ticket",
+      "mesTickets": "Mes tickets ({count})",
+      "vide": "Aucun ticket ouvert",
+      "selectionner": "Sélectionnez un ticket pour voir la conversation",
+      "aucunMessage": "Aucun message pour l'instant",
+      "messagePlaceholder": "Écrire un message…",
+      "statuts": {
+        "OUVERT": "Ouvert",
+        "EN_COURS": "En cours",
+        "EN_ATTENTE": "En attente",
+        "RESOLU": "Résolu",
+        "FERME": "Fermé"
+      },
+      "priorites": {
+        "FAIBLE": "Faible",
+        "NORMALE": "Normale",
+        "HAUTE": "Haute",
+        "URGENTE": "Urgente"
+      },
+      "modal": {
+        "titre": "Nouveau ticket support",
+        "sujetPlaceholder": "Sujet *",
+        "categories": {
+          "GENERAL": "Général",
+          "TECHNIQUE": "Technique",
+          "FACTURATION": "Facturation",
+          "FORMATION": "Formation",
+          "BUG": "Bug"
+        },
+        "descriptionPlaceholder": "Décrivez votre problème en détail *",
+        "annuler": "Annuler",
+        "ouvrir": "Ouvrir le ticket",
+        "envoi": "Envoi…"
+      }
+    }
+  }
+}

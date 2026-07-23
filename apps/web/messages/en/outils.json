@@ -1,1 +1,269 @@
-{}
+{
+  "outils": {
+    "documents": {
+      "titre": "Document management",
+      "sousTitre": "{total} documents — {affiches} shown",
+      "chargement": "…",
+      "deposer": "Upload a document",
+      "recherche": "Search by name or tag…",
+      "categories": {
+        "Tous": "All",
+        "Rapports": "Reports",
+        "Conventions": "Agreements",
+        "Finance": "Finance",
+        "Médias": "Media",
+        "Gouvernance": "Governance",
+        "Projets": "Projects"
+      },
+      "tousStatuts": "All statuses",
+      "statuts": {
+        "VALIDE": "Approved",
+        "EN_ATTENTE": "Pending",
+        "ARCHIVE": "Archived"
+      },
+      "zoneDepot": "Drag a file here to upload it",
+      "qrTitre": "Verification QR code",
+      "qrTelecharger": "Download QR code",
+      "qrAlt": "QR code",
+      "vide": "No document found.",
+      "colNom": "Name",
+      "colCategorie": "Category",
+      "colTaille": "Size",
+      "colDate": "Date",
+      "colStatut": "Status",
+      "colTags": "Tags",
+      "modal": {
+        "titre": "Upload a document",
+        "zoneDepot": "Drag a file or",
+        "parcourir": "browse",
+        "nom": "Document name",
+        "nomPlaceholder": "File name",
+        "categorie": "Category",
+        "tags": "Tags",
+        "tagsAide": "(comma-separated)",
+        "tagsPlaceholder": "E.g. report, 2026, EU",
+        "annuler": "Cancel",
+        "enregistrer": "Save"
+      }
+    },
+    "reporting": {
+      "titre": "Reports & BI",
+      "sousTitre": "Financial analysis and exports — Fiscal year {exercice}",
+      "onglets": {
+        "bi": "BI dashboard",
+        "financier": "Financial report",
+        "bilan": "Balance sheet",
+        "exports": "Exports"
+      },
+      "chargement": "Loading…",
+      "aucuneDonnee": "No data",
+      "produits": "Income",
+      "totalProduits": "Total income",
+      "charges": "Expenses",
+      "totalCharges": "Total expenses",
+      "resultatNet": "Net result for fiscal year {exercice}",
+      "resultatFormule": "Total income − Total expenses",
+      "actif": "Assets",
+      "totalActif": "Total assets",
+      "passif": "Liabilities",
+      "totalPassif": "Total liabilities",
+      "exports": {
+        "rapportFinancier": "Financial report",
+        "rapportFinancierDesc": "Income, expenses and result for the fiscal year",
+        "bilanComptable": "Balance sheet",
+        "bilanComptableDesc": "Assets and liabilities of the organisation",
+        "grandLivre": "General ledger",
+        "grandLivreDesc": "Details of all accounting entries",
+        "balanceGenerale": "Trial balance",
+        "balanceGeneraleDesc": "Balances of all accounts",
+        "rapportBailleur": "Donor report",
+        "rapportBailleurDesc": "Report on the use of funds by donor"
+      },
+      "graphiques": {
+        "dons12Mois": "Donation trend over 12 months",
+        "depensesProjets": "Spending by project (top 8)",
+        "chargesNature": "Expense breakdown by nature (class 6)",
+        "tresorerie6Mois": "Cash position over 6 months",
+        "legendeDons": "Donations",
+        "legendeDepenses": "Spending",
+        "legendePart": "Share",
+        "legendeSolde": "Balance",
+        "mois": {
+          "jan": "Jan",
+          "fev": "Feb",
+          "mar": "Mar",
+          "avr": "Apr",
+          "mai": "May",
+          "jun": "Jun",
+          "jul": "Jul",
+          "aou": "Aug",
+          "sep": "Sep",
+          "oct": "Oct",
+          "nov": "Nov",
+          "dec": "Dec"
+        },
+        "natures": {
+          "achats": "Goods consumed",
+          "servicesExt": "External services",
+          "personnel": "Staff costs",
+          "amortissements": "Depreciation charges",
+          "autres": "Other expenses"
+        }
+      }
+    },
+    "ia": {
+      "titre": "ANOUANZÊ AI",
+      "beta": "Beta",
+      "sousTitre": "Smart assistant for your organisation",
+      "conversation": "Conversation",
+      "insights": {
+        "titre": "AI insights",
+        "vide": "No insight available"
+      },
+      "alertes": {
+        "titre": "Detected alerts",
+        "vide": "No critical alert detected"
+      },
+      "recommandations": {
+        "titre": "Recommendations",
+        "vide": "No recommendation available"
+      },
+      "genererRapport": "Generate a narrative report",
+      "generation": "Generating…",
+      "analyserAnomalies": "Analyse anomalies",
+      "analyse": "Analysing…",
+      "toasts": {
+        "rapportOk": "Narrative report generated successfully",
+        "rapportErreur": "Error while generating the report",
+        "anomaliesOk": "Anomaly analysis completed",
+        "anomaliesErreur": "Error during analysis"
+      },
+      "chat": {
+        "accueil": "Hello! I am ANOUANZÊ AI. How can I help you analyse your data and improve the management of your organisation?",
+        "erreur": "I am experiencing a technical issue. Please try again in a few moments.",
+        "reflexion": "ANOUANZÊ AI is thinking",
+        "placeholder": "Ask your question…",
+        "suggestions": {
+          "analyser": "Analyse my dashboard",
+          "rapport": "Generate a narrative report",
+          "anomalies": "Detect anomalies",
+          "budget": "Propose a budget"
+        }
+      }
+    },
+    "import": {
+      "titre": "Data import",
+      "sousTitre": "Bulk-import your data from an Excel file",
+      "typeDonnees": "Type of data to import",
+      "types": {
+        "membres": "Members",
+        "donateurs": "Donors",
+        "employes": "Employees",
+        "beneficiaires": "Beneficiaries"
+      },
+      "modeleAide": "First download the Excel template for this type",
+      "telechargerModele": "Download template",
+      "fichier": "File to import",
+      "choisirFichier": "Click to select an Excel file (.xlsx)",
+      "tailleMax": "Maximum size: 10 MB",
+      "valider": "Validate file",
+      "validationEnCours": "Validating…",
+      "fichierValide": "{count, plural, one {Valid file — # row detected} other {Valid file — # rows detected}}",
+      "erreursDetectees": "{count, plural, one {# error detected} other {# errors detected}}",
+      "erreurLigneChamp": "Row {ligne} · {champ}: {message}",
+      "erreurLigne": "Row {ligne}: {message}",
+      "apercu": "Preview of the first rows:",
+      "colLigne": "Row",
+      "colNom": "Last name",
+      "colPrenom": "First name",
+      "colEmail": "Email",
+      "annuler": "Cancel",
+      "importer": "{count, plural, one {Import # row} other {Import # rows}}",
+      "importEnCours": "Importing…",
+      "importes": "{count, plural, one {Imported} other {Imported}}",
+      "erreursLabel": "{count, plural, one {Error} other {Errors}}",
+      "total": "Total",
+      "nouvelImport": "New import",
+      "erreurTemplate": "Error while downloading the template",
+      "erreurValidation": "Validation error: {message}",
+      "erreurImport": "Import error: {message}"
+    },
+    "audit": {
+      "titre": "Audit & Traceability",
+      "sousTitre": "Log of user actions",
+      "stats": {
+        "actionsMois": "Actions this month",
+        "utilisateursActifs": "Active users",
+        "actionsCritiques": "Critical actions",
+        "suppressions": "Deletions"
+      },
+      "filtres": {
+        "dateDebut": "Start date",
+        "dateFin": "End date",
+        "action": "Action",
+        "toutes": "All",
+        "ressource": "Resource",
+        "ressourcePlaceholder": "E.g. Member, Project…"
+      },
+      "actions": {
+        "CREATE": "Created",
+        "UPDATE": "Updated",
+        "DELETE": "Deleted",
+        "LOGIN": "Sign-in"
+      },
+      "colDateHeure": "Date / Time",
+      "colUtilisateur": "User",
+      "colAction": "Action",
+      "colRessource": "Resource",
+      "colDetails": "Details",
+      "voir": "View",
+      "detail": {
+        "titre": "Action details",
+        "dateHeure": "Date / Time",
+        "utilisateur": "User",
+        "action": "Action",
+        "ressource": "Resource",
+        "etatAvant": "State before",
+        "etatApres": "State after"
+      }
+    },
+    "tickets": {
+      "titre": "Support & Tickets",
+      "sousTitre": "Contact the ANOUANZÊ support team",
+      "nouveau": "New ticket",
+      "mesTickets": "My tickets ({count})",
+      "vide": "No open ticket",
+      "selectionner": "Select a ticket to view the conversation",
+      "aucunMessage": "No message yet",
+      "messagePlaceholder": "Write a message…",
+      "statuts": {
+        "OUVERT": "Open",
+        "EN_COURS": "In progress",
+        "EN_ATTENTE": "Pending",
+        "RESOLU": "Resolved",
+        "FERME": "Closed"
+      },
+      "priorites": {
+        "FAIBLE": "Low",
+        "NORMALE": "Normal",
+        "HAUTE": "High",
+        "URGENTE": "Urgent"
+      },
+      "modal": {
+        "titre": "New support ticket",
+        "sujetPlaceholder": "Subject *",
+        "categories": {
+          "GENERAL": "General",
+          "TECHNIQUE": "Technical",
+          "FACTURATION": "Billing",
+          "FORMATION": "Training",
+          "BUG": "Bug"
+        },
+        "descriptionPlaceholder": "Describe your problem in detail *",
+        "annuler": "Cancel",
+        "ouvrir": "Open ticket",
+        "envoi": "Sending…"
+      }
+    }
+  }
+}

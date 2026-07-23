@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Search, Settings, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { CATEGORIES, filtrerCategories, type CategorieId } from '@/components/settings/categories';
+import { useCategories, filtrerCategories, type CategorieId } from '@/components/settings/categories';
 import { OrganisationSettings } from '@/components/settings/OrganisationSettings';
 import { UtilisateursSettings } from '@/components/settings/UtilisateursSettings';
 import { DocumentsSettings } from '@/components/settings/DocumentsSettings';
@@ -14,6 +15,7 @@ import { DonneesSettings } from '@/components/settings/DonneesSettings';
 import { AbonnementSettings } from '@/components/settings/AbonnementSettings';
 
 export default function ParametresPage() {
+  const t = useTranslations('shell.parametres');
   const { data: session } = useSession();
   const utilisateurId = session?.user?.id;
   const organisationId = session?.user?.organisationId;
@@ -22,8 +24,9 @@ export default function ParametresPage() {
   const [categorie, setCategorie] = useState<CategorieId>('organisation');
   const [recherche, setRecherche] = useState('');
 
-  const resultats = useMemo(() => filtrerCategories(recherche), [recherche]);
-  const categorieActive = CATEGORIES.find((c) => c.id === categorie) ?? CATEGORIES[0];
+  const categories = useCategories();
+  const resultats = useMemo(() => filtrerCategories(recherche, categories), [recherche, categories]);
+  const categorieActive = categories.find((c) => c.id === categorie) ?? categories[0];
   const enRecherche = recherche.trim().length > 0;
 
   return (
@@ -34,8 +37,8 @@ export default function ParametresPage() {
             <Settings className="h-5 w-5 text-primary-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-800">Paramètres</h1>
-            <p className="text-sm text-neutral-500">Configuration de l'organisation</p>
+            <h1 className="text-xl font-bold text-neutral-800">{t('titre')}</h1>
+            <p className="text-sm text-neutral-500">{t('sousTitre')}</p>
           </div>
         </div>
 
@@ -43,15 +46,15 @@ export default function ParametresPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <input
             className="input pl-9 pr-9"
-            placeholder="Rechercher un paramètre (devise, rôle, export…)"
+            placeholder={t('recherchePlaceholder')}
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
-            aria-label="Rechercher dans les paramètres"
+            aria-label={t('rechercheAria')}
           />
           {enRecherche && (
             <button
               onClick={() => setRecherche('')}
-              aria-label="Effacer la recherche"
+              aria-label={t('rechercheEffacer')}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
             >
               <X className="h-4 w-4" />
@@ -63,13 +66,10 @@ export default function ParametresPage() {
       {enRecherche && (
         <div className="rounded-xl border border-neutral-200 bg-white p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-            {resultats.length} catégorie{resultats.length > 1 ? 's' : ''} correspond
-            {resultats.length > 1 ? 'ent' : ''} à « {recherche.trim()} »
+            {t('rechercheResultats', { count: resultats.length, requete: recherche.trim() })}
           </p>
           {resultats.length === 0 ? (
-            <p className="text-sm text-neutral-500">
-              Aucun paramètre ne correspond à cette recherche.
-            </p>
+            <p className="text-sm text-neutral-500">{t('rechercheAucun')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {resultats.map((c) => (
@@ -98,11 +98,11 @@ export default function ParametresPage() {
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sous-navigation des 7 catégories */}
         <nav
-          aria-label="Catégories de paramètres"
+          aria-label={t('navAria')}
           className="shrink-0 lg:w-64"
         >
           <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-            {CATEGORIES.map((c) => {
+            {categories.map((c) => {
               const actif = c.id === categorie;
               return (
                 <button

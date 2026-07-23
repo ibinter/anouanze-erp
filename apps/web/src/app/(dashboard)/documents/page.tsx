@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Search, Grid3X3, List, Upload, X, Tag, QrCode } from 'lucide-react';
@@ -32,13 +33,14 @@ const STATUT_BADGE: Record<string, string> = {
   archive: 'badge-neutral',
 };
 
-const STATUT_LABEL: Record<string, string> = {
-  VALIDE: 'Validé',
-  EN_ATTENTE: 'En attente',
-  ARCHIVE: 'Archivé',
-  valide: 'Validé',
-  en_attente: 'En attente',
-  archive: 'Archivé',
+/** Normalise une valeur d'énumération API vers la clé de traduction correspondante. */
+const STATUT_KEY: Record<string, string> = {
+  VALIDE: 'VALIDE',
+  EN_ATTENTE: 'EN_ATTENTE',
+  ARCHIVE: 'ARCHIVE',
+  valide: 'VALIDE',
+  en_attente: 'EN_ATTENTE',
+  archive: 'ARCHIVE',
 };
 
 function formatTaille(t?: number | string) {
@@ -50,6 +52,8 @@ function formatTaille(t?: number | string) {
 }
 
 export default function DocumentsPage() {
+  const t = useTranslations('outils.documents');
+  const statutLabel = (s: string) => (STATUT_KEY[s] ? t(`statuts.${STATUT_KEY[s]}` as never) : s);
   const [vue, setVue] = useState<'grille' | 'liste'>('grille');
   const [search, setSearch] = useState('');
   const [categorie, setCategorie] = useState('Tous');
@@ -105,8 +109,10 @@ export default function DocumentsPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Gestion documentaire</h1>
-          <p className="text-sm text-neutral-500 mt-1">{isLoading ? '…' : `${total} documents`} — {documents.length} affichés</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            {isLoading ? t('chargement') : t('sousTitre', { total, affiches: documents.length })}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex border border-neutral-200 rounded-lg overflow-hidden">
@@ -125,7 +131,7 @@ export default function DocumentsPage() {
           </div>
           <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
             <Upload className="w-4 h-4" />
-            Déposer un document
+            {t('deposer')}
           </button>
         </div>
       </div>
@@ -135,20 +141,20 @@ export default function DocumentsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="text"
-            placeholder="Rechercher par nom ou tag…"
+            placeholder={t('recherche')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="input pl-9 w-full"
           />
         </div>
         <select className="input w-full sm:w-44" value={categorie} onChange={(e) => { setCategorie(e.target.value); setPage(1); }}>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {CATEGORIES.map((c) => <option key={c} value={c}>{t(`categories.${c}` as never)}</option>)}
         </select>
         <select className="input w-full sm:w-44" value={statut} onChange={(e) => { setStatut(e.target.value); setPage(1); }}>
-          <option value="">Tous les statuts</option>
-          <option value="VALIDE">Validé</option>
-          <option value="EN_ATTENTE">En attente</option>
-          <option value="ARCHIVE">Archivé</option>
+          <option value="">{t('tousStatuts')}</option>
+          <option value="VALIDE">{t('statuts.VALIDE')}</option>
+          <option value="EN_ATTENTE">{t('statuts.EN_ATTENTE')}</option>
+          <option value="ARCHIVE">{t('statuts.ARCHIVE')}</option>
         </select>
       </div>
 
@@ -162,7 +168,7 @@ export default function DocumentsPage() {
         )}
       >
         <Upload className="w-5 h-5 mx-auto mb-1" />
-        Glissez un fichier ici pour le déposer
+        {t('zoneDepot')}
       </div>
 
       {isLoading ? (
@@ -177,7 +183,7 @@ export default function DocumentsPage() {
                 <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-50">
                   <FileIcon mimeType={doc.mimeType ?? ''} className="w-7 h-7" />
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); openQr(doc.id, doc.nom); }} title="QR code de vérification" className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-primary rounded-lg hover:bg-gray-100 transition-all">
+                <button onClick={(e) => { e.stopPropagation(); openQr(doc.id, doc.nom); }} title={t('qrTitre')} className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-primary rounded-lg hover:bg-gray-100 transition-all">
                   <QrCode className="w-4 h-4" />
                 </button>
               </div>
@@ -185,7 +191,7 @@ export default function DocumentsPage() {
               <p className="text-xs text-neutral-400 mt-0.5">{formatTaille(doc.taille)} · {formatDate(doc.createdAt ?? '')}</p>
               {doc.statut && (
                 <div className="flex items-center gap-1 mt-2 flex-wrap">
-                  <span className={`badge ${STATUT_BADGE[doc.statut] ?? 'badge-neutral'} text-xs`}>{STATUT_LABEL[doc.statut] ?? doc.statut}</span>
+                  <span className={`badge ${STATUT_BADGE[doc.statut] ?? 'badge-neutral'} text-xs`}>{statutLabel(doc.statut)}</span>
                 </div>
               )}
               {doc.tags && doc.tags.length > 0 && (
@@ -200,7 +206,7 @@ export default function DocumentsPage() {
             </div>
           ))}
           {documents.length === 0 && (
-            <div className="col-span-4 text-center py-8 text-sm text-neutral-400">Aucun document trouvé.</div>
+            <div className="col-span-4 text-center py-8 text-sm text-neutral-400">{t('vide')}</div>
           )}
         </div>
       ) : (
@@ -208,7 +214,7 @@ export default function DocumentsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-neutral-50 border-b border-neutral-100">
-                {['Nom', 'Catégorie', 'Taille', 'Date', 'Statut', 'Tags'].map((h) => (
+                {[t('colNom'), t('colCategorie'), t('colTaille'), t('colDate'), t('colStatut'), t('colTags')].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -222,11 +228,17 @@ export default function DocumentsPage() {
                       <span className="font-medium text-neutral-800 truncate max-w-48">{doc.nom}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-neutral-600">{doc.categorie ?? '—'}</td>
+                  <td className="px-4 py-3 text-neutral-600">
+                    {doc.categorie
+                      ? CATEGORIES.includes(doc.categorie)
+                        ? t(`categories.${doc.categorie}` as never)
+                        : doc.categorie
+                      : '—'}
+                  </td>
                   <td className="px-4 py-3 text-neutral-500">{formatTaille(doc.taille)}</td>
                   <td className="px-4 py-3 text-neutral-500">{formatDate(doc.createdAt ?? '')}</td>
                   <td className="px-4 py-3">
-                    {doc.statut && <span className={`badge ${STATUT_BADGE[doc.statut] ?? 'badge-neutral'}`}>{STATUT_LABEL[doc.statut] ?? doc.statut}</span>}
+                    {doc.statut && <span className={`badge ${STATUT_BADGE[doc.statut] ?? 'badge-neutral'}`}>{statutLabel(doc.statut)}</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1 flex-wrap">
@@ -249,11 +261,11 @@ export default function DocumentsPage() {
       <Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title="Déposer un document"
+        title={t('modal.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button className="btn-primary" onClick={() => setModalOpen(false)}>Enregistrer</button>
+            <button className="btn-secondary" onClick={() => setModalOpen(false)}>{t('modal.annuler')}</button>
+            <button className="btn-primary" onClick={() => setModalOpen(false)}>{t('modal.enregistrer')}</button>
           </>
         }
       >
@@ -277,24 +289,24 @@ export default function DocumentsPage() {
               className={cn('border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors', dragging ? 'border-primary-600 bg-primary-50' : 'border-neutral-200 hover:border-primary-300')}
             >
               <Upload className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
-              <p className="text-sm text-neutral-500">Glissez un fichier ou <span className="text-primary-600 font-medium">parcourez</span></p>
+              <p className="text-sm text-neutral-500">{t('modal.zoneDepot')} <span className="text-primary-600 font-medium">{t('modal.parcourir')}</span></p>
             </div>
           )}
           <div>
-            <label className="label">Nom du document</label>
-            <input type="text" className="input w-full" placeholder="Nom du fichier" value={newDoc.nom} onChange={(e) => setNewDoc((p) => ({ ...p, nom: e.target.value }))} />
+            <label className="label">{t('modal.nom')}</label>
+            <input type="text" className="input w-full" placeholder={t('modal.nomPlaceholder')} value={newDoc.nom} onChange={(e) => setNewDoc((p) => ({ ...p, nom: e.target.value }))} />
           </div>
           <div>
-            <label className="label">Catégorie</label>
+            <label className="label">{t('modal.categorie')}</label>
             <select className="input w-full" value={newDoc.categorie} onChange={(e) => setNewDoc((p) => ({ ...p, categorie: e.target.value }))}>
-              {CATEGORIES.filter((c) => c !== 'Tous').map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.filter((c) => c !== 'Tous').map((c) => <option key={c} value={c}>{t(`categories.${c}` as never)}</option>)}
             </select>
           </div>
           <div>
-            <label className="label">Tags <span className="text-neutral-400 font-normal">(séparés par virgule)</span></label>
+            <label className="label">{t('modal.tags')} <span className="text-neutral-400 font-normal">{t('modal.tagsAide')}</span></label>
             <div className="relative">
               <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input type="text" className="input w-full pl-9" placeholder="Ex: rapport, 2026, UE" value={newDoc.tags} onChange={(e) => setNewDoc((p) => ({ ...p, tags: e.target.value }))} />
+              <input type="text" className="input w-full pl-9" placeholder={t('modal.tagsPlaceholder')} value={newDoc.tags} onChange={(e) => setNewDoc((p) => ({ ...p, tags: e.target.value }))} />
             </div>
           </div>
         </div>
@@ -305,14 +317,14 @@ export default function DocumentsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setQrDoc(null)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-gray-900">QR code de vérification</h2>
+              <h2 className="font-bold text-gray-900">{t('qrTitre')}</h2>
               <button onClick={() => setQrDoc(null)}><X className="w-5 h-5" /></button>
             </div>
             <p className="text-sm text-gray-600 mb-4 truncate">{qrDoc.nom}</p>
-            <img src={qrDoc.qrImageUrl} alt="QR code" className="mx-auto w-48 h-48 rounded-xl border border-gray-200" />
+            <img src={qrDoc.qrImageUrl} alt={t('qrAlt')} className="mx-auto w-48 h-48 rounded-xl border border-gray-200" />
             <p className="text-xs text-gray-400 mt-3 break-all">{qrDoc.url}</p>
             <a href={qrDoc.qrImageUrl} download={`qr-${qrDoc.id}.png`} className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
-              Télécharger le QR
+              {t('qrTelecharger')}
             </a>
           </div>
         </div>

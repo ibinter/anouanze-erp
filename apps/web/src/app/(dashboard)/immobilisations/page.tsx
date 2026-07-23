@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Building2, Plus, TrendingDown, Wallet } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DataTable, type Column } from '@/components/ui/DataTable';
@@ -48,31 +49,28 @@ const STATUT_STYLES: Record<string, string> = {
   REBUTE: 'badge badge-error',
 };
 
-const STATUT_LABELS: Record<string, string> = {
-  EN_SERVICE: 'En service',
-  CEDE: 'Cédé',
-  REBUTE: 'Rebuté',
-};
+const STATUT_IDS = ['EN_SERVICE', 'CEDE', 'REBUTE'];
 
 const CATEGORIES = [
-  { value: 'INFORMATIQUE', label: 'Matériel informatique', style: 'badge bg-blue-100 text-blue-700' },
-  { value: 'MOBILIER', label: 'Mobilier', style: 'badge badge-neutral' },
-  { value: 'VEHICULE', label: 'Véhicule', style: 'badge bg-purple-100 text-purple-700' },
-  { value: 'MATERIEL', label: 'Équipement', style: 'badge badge-warning' },
-  { value: 'BATIMENT', label: 'Bâtiment', style: 'badge bg-teal-100 text-teal-700' },
-  { value: 'TERRAIN', label: 'Terrain', style: 'badge bg-green-100 text-green-700' },
+  { value: 'INFORMATIQUE', style: 'badge bg-blue-100 text-blue-700' },
+  { value: 'MOBILIER', style: 'badge badge-neutral' },
+  { value: 'VEHICULE', style: 'badge bg-purple-100 text-purple-700' },
+  { value: 'MATERIEL', style: 'badge badge-warning' },
+  { value: 'BATIMENT', style: 'badge bg-teal-100 text-teal-700' },
+  { value: 'TERRAIN', style: 'badge bg-green-100 text-green-700' },
 ];
 
-function categorieLabel(value: string): string {
-  return CATEGORIES.find((c) => c.value === value)?.label ?? value;
-}
+/** Taux d'amortissement proposés à la saisie (taux annuel → durée en années). */
+const TAUX_OPTIONS = [
+  { taux: 10, annees: 10 },
+  { taux: 20, annees: 5 },
+  { taux: 25, annees: 4 },
+  { taux: 33, annees: 3 },
+  { taux: 50, annees: 2 },
+];
 
 function categorieStyle(value: string): string {
   return CATEGORIES.find((c) => c.value === value)?.style ?? 'badge badge-neutral';
-}
-
-function statutLabel(value: string): string {
-  return STATUT_LABELS[value] ?? value;
 }
 
 function statutStyle(value: string): string {
@@ -115,7 +113,15 @@ const FORM_INIT = {
 };
 
 export default function ImmobilisationsPage() {
+  const t = useTranslations('finance.immobilisations');
+  const tc = useTranslations('finance.common');
   const qc = useQueryClient();
+
+  const categorieLabel = (value: string) =>
+    CATEGORIES.some((c) => c.value === value) ? t(`categories.${value}`) : value;
+  const statutLabel = (value: string) =>
+    STATUT_IDS.includes(value) ? t(`statuts.${value}`) : value;
+
   const [modalNv, setModalNv] = useState(false);
   const [detail, setDetail] = useState<Immobilisation | null>(null);
   const [form, setForm] = useState(FORM_INIT);
@@ -172,19 +178,19 @@ export default function ImmobilisationsPage() {
           .reduce((s, i) => s + (toNum(i.valeurAcquisition) * tauxAnnuel(i)) / 100 / 12, 0);
 
   const columns: Column<Immobilisation>[] = [
-    { key: 'reference', header: 'Référence', render: (r) => <span className="font-mono text-xs text-neutral-500">{r.reference}</span> },
-    { key: 'designation', header: 'Désignation', render: (r) => <span className="font-semibold text-neutral-800 text-sm">{r.designation}</span> },
-    { key: 'categorie', header: 'Catégorie', render: (r) => <span className={categorieStyle(r.categorie)}>{categorieLabel(r.categorie)}</span> },
-    { key: 'dateAcquisition', header: 'Acquisition', render: (r) => <span className="text-xs text-neutral-500">{formatDate(r.dateAcquisition)}</span> },
-    { key: 'valeurAcquisition', header: 'Valeur acq.', render: (r) => <span className="text-xs">{formatMontant(toNum(r.valeurAcquisition))}</span> },
+    { key: 'reference', header: t('colonnes.reference'), render: (r) => <span className="font-mono text-xs text-neutral-500">{r.reference}</span> },
+    { key: 'designation', header: t('colonnes.designation'), render: (r) => <span className="font-semibold text-neutral-800 text-sm">{r.designation}</span> },
+    { key: 'categorie', header: t('colonnes.categorie'), render: (r) => <span className={categorieStyle(r.categorie)}>{categorieLabel(r.categorie)}</span> },
+    { key: 'dateAcquisition', header: t('colonnes.acquisition'), render: (r) => <span className="text-xs text-neutral-500">{formatDate(r.dateAcquisition)}</span> },
+    { key: 'valeurAcquisition', header: t('colonnes.valeurAcq'), render: (r) => <span className="text-xs">{formatMontant(toNum(r.valeurAcquisition))}</span> },
     {
-      key: 'valeurNette', header: 'Valeur nette', render: (r) => (
+      key: 'valeurNette', header: t('colonnes.valeurNette'), render: (r) => (
         <span className="font-semibold text-primary-600 text-sm">{formatMontant(valeurNette(r))}</span>
       )
     },
-    { key: 'tauxAmortissement', header: 'Taux', render: (r) => <span className="text-xs text-neutral-500">{Math.round(tauxAnnuel(r))}%</span> },
+    { key: 'tauxAmortissement', header: t('colonnes.taux'), render: (r) => <span className="text-xs text-neutral-500">{Math.round(tauxAnnuel(r))}%</span> },
     {
-      key: 'progression', header: 'Amorti', render: (r) => {
+      key: 'progression', header: t('colonnes.amorti'), render: (r) => {
         const pct = pctAmorti(r);
         return (
           <div className="space-y-1 min-w-[80px]">
@@ -200,7 +206,7 @@ export default function ImmobilisationsPage() {
       }
     },
     {
-      key: 'statut', header: 'Statut', render: (r) => (
+      key: 'statut', header: t('colonnes.statut'), render: (r) => (
         <span className={statutStyle(r.statut)}>{statutLabel(r.statut)}</span>
       )
     },
@@ -214,20 +220,20 @@ export default function ImmobilisationsPage() {
             <Building2 className="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-800">Immobilisations</h1>
-            <p className="text-sm text-neutral-500">Patrimoine et amortissements</p>
+            <h1 className="text-xl font-bold text-neutral-800">{t('title')}</h1>
+            <p className="text-sm text-neutral-500">{t('subtitle')}</p>
           </div>
         </div>
         <button onClick={() => { setErreur(null); setModalNv(true); }} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Nouvelle immobilisation
+          <Plus className="w-4 h-4" /> {t('actions.new')}
         </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatCard titre="Total immobilisations" valeur={total} icone={<Building2 className="w-5 h-5" />} couleur="blue" description={`${enService} en service`} />
-        <StatCard titre="Valeur d'acquisition" valeur={formatMontant(vaTotal)} icone={<Wallet className="w-5 h-5" />} couleur="purple" description="Brut, tous statuts" />
-        <StatCard titre="Valeur nette comptable" valeur={formatMontant(vnTotal)} icone={<Building2 className="w-5 h-5" />} couleur="green" description="Après amortissements" />
-        <StatCard titre="Amortissements ce mois" valeur={formatMontant(amortMois)} icone={<TrendingDown className="w-5 h-5" />} couleur="orange" description="Dotation mensuelle" />
+        <StatCard titre={t('kpi.total')} valeur={total} icone={<Building2 className="w-5 h-5" />} couleur="blue" description={t('kpi.totalDesc', { count: enService })} />
+        <StatCard titre={t('kpi.valeurAcquisition')} valeur={formatMontant(vaTotal)} icone={<Wallet className="w-5 h-5" />} couleur="purple" description={t('kpi.valeurAcquisitionDesc')} />
+        <StatCard titre={t('kpi.valeurNette')} valeur={formatMontant(vnTotal)} icone={<Building2 className="w-5 h-5" />} couleur="green" description={t('kpi.valeurNetteDesc')} />
+        <StatCard titre={t('kpi.amortissementsMois')} valeur={formatMontant(amortMois)} icone={<TrendingDown className="w-5 h-5" />} couleur="orange" description={t('kpi.amortissementsMoisDesc')} />
       </div>
 
       <DataTable
@@ -240,11 +246,11 @@ export default function ImmobilisationsPage() {
       <Modal
         open={modalNv}
         onOpenChange={(o) => { setModalNv(o); if (!o) setErreur(null); }}
-        title="Nouvelle immobilisation"
+        title={t('modal.title')}
         size="lg"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setModalNv(false)}>Annuler</button>
+            <button className="btn-secondary" onClick={() => setModalNv(false)}>{tc('cancel')}</button>
             <button
               className="btn-primary"
               disabled={creer.isPending || !form.reference || !form.designation || !form.dateAcquisition || form.valeurAcquisition <= 0}
@@ -259,7 +265,7 @@ export default function ImmobilisationsPage() {
                 })
               }
             >
-              {creer.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {creer.isPending ? tc('saving') : tc('save')}
             </button>
           </>
         }
@@ -270,40 +276,40 @@ export default function ImmobilisationsPage() {
           )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="label">Référence</label>
-              <input className="input" placeholder="IMM-XXX" value={form.reference} onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))} />
+              <label className="label">{t('modal.reference')}</label>
+              <input className="input" placeholder={t('modal.referencePlaceholder')} value={form.reference} onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))} />
             </div>
             <div className="space-y-1">
-              <label className="label">Catégorie</label>
+              <label className="label">{t('modal.categorie')}</label>
               <select className="input" value={form.categorie} onChange={(e) => setForm((f) => ({ ...f, categorie: e.target.value }))}>
                 {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                  <option key={c.value} value={c.value}>{categorieLabel(c.value)}</option>
                 ))}
               </select>
             </div>
           </div>
           <div className="space-y-1">
-            <label className="label">Désignation</label>
-            <input className="input" placeholder="Description de l'immobilisation" value={form.designation} onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))} />
+            <label className="label">{t('modal.designation')}</label>
+            <input className="input" placeholder={t('modal.designationPlaceholder')} value={form.designation} onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="label">Date d'acquisition</label>
+              <label className="label">{t('modal.dateAcquisition')}</label>
               <input type="date" className="input" value={form.dateAcquisition} onChange={(e) => setForm((f) => ({ ...f, dateAcquisition: e.target.value }))} />
             </div>
             <div className="space-y-1">
-              <label className="label">Valeur d'acquisition (FCFA)</label>
+              <label className="label">{t('modal.valeurAcquisition')}</label>
               <input type="number" className="input" min={0} value={form.valeurAcquisition} onChange={(e) => setForm((f) => ({ ...f, valeurAcquisition: Number(e.target.value) }))} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="label">Taux d'amortissement (%)</label>
+            <label className="label">{t('modal.taux')}</label>
             <select className="input" value={form.tauxAmortissement} onChange={(e) => setForm((f) => ({ ...f, tauxAmortissement: Number(e.target.value) }))}>
-              <option value={10}>10% — 10 ans</option>
-              <option value={20}>20% — 5 ans</option>
-              <option value={25}>25% — 4 ans</option>
-              <option value={33}>33% — 3 ans</option>
-              <option value={50}>50% — 2 ans</option>
+              {TAUX_OPTIONS.map((o) => (
+                <option key={o.taux} value={o.taux}>
+                  {t('modal.tauxOption', { taux: String(o.taux), annees: o.annees })}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -323,25 +329,25 @@ export default function ImmobilisationsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Date d'acquisition</p>
+                <p className="text-xs text-neutral-500">{t('detail.dateAcquisition')}</p>
                 <p className="mt-1 font-semibold text-neutral-800">{formatDate(detail.dateAcquisition)}</p>
               </div>
               <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Taux d'amortissement</p>
+                <p className="text-xs text-neutral-500">{t('detail.taux')}</p>
                 <p className="mt-1 font-semibold text-neutral-800">{Math.round(tauxAnnuel(detail))}%</p>
               </div>
               <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Valeur d'acquisition</p>
+                <p className="text-xs text-neutral-500">{t('detail.valeurAcquisition')}</p>
                 <p className="mt-1 font-semibold text-neutral-800">{formatMontant(toNum(detail.valeurAcquisition))}</p>
               </div>
               <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Amortissement</p>
+                <p className="text-xs text-neutral-500">{t('detail.amortissement')}</p>
                 <p className="mt-1 font-semibold text-neutral-800">{pctAmorti(detail)}%</p>
               </div>
             </div>
             {detail.localisation && (
               <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Localisation</p>
+                <p className="text-xs text-neutral-500">{t('detail.localisation')}</p>
                 <p className="mt-1 font-semibold text-neutral-800">{detail.localisation}</p>
               </div>
             )}
@@ -354,7 +360,7 @@ export default function ImmobilisationsPage() {
               </div>
             </div>
             <div className="rounded-xl bg-primary-50 border border-primary-100 p-4 flex items-center justify-between">
-              <span className="text-sm font-medium text-primary-700">Valeur nette comptable</span>
+              <span className="text-sm font-medium text-primary-700">{t('detail.valeurNette')}</span>
               <span className="text-lg font-bold text-primary-700">{formatMontant(valeurNette(detail))}</span>
             </div>
           </div>

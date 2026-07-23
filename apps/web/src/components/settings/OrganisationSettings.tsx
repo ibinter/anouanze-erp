@@ -5,20 +5,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Section, Champ, BientotDisponible } from './primitives';
 
-const DEVISES = [
-  { code: 'XOF', libelle: 'XOF — Franc CFA BCEAO' },
-  { code: 'XAF', libelle: 'XAF — Franc CFA BEAC' },
-  { code: 'EUR', libelle: 'EUR — Euro' },
-  { code: 'USD', libelle: 'USD — Dollar américain' },
-  { code: 'GBP', libelle: 'GBP — Livre sterling' },
-  { code: 'CAD', libelle: 'CAD — Dollar canadien' },
-  { code: 'CHF', libelle: 'CHF — Franc suisse' },
-  { code: 'GHS', libelle: 'GHS — Cedi ghanéen' },
-  { code: 'NGN', libelle: 'NGN — Naira nigérian' },
-  { code: 'KES', libelle: 'KES — Shilling kényan' },
-];
+/** Codes ISO 4217 : les libellés affichés viennent de `shell.parametres.organisation.devises`. */
+const DEVISES = ['XOF', 'XAF', 'EUR', 'USD', 'GBP', 'CAD', 'CHF', 'GHS', 'NGN', 'KES'] as const;
 
 const TYPES_ORGANISATION = [
   'ASSOCIATION',
@@ -33,35 +24,15 @@ const TYPES_ORGANISATION = [
   'PROGRAMME_DEVELOPPEMENT',
 ] as const;
 
+/** Codes ISO 3166-1 alpha-2 ; libellés dans `shell.parametres.organisation.listePays`. */
 const PAYS = [
-  { code: 'CI', nom: "Côte d'Ivoire" },
-  { code: 'SN', nom: 'Sénégal' },
-  { code: 'BF', nom: 'Burkina Faso' },
-  { code: 'ML', nom: 'Mali' },
-  { code: 'BJ', nom: 'Bénin' },
-  { code: 'TG', nom: 'Togo' },
-  { code: 'NE', nom: 'Niger' },
-  { code: 'GN', nom: 'Guinée' },
-  { code: 'CM', nom: 'Cameroun' },
-  { code: 'GA', nom: 'Gabon' },
-  { code: 'CD', nom: 'RD Congo' },
-  { code: 'GH', nom: 'Ghana' },
-  { code: 'NG', nom: 'Nigeria' },
-  { code: 'KE', nom: 'Kenya' },
-  { code: 'FR', nom: 'France' },
-  { code: 'BE', nom: 'Belgique' },
-  { code: 'CA', nom: 'Canada' },
-];
+  'CI', 'SN', 'BF', 'ML', 'BJ', 'TG', 'NE', 'GN', 'CM',
+  'GA', 'CD', 'GH', 'NG', 'KE', 'FR', 'BE', 'CA',
+] as const;
 
-const MOIS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
+const MOIS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
-const LANGUES = [
-  { code: 'fr', nom: 'Français' },
-  { code: 'en', nom: 'English' },
-];
+const LANGUES = ['fr', 'en'] as const;
 
 interface OrgForm {
   nom: string;
@@ -89,6 +60,7 @@ const FORM_VIDE: OrgForm = {
 };
 
 export function OrganisationSettings({ organisationId }: { organisationId?: string }) {
+  const t = useTranslations('shell.parametres.organisation');
   const queryClient = useQueryClient();
   const [form, setForm] = useState<OrgForm>(FORM_VIDE);
   const [saving, setSaving] = useState(false);
@@ -131,7 +103,7 @@ export function OrganisationSettings({ organisationId }: { organisationId?: stri
   async function enregistrer() {
     if (!organisationId) return;
     if (!form.nom.trim()) {
-      toast.error("Le nom de l'organisation est obligatoire");
+      toast.error(t('nomObligatoire'));
       return;
     }
     setSaving(true);
@@ -154,10 +126,10 @@ export function OrganisationSettings({ organisationId }: { organisationId?: stri
         couleurPrimaire: form.couleurPrimaire,
         couleurSecondaire: form.couleurSecondaire,
       });
-      toast.success('Organisation mise à jour');
+      toast.success(t('succes'));
       queryClient.invalidateQueries({ queryKey: ['organisation', organisationId] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
+      toast.error(err instanceof Error ? err.message : t('erreurSauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -165,35 +137,32 @@ export function OrganisationSettings({ organisationId }: { organisationId?: stri
 
   if (!organisationId) {
     return (
-      <BientotDisponible
-        titre="Aucune organisation rattachée"
-        raison="Votre compte n'est lié à aucune organisation : les paramètres d'identité ne peuvent pas être chargés."
-      />
+      <BientotDisponible titre={t('aucuneTitre')} raison={t('aucuneRaison')} />
     );
   }
 
   if (isLoading) {
     return (
       <div className="flex justify-center gap-2 py-12 text-neutral-400">
-        <Loader2 className="h-5 w-5 animate-spin" /> Chargement de l'organisation…
+        <Loader2 className="h-5 w-5 animate-spin" /> {t('chargement')}
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl space-y-6">
-      <Section titre="Identité visuelle" description="Logo et couleurs repris sur les documents exportés.">
+      <Section titre={t('identiteVisuelleTitre')} description={t('identiteVisuelleDesc')}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-100 text-3xl font-bold text-primary-600">
             {form.logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.logo} alt="Logo" className="h-full w-full object-contain" />
+              <img src={form.logo} alt={t('logoAlt')} className="h-full w-full object-contain" />
             ) : (
               (form.nom[0]?.toUpperCase() ?? 'A')
             )}
           </div>
           <div className="flex-1 space-y-3">
-            <Champ label="URL du logo" aide="Adresse publique de l'image (PNG ou SVG).">
+            <Champ label={t('logoUrl')} aide={t('logoUrlAide')}>
               <input
                 className="input"
                 placeholder="https://…/logo.png"
@@ -202,107 +171,101 @@ export function OrganisationSettings({ organisationId }: { organisationId?: stri
               />
             </Champ>
             <div className="grid grid-cols-2 gap-3">
-              <Champ label="Couleur primaire">
+              <Champ label={t('couleurPrimaire')}>
                 <input type="color" className="input h-10 p-1" value={form.couleurPrimaire} onChange={(e) => set('couleurPrimaire', e.target.value)} />
               </Champ>
-              <Champ label="Couleur secondaire">
+              <Champ label={t('couleurSecondaire')}>
                 <input type="color" className="input h-10 p-1" value={form.couleurSecondaire} onChange={(e) => set('couleurSecondaire', e.target.value)} />
               </Champ>
             </div>
           </div>
         </div>
-        <BientotDisponible
-          titre="Téléversement direct du logo"
-          raison="L'API n'expose pas encore d'endpoint d'upload dédié au logo d'organisation ; seule une URL publique est enregistrée pour l'instant."
-        />
+        <BientotDisponible titre={t('uploadTitre')} raison={t('uploadRaison')} />
       </Section>
 
-      <Section titre="Identité de l'organisation" description="Nom légal, sigle et nature juridique.">
+      <Section titre={t('identiteTitre')} description={t('identiteDesc')}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Champ label="Nom de l'organisation" className="sm:col-span-2">
+          <Champ label={t('nom')} className="sm:col-span-2">
             <input className="input" value={form.nom} onChange={(e) => set('nom', e.target.value)} />
           </Champ>
-          <Champ label="Sigle">
+          <Champ label={t('sigle')}>
             <input className="input" value={form.sigle} onChange={(e) => set('sigle', e.target.value)} />
           </Champ>
-          <Champ label="Type d'organisation">
+          <Champ label={t('type')}>
             <select className="input" value={form.type} onChange={(e) => set('type', e.target.value)}>
-              {TYPES_ORGANISATION.map((t) => (
-                <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+              {TYPES_ORGANISATION.map((code) => (
+                <option key={code} value={code}>{t(`types.${code}`)}</option>
               ))}
             </select>
           </Champ>
         </div>
       </Section>
 
-      <Section titre="Coordonnées" description="Contacts affichés sur les documents officiels.">
+      <Section titre={t('coordonneesTitre')} description={t('coordonneesDesc')}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Champ label="Email">
+          <Champ label={t('email')}>
             <input type="email" className="input" value={form.email} onChange={(e) => set('email', e.target.value)} />
           </Champ>
-          <Champ label="Téléphone">
+          <Champ label={t('telephone')}>
             <input type="tel" className="input" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} />
           </Champ>
-          <Champ label="Site web">
+          <Champ label={t('siteWeb')}>
             <input className="input" placeholder="https://" value={form.siteWeb} onChange={(e) => set('siteWeb', e.target.value)} />
           </Champ>
-          <Champ label="Siège social">
+          <Champ label={t('siege')}>
             <input className="input" value={form.siege} onChange={(e) => set('siege', e.target.value)} />
           </Champ>
         </div>
       </Section>
 
-      <Section titre="Localisation, langue et devise" description="Paramètres régionaux appliqués à toute l'organisation.">
+      <Section titre={t('regionalTitre')} description={t('regionalDesc')}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Champ label="Pays principal">
+          <Champ label={t('pays')}>
             <select className="input" value={form.paysPrincipal} onChange={(e) => set('paysPrincipal', e.target.value)}>
-              {PAYS.map((p) => (
-                <option key={p.code} value={p.code}>{p.nom}</option>
+              {PAYS.map((code) => (
+                <option key={code} value={code}>{t(`listePays.${code}`)}</option>
               ))}
             </select>
           </Champ>
-          <Champ label="Langue de l'interface">
+          <Champ label={t('langue')}>
             <select className="input" value={form.langue} onChange={(e) => set('langue', e.target.value)}>
-              {LANGUES.map((l) => (
-                <option key={l.code} value={l.code}>{l.nom}</option>
+              {LANGUES.map((code) => (
+                <option key={code} value={code}>{t(`langues.${code}`)}</option>
               ))}
             </select>
           </Champ>
-          <Champ label="Devise par défaut">
+          <Champ label={t('devise')}>
             <select className="input" value={form.deviseDefaut} onChange={(e) => set('deviseDefaut', e.target.value)}>
-              {DEVISES.map((d) => (
-                <option key={d.code} value={d.code}>{d.libelle}</option>
+              {DEVISES.map((code) => (
+                <option key={code} value={code}>{t(`devises.${code}`)}</option>
               ))}
             </select>
           </Champ>
         </div>
-        <BientotDisponible
-          titre="Fuseau horaire"
-          raison="Le modèle Organisation ne stocke pas encore de fuseau horaire : les dates sont affichées dans le fuseau du navigateur."
-        />
+        <BientotDisponible titre={t('fuseauTitre')} raison={t('fuseauRaison')} />
       </Section>
 
-      <Section titre="Exercice comptable" description="Mois d'ouverture et de clôture de l'exercice.">
+      <Section titre={t('exerciceTitre')} description={t('exerciceDesc')}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Champ label="Début de l'exercice">
+          <Champ label={t('exerciceDebut')}>
             <select
               className="input"
               value={form.exerciceComptableDebut}
               onChange={(e) => set('exerciceComptableDebut', Number(e.target.value))}
             >
-              {MOIS.map((m, i) => (
-                <option key={m} value={i + 1}>{m}</option>
+              {MOIS.map((m) => (
+                <option key={m} value={m}>{t(`mois.${m}`)}</option>
               ))}
             </select>
           </Champ>
-          <Champ label="Fin de l'exercice">
+          <Champ label={t('exerciceFin')}>
             <select
               className="input"
               value={form.exerciceComptableFin}
               onChange={(e) => set('exerciceComptableFin', Number(e.target.value))}
             >
-              {MOIS.map((m, i) => (
-                <option key={m} value={i + 1}>{m}</option>
+              {MOIS.map((m) => (
+                <option key={m} value={m}>{t(`mois.${m}`)}</option>
               ))}
             </select>
           </Champ>
@@ -311,7 +274,7 @@ export function OrganisationSettings({ organisationId }: { organisationId?: stri
 
       <div className="flex justify-end">
         <button onClick={enregistrer} disabled={saving} className="btn-primary disabled:opacity-60">
-          {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
+          {saving ? t('enregistrement') : t('enregistrer')}
         </button>
       </div>
     </div>

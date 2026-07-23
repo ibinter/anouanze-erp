@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2, Search, ShieldAlert, UserPlus } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/utils';
@@ -12,11 +13,10 @@ import { Section, BientotDisponible, Champ, LigneOption, Toggle } from './primit
 import { MatricePermissions } from './MatricePermissions';
 import {
   ROLES,
-  ROLE_LABELS,
   ROLES_ADMINISTRATION,
   badgeRole,
   estRoleConnu,
-  libelleRole,
+  useLibellesRoles,
   type Role,
 } from './roles';
 
@@ -36,11 +36,11 @@ interface Membre {
   membreDepuis?: string | null;
 }
 
-function formatDate(valeur?: string | null) {
+function formatDate(valeur: string | null | undefined, locale: string) {
   if (!valeur) return '—';
   const d = new Date(valeur);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 interface ActionEnAttente {
@@ -57,6 +57,9 @@ export function UtilisateursSettings({
   utilisateurId?: string;
   roleCourant?: string;
 }) {
+  const t = useTranslations('shell.parametres.utilisateurs');
+  const locale = useLocale();
+  const { labels: ROLE_LABELS, libelle: libelleRole } = useLibellesRoles();
   const queryClient = useQueryClient();
   const [recherche, setRecherche] = useState('');
   const [modalInvitation, setModalInvitation] = useState(false);
@@ -106,11 +109,11 @@ export function UtilisateursSettings({
       return data;
     },
     onSuccess: () => {
-      toast.success('Rôle mis à jour');
+      toast.success(t('roleMisAJour'));
       queryClient.invalidateQueries({ queryKey: ['membres-organisation'] });
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Modification du rôle impossible');
+      toast.error(err instanceof Error ? err.message : t('roleErreur'));
     },
   });
 
@@ -120,11 +123,11 @@ export function UtilisateursSettings({
       return data;
     },
     onSuccess: (_d, variables) => {
-      toast.success(variables.actif ? 'Compte activé' : 'Compte désactivé');
+      toast.success(variables.actif ? t('compteActive') : t('compteDesactive'));
       queryClient.invalidateQueries({ queryKey: ['membres-organisation'] });
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Modification du statut impossible');
+      toast.error(err instanceof Error ? err.message : t('statutErreur'));
     },
   });
 
@@ -134,16 +137,16 @@ export function UtilisateursSettings({
       return data as { message?: string; emailEnvoye?: boolean };
     },
     onSuccess: (data) => {
-      toast.success(data?.message ?? 'Invitation envoyée');
+      toast.success(data?.message ?? t('invitationEnvoyee'));
       if (data?.emailEnvoye === false) {
-        toast.warning("L'email n'a pas pu être envoyé — communiquez le lien manuellement.");
+        toast.warning(t('invitationEmailNonEnvoye'));
       }
       queryClient.invalidateQueries({ queryKey: ['membres-organisation'] });
       setModalInvitation(false);
       setInvitation({ email: '', role: 'LECTEUR', nom: '', prenom: '' });
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de l'invitation");
+      toast.error(err instanceof Error ? err.message : t('invitationErreur'));
     },
   });
 
@@ -161,7 +164,7 @@ export function UtilisateursSettings({
   function envoyerInvitation() {
     const email = invitation.email.trim();
     if (!email || !email.includes('@')) {
-      toast.error('Adresse email invalide');
+      toast.error(t('emailInvalide'));
       return;
     }
     mutationInvitation.mutate({
@@ -172,12 +175,18 @@ export function UtilisateursSettings({
     });
   }
 
+  const nomMembre = action ? `${action.membre.prenom ?? ''} ${action.membre.nom ?? ''}`.trim() : '';
+
   const messageConfirmation = action
     ? action.type === 'role'
-      ? `Le rôle de ${action.membre.prenom} ${action.membre.nom} passera de « ${libelleRole(action.membre.role)} » à « ${libelleRole(action.nouveauRole)} ». Ses droits d'accès changent immédiatement.`
+      ? t('confirmationRole', {
+          membre: nomMembre,
+          ancien: libelleRole(action.membre.role),
+          nouveau: libelleRole(action.nouveauRole),
+        })
       : action.nouvelEtat
-        ? `Réactiver l'accès de ${action.membre.prenom} ${action.membre.nom} à cette organisation ?`
-        : `Désactiver ${action.membre.prenom} ${action.membre.nom} ? Ses sessions en cours seront fermées et il ne pourra plus se connecter à cette organisation.`
+        ? t('confirmationReactiver', { membre: nomMembre })
+        : t('confirmationDesactiver', { membre: nomMembre })
     : '';
 
   return (
@@ -186,20 +195,19 @@ export function UtilisateursSettings({
         <div className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <p className="text-xs leading-relaxed text-amber-800">
-            La gestion des membres est réservée aux rôles <strong>Administrateur de l'organisation</strong> et{' '}
-            <strong>Super administrateur</strong>. Votre rôle actuel ({libelleRole(roleCourant)}) donne uniquement
-            accès à la matrice des permissions ci-dessous.
+            {t('accesRestreintDebut')} <strong>{ROLE_LABELS.ADMIN_ORGANISATION}</strong> {t('accesRestreintEt')}{' '}
+            <strong>{ROLE_LABELS.SUPER_ADMIN}</strong>. {t('accesRestreintFin', { role: libelleRole(roleCourant) })}
           </p>
         </div>
       )}
 
       {estAdministrateur && (
         <Section
-          titre="Membres de l'organisation"
-          description="Rôle, statut et dernière connexion de chaque compte rattaché à votre organisation."
+          titre={t('membresTitre')}
+          description={t('membresDesc')}
           action={
             <button onClick={() => setModalInvitation(true)} className="btn-primary flex items-center gap-2">
-              <UserPlus className="h-4 w-4" /> Inviter un utilisateur
+              <UserPlus className="h-4 w-4" /> {t('inviter')}
             </button>
           }
         >
@@ -207,7 +215,7 @@ export function UtilisateursSettings({
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <input
               className="input pl-9"
-              placeholder="Rechercher un membre…"
+              placeholder={t('rechercherMembre')}
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
@@ -215,18 +223,25 @@ export function UtilisateursSettings({
 
           {error ? (
             <p className="py-8 text-center text-sm text-neutral-500">
-              {error instanceof Error ? error.message : 'Impossible de charger les membres.'}
+              {error instanceof Error ? error.message : t('erreurChargement')}
             </p>
           ) : isLoading ? (
             <div className="flex justify-center gap-2 py-10 text-neutral-400">
-              <Loader2 className="h-5 w-5 animate-spin" /> Chargement des membres…
+              <Loader2 className="h-5 w-5 animate-spin" /> {t('chargementMembres')}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-neutral-200">
               <table className="w-full min-w-[840px] text-sm">
                 <thead>
                   <tr className="border-b border-neutral-100 bg-neutral-50">
-                    {['Membre', 'Rôle', 'Statut', 'Dernière connexion', 'Membre depuis', ''].map((h, i) => (
+                    {[
+                      t('colonneMembre'),
+                      t('colonneRole'),
+                      t('colonneStatut'),
+                      t('colonneDerniereConnexion'),
+                      t('colonneMembreDepuis'),
+                      '',
+                    ].map((h, i) => (
                       <th
                         key={i}
                         className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500"
@@ -240,7 +255,7 @@ export function UtilisateursSettings({
                   {membresFiltres.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-sm text-neutral-400">
-                        Aucun membre ne correspond à cette recherche.
+                        {t('aucunMembre')}
                       </td>
                     </tr>
                   ) : (
@@ -253,7 +268,7 @@ export function UtilisateursSettings({
                           <td className="px-4 py-3">
                             <p className="font-semibold text-neutral-800">
                               {`${m.prenom ?? ''} ${m.nom ?? ''}`.trim() || m.email}
-                              {soiMeme && <span className="badge badge-neutral ml-2">vous</span>}
+                              {soiMeme && <span className="badge badge-neutral ml-2">{t('vous')}</span>}
                             </p>
                             <p className="text-xs text-neutral-500">{m.email}</p>
                           </td>
@@ -279,17 +294,17 @@ export function UtilisateursSettings({
                           </td>
                           <td className="px-4 py-3">
                             <span className={m.actif ? 'badge badge-success' : 'badge badge-neutral'}>
-                              {m.actif ? 'Actif' : 'Désactivé'}
+                              {m.actif ? t('actif') : t('desactive')}
                             </span>
                             {!m.emailVerifie && (
-                              <span className="badge badge-warning ml-1">Email non vérifié</span>
+                              <span className="badge badge-warning ml-1">{t('emailNonVerifie')}</span>
                             )}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-xs text-neutral-500">
-                            {formatDate(m.dernierLogin)}
+                            {formatDate(m.dernierLogin, locale)}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-xs text-neutral-500">
-                            {formatDate(m.membreDepuis)}
+                            {formatDate(m.membreDepuis, locale)}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
@@ -305,7 +320,7 @@ export function UtilisateursSettings({
                                 setAction({ type: 'statut', membre: m, nouvelEtat: !m.actif })
                               }
                             >
-                              {m.actif ? 'Désactiver' : 'Activer'}
+                              {m.actif ? t('desactiver') : t('activer')}
                             </button>
                           </td>
                         </tr>
@@ -319,94 +334,67 @@ export function UtilisateursSettings({
         </Section>
       )}
 
-      <Section
-        titre="Matrice rôle × permissions"
-        description="Lecture seule — générée à partir des guards et décorateurs réellement présents dans l'API."
-      >
+      <Section titre={t('matriceTitre')} description={t('matriceDesc')}>
         <MatricePermissions />
       </Section>
 
-      <Section
-        titre="Authentification"
-        description="Renforcement de la connexion des membres de l'organisation."
-      >
-        <LigneOption
-          titre="Double authentification (2FA)"
-          description="Le champ existe en base (Utilisateur.deuxFacteurs) mais aucun endpoint ne permet encore de l'activer."
-        >
-          <Toggle label="Double authentification" checked={false} disabled onChange={() => undefined} />
+      <Section titre={t('authTitre')} description={t('authDesc')}>
+        <LigneOption titre={t('deuxFacteursTitre')} description={t('deuxFacteursDesc')}>
+          <Toggle label={t('deuxFacteursLabel')} checked={false} disabled onChange={() => undefined} />
         </LigneOption>
-        <LigneOption
-          titre="Durée de session"
-          description="Jeton d'accès valable 15 minutes, renouvelé automatiquement par un jeton de rafraîchissement valable 7 jours."
-        >
-          <span className="badge badge-neutral">15 min / 7 j</span>
+        <LigneOption titre={t('sessionTitre')} description={t('sessionDesc')}>
+          <span className="badge badge-neutral">{t('sessionBadge')}</span>
         </LigneOption>
-        <BientotDisponible
-          titre="Durée de session configurable et 2FA"
-          raison="Ces durées sont fixées dans le service d'authentification (auth.service.ts) et ne sont pas paramétrables par organisation. L'interface n'affiche donc pas de réglage modifiable qui n'aurait aucun effet."
-        />
+        <BientotDisponible titre={t('sessionBientotTitre')} raison={t('sessionBientotRaison')} />
       </Section>
 
-      <Section
-        titre="Politique de mot de passe"
-        description="Règles imposées lors de la création et du renouvellement des mots de passe."
-      >
-        <BientotDisponible
-          titre="Longueur minimale, complexité, expiration, historique"
-          raison="L'API ne stocke aucune politique de mot de passe configurable : la seule règle appliquée aujourd'hui est le hachage bcrypt (coût 12) et l'expiration du lien de réinitialisation. Aucune valeur n'est affichée pour ne pas laisser croire à des règles inexistantes."
-        />
+      <Section titre={t('motDePasseTitre')} description={t('motDePasseDesc')}>
+        <BientotDisponible titre={t('motDePasseBientotTitre')} raison={t('motDePasseBientotRaison')} />
       </Section>
 
-      <Section
-        titre="Sessions et appareils"
-        description="Sessions actives et révocation à distance."
-      >
-        <BientotDisponible
-          titre="Liste des sessions actives par appareil"
-          raison="Le modèle Session enregistre bien un jeton, une IP et un user-agent, mais aucun endpoint ne les expose ni ne permet de les révoquer individuellement. Une session est en revanche automatiquement fermée lors de la désactivation d'un compte ou d'une réinitialisation de mot de passe."
-        />
+      <Section titre={t('sessionsTitre')} description={t('sessionsDesc')}>
+        <BientotDisponible titre={t('sessionsBientotTitre')} raison={t('sessionsBientotRaison')} />
       </Section>
 
       <Modal
         open={modalInvitation}
         onOpenChange={setModalInvitation}
-        title="Inviter un utilisateur"
-        description="Un email de définition de mot de passe est envoyé au nouvel utilisateur (valable 24 h)."
+        title={t('modalTitre')}
+        description={t('modalDesc')}
         footer={
           <>
             <button className="btn-secondary" onClick={() => setModalInvitation(false)}>
-              Annuler
+              {t('modalAnnuler')}
             </button>
             <button
               className="btn-primary disabled:opacity-60"
               disabled={mutationInvitation.isPending}
               onClick={envoyerInvitation}
             >
-              {mutationInvitation.isPending ? 'Envoi…' : "Envoyer l'invitation"}
+              {mutationInvitation.isPending ? t('modalEnvoi') : t('modalEnvoyer')}
             </button>
           </>
         }
       >
         <div className="space-y-3">
-          <Champ label="Email">
+          <Champ label={t('champEmail')}>
             <input
               type="email"
               className="input"
-              placeholder="utilisateur@organisation.ci"
+              placeholder={t('champEmailPlaceholder')}
               value={invitation.email}
               onChange={(e) => setInvitation({ ...invitation, email: e.target.value })}
             />
           </Champ>
           <div className="grid grid-cols-2 gap-3">
-            <Champ label="Prénom (facultatif)">
+            <Champ label={t('champPrenom')}>
               <input
                 className="input"
                 value={invitation.prenom}
                 onChange={(e) => setInvitation({ ...invitation, prenom: e.target.value })}
               />
             </Champ>
-            <Champ label="Nom (facultatif)">
+            <Champ label={t('champNom')}>
               <input
                 className="input"
                 value={invitation.nom}
@@ -414,7 +402,7 @@ export function UtilisateursSettings({
               />
             </Champ>
           </div>
-          <Champ label="Rôle attribué" aide="Modifiable à tout moment depuis la liste des membres.">
+          <Champ label={t('champRole')} aide={t('champRoleAide')}>
             <select
               className="input"
               value={invitation.role}
@@ -434,7 +422,7 @@ export function UtilisateursSettings({
         open={!!action}
         onClose={() => setAction(null)}
         onConfirm={confirmerAction}
-        titre={action?.type === 'role' ? 'Confirmer le changement de rôle' : 'Confirmer le changement de statut'}
+        titre={action?.type === 'role' ? t('confirmationTitreRole') : t('confirmationTitreStatut')}
         message={messageConfirmation}
         variante={action?.type === 'statut' && action.nouvelEtat === false ? 'danger' : 'warning'}
       />

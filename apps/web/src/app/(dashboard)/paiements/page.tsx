@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { CreditCard, TrendingUp, CheckCircle, XCircle, Clock, Plus, X, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -33,12 +34,9 @@ const STATUT_COLORS: Record<string, string> = {
   ANNULE: 'bg-gray-100 text-gray-600',
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  DON: 'Don',
-  COTISATION: 'Cotisation',
-  PRESTATION: 'Prestation',
-  REMBOURSEMENT: 'Remboursement',
-};
+const TYPE_IDS = ['DON', 'COTISATION', 'PRESTATION', 'REMBOURSEMENT'];
+
+const STATUT_IDS = ['EN_ATTENTE', 'SUCCES', 'ECHEC', 'ANNULE'];
 
 /**
  * Statut d'intégration réel de chaque passerelle — audité sur
@@ -51,10 +49,10 @@ const TYPE_LABELS: Record<string, string> = {
  */
 type StatutIntegration = 'DISPONIBLE' | 'INTEGRATION' | 'BIENTOT';
 
-const INTEGRATION_BADGES: Record<StatutIntegration, { label: string; className: string }> = {
-  DISPONIBLE: { label: 'Disponible', className: 'bg-green-100 text-green-700' },
-  INTEGRATION: { label: 'En intégration', className: 'bg-amber-100 text-amber-700' },
-  BIENTOT: { label: 'Bientôt disponible', className: 'bg-gray-100 text-gray-500' },
+const INTEGRATION_BADGES: Record<StatutIntegration, { className: string }> = {
+  DISPONIBLE: { className: 'bg-green-100 text-green-700' },
+  INTEGRATION: { className: 'bg-amber-100 text-amber-700' },
+  BIENTOT: { className: 'bg-gray-100 text-gray-500' },
 };
 
 interface Operateur {
@@ -63,7 +61,8 @@ interface Operateur {
   initiales: string;
   pastille: string;
   integration: StatutIntegration;
-  detail: string;
+  /** Clé de traduction du détail affiché sous le badge d'intégration. */
+  detailKey: 'detailWebhook' | 'detailNonDemarre';
 }
 
 const OPERATEURS: Operateur[] = [
@@ -73,7 +72,7 @@ const OPERATEURS: Operateur[] = [
     initiales: 'OM',
     pastille: 'bg-orange-500',
     integration: 'INTEGRATION',
-    detail: 'Webhook de confirmation actif — initiation à finaliser',
+    detailKey: 'detailWebhook',
   },
   {
     id: 'CINETPAY',
@@ -81,7 +80,7 @@ const OPERATEURS: Operateur[] = [
     initiales: 'CP',
     pastille: 'bg-blue-600',
     integration: 'INTEGRATION',
-    detail: 'Webhook de confirmation actif — initiation à finaliser',
+    detailKey: 'detailWebhook',
   },
   {
     id: 'MTN_MOMO',
@@ -89,7 +88,7 @@ const OPERATEURS: Operateur[] = [
     initiales: 'MTN',
     pastille: 'bg-yellow-500',
     integration: 'BIENTOT',
-    detail: 'Intégration non démarrée',
+    detailKey: 'detailNonDemarre',
   },
   {
     id: 'WAVE',
@@ -97,14 +96,20 @@ const OPERATEURS: Operateur[] = [
     initiales: 'W',
     pastille: 'bg-sky-500',
     integration: 'BIENTOT',
-    detail: 'Intégration non démarrée',
+    detailKey: 'detailNonDemarre',
   },
 ];
 
 const OPERATEURS_SELECTIONNABLES = OPERATEURS.filter((o) => o.integration !== 'BIENTOT');
 
 export default function PaiementsPage() {
+  const t = useTranslations('finance.paiements');
+  const tc = useTranslations('finance.common');
   const qc = useQueryClient();
+
+  const typeLabel = (type: string) => (TYPE_IDS.includes(type) ? t(`types.${type}`) : type);
+  const statutLabel = (statut: string) => (STATUT_IDS.includes(statut) ? t(`statuts.${statut}`) : statut);
+
   const [showInitier, setShowInitier] = useState(false);
   const [filtreStatut, setFiltreStatut] = useState('');
   const [filtreType, setFiltreType] = useState('');
@@ -137,13 +142,13 @@ export default function PaiementsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paiements Mobile</h1>
-          <p className="text-gray-500 text-sm mt-1">Orange Money, MTN MoMo, CinetPay, Wave</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => refetch()} className="p-2 border border-gray-300 rounded-lg text-gray-500"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => refetch()} aria-label={t('actions.refresh')} title={t('actions.refresh')} className="p-2 border border-gray-300 rounded-lg text-gray-500"><RefreshCw className="w-4 h-4" /></button>
           <button onClick={() => setShowInitier(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
-            <Plus className="w-4 h-4" /> Initier un paiement
+            <Plus className="w-4 h-4" /> {t('actions.initier')}
           </button>
         </div>
       </div>
@@ -152,28 +157,28 @@ export default function PaiementsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500">Total collecté</span>
+            <span className="text-xs text-gray-500">{t('kpi.totalCollecte')}</span>
             <TrendingUp className="w-4 h-4 text-green-500" />
           </div>
           <p className="text-xl font-bold text-gray-900">{(stats?.totalCollecte ?? 0).toLocaleString('fr-FR')} FCFA</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500">Transactions</span>
+            <span className="text-xs text-gray-500">{t('kpi.transactions')}</span>
             <CreditCard className="w-4 h-4 text-blue-500" />
           </div>
           <p className="text-xl font-bold text-gray-900">{stats?.nbTransactions ?? 0}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500">Taux de succès</span>
+            <span className="text-xs text-gray-500">{t('kpi.tauxSucces')}</span>
             <CheckCircle className="w-4 h-4 text-green-500" />
           </div>
           <p className="text-xl font-bold text-gray-900">{stats?.tauxSucces ?? 0}%</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-500">En attente</span>
+            <span className="text-xs text-gray-500">{t('kpi.enAttente')}</span>
             <Clock className="w-4 h-4 text-yellow-500" />
           </div>
           <p className="text-xl font-bold text-gray-900">{stats?.parStatut?.find(s => s.statut === 'EN_ATTENTE')?.count ?? 0}</p>
@@ -195,9 +200,9 @@ export default function PaiementsPage() {
               <div className="min-w-0">
                 <p className="font-semibold text-gray-900 text-sm truncate">{op.label}</p>
                 <span className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full ${badge.className}`}>
-                  {badge.label}
+                  {t(`integration.${op.integration}`)}
                 </span>
-                <p className="text-[11px] text-gray-400 mt-1 leading-snug">{op.detail}</p>
+                <p className="text-[11px] text-gray-400 mt-1 leading-snug">{t(`operateurs.${op.detailKey}`)}</p>
               </div>
             </div>
           );
@@ -205,24 +210,24 @@ export default function PaiementsPage() {
       </div>
 
       <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-        Aucune passerelle n&apos;est encore en collecte automatique de bout en bout : un paiement initié
-        ici est enregistré au statut <span className="font-semibold">En attente</span> et n&apos;est
-        confirmé qu&apos;à réception du webhook de l&apos;opérateur.
+        {t.rich('avertissement', {
+          b: (chunks) => <span className="font-semibold">{chunks}</span>,
+        })}
       </p>
 
       {/* Filtres */}
       <div className="flex gap-2 flex-wrap">
         <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" value={filtreStatut} onChange={e => setFiltreStatut(e.target.value)}>
-          <option value="">Tous les statuts</option>
-          <option value="EN_ATTENTE">En attente</option>
-          <option value="SUCCES">Succès</option>
-          <option value="ECHEC">Échec</option>
+          <option value="">{t('filtre.tousStatuts')}</option>
+          <option value="EN_ATTENTE">{t('statuts.EN_ATTENTE')}</option>
+          <option value="SUCCES">{t('statuts.SUCCES')}</option>
+          <option value="ECHEC">{t('statuts.ECHEC')}</option>
         </select>
         <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" value={filtreType} onChange={e => setFiltreType(e.target.value)}>
-          <option value="">Tous les types</option>
-          <option value="DON">Don</option>
-          <option value="COTISATION">Cotisation</option>
-          <option value="PRESTATION">Prestation</option>
+          <option value="">{t('filtre.tousTypes')}</option>
+          <option value="DON">{t('types.DON')}</option>
+          <option value="COTISATION">{t('types.COTISATION')}</option>
+          <option value="PRESTATION">{t('types.PRESTATION')}</option>
         </select>
       </div>
 
@@ -233,19 +238,19 @@ export default function PaiementsPage() {
         ) : transactions.length === 0 ? (
           <div className="py-16 text-center text-gray-400">
             <CreditCard className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p>Aucune transaction</p>
+            <p>{t('table.empty')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
-                <th className="px-4 py-3 text-left">Référence</th>
-                <th className="px-4 py-3 text-left">Description</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-right">Montant</th>
-                <th className="px-4 py-3 text-left">Statut</th>
-                <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-4 py-3 text-left">{t('table.reference')}</th>
+                <th className="px-4 py-3 text-left">{t('table.description')}</th>
+                <th className="px-4 py-3 text-left">{t('table.type')}</th>
+                <th className="px-4 py-3 text-right">{t('table.montant')}</th>
+                <th className="px-4 py-3 text-left">{t('table.statut')}</th>
+                <th className="px-4 py-3 text-left">{t('table.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -253,10 +258,10 @@ export default function PaiementsPage() {
                 <tr key={tx.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{tx.reference ?? tx.id.slice(0, 8)}</td>
                   <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{tx.description ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{TYPE_LABELS[tx.type] ?? tx.type}</td>
+                  <td className="px-4 py-3 text-gray-600">{typeLabel(tx.type)}</td>
                   <td className="px-4 py-3 text-right font-semibold text-gray-900">{toNum(tx.montant).toLocaleString('fr-FR')} {tx.devise}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[tx.statut] ?? 'bg-gray-100 text-gray-600'}`}>{tx.statut}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[tx.statut] ?? 'bg-gray-100 text-gray-600'}`}>{statutLabel(tx.statut)}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-400">{new Date(tx.created_at).toLocaleDateString('fr-FR')}</td>
                 </tr>
@@ -272,41 +277,40 @@ export default function PaiementsPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Initier un paiement</h2>
+              <h2 className="text-lg font-bold">{t('modal.title')}</h2>
               <button onClick={() => setShowInitier(false)}><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Montant *" value={form.montant} onChange={e => setForm(f => ({ ...f, montant: e.target.value }))} />
+                <input type="number" className="border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.montantPlaceholder')} value={form.montant} onChange={e => setForm(f => ({ ...f, montant: e.target.value }))} />
                 <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.devise} onChange={e => setForm(f => ({ ...f, devise: e.target.value }))}>
-                  <option value="XOF">FCFA (XOF)</option>
+                  <option value="XOF">{t('modal.deviseXof')}</option>
                   <option value="EUR">EUR</option>
                   <option value="USD">USD</option>
                 </select>
               </div>
               <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-                <option value="DON">Don</option>
-                <option value="COTISATION">Cotisation</option>
+                <option value="DON">{t('types.DON')}</option>
+                <option value="COTISATION">{t('types.COTISATION')}</option>
               </select>
               <div>
                 <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.operateur} onChange={e => setForm(f => ({ ...f, operateur: e.target.value }))}>
                   {OPERATEURS_SELECTIONNABLES.map(op => (
                     <option key={op.id} value={op.id}>
-                      {op.label} — {INTEGRATION_BADGES[op.integration].label}
+                      {op.label} — {t(`integration.${op.integration}`)}
                     </option>
                   ))}
                 </select>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Canal indicatif : seuls les opérateurs dont le webhook de confirmation est actif
-                  sont proposés. Le routage automatique vers la passerelle n&apos;est pas encore actif.
+                  {t('modal.canalNote')}
                 </p>
               </div>
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-              <input type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Email du payeur *" value={form.payeurEmail} onChange={e => setForm(f => ({ ...f, payeurEmail: e.target.value }))} />
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Téléphone du payeur *" value={form.payeurTel} onChange={e => setForm(f => ({ ...f, payeurTel: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.descriptionPlaceholder')} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              <input type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.emailPlaceholder')} value={form.payeurEmail} onChange={e => setForm(f => ({ ...f, payeurEmail: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.telPlaceholder')} value={form.payeurTel} onChange={e => setForm(f => ({ ...f, payeurTel: e.target.value }))} />
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setShowInitier(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => setShowInitier(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">{tc('cancel')}</button>
               <button
                 onClick={() =>
                   // `operateur` est volontairement exclu : le DTO API le rejette
@@ -323,7 +327,7 @@ export default function PaiementsPage() {
                 disabled={!form.montant || !form.payeurTel || !form.payeurEmail || initierPaiement.isPending}
                 className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60"
               >
-                {initierPaiement.isPending ? 'Envoi...' : 'Initier'}
+                {initierPaiement.isPending ? t('modal.sending') : t('modal.submit')}
               </button>
             </div>
           </div>
