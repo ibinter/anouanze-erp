@@ -107,39 +107,49 @@ describe('searchKnowledge — silence sur le hors-sujet (exigence anti-hallucina
  *   « gagne » ⊂ « -GAGNE-r du temps » → passage « bénéfices »
  * `sharePrefix` (racine commune ≥ 4 caractères) amplifie l'effet côté keywords.
  *
- * Conséquence : un contexte non pertinent est injecté dans le prompt système,
- * ce qui augmente le risque d'hallucination sur une question hors périmètre.
- * Correctif suggéré (NON appliqué — hors périmètre de cette mission) :
- * comparer sur des mots entiers (`new Set(normalizedContent.split(' '))`) et
- * exiger un score plancher (≥ 3) avant d'injecter un passage.
+ * Conséquence : un contexte non pertinent était injecté dans le prompt système,
+ * ce qui augmentait le risque d'hallucination sur une question hors périmètre.
  *
- * Les tests ci-dessous VERROUILLENT le comportement actuel afin que le jour où
- * le correctif est appliqué, ils échouent et signalent explicitement le
- * changement — ils ne masquent pas le défaut, ils le documentent.
+ * ✅ CORRIGÉ : `searchKnowledge` compare désormais sur des MOTS ENTIERS
+ * (`new Set(normalizedContent.split(' '))`) et applique un score plancher
+ * (`MIN_RELEVANCE_SCORE = 4`) avant de retenir un passage.
+ *
+ * Les tests ci-dessous verrouillent le comportement CORRIGÉ : une question
+ * hors-sujet ne doit plus remonter aucun passage, et la règle 10 des
+ * garde-fous (« reconnaître qu'une information manque ») s'applique.
  * ────────────────────────────────────────────────────────────────────────────
  */
-describe('[BUG CONNU] faux positifs par sous-chaîne', () => {
-  it('« Qui a gagné la finale de football hier soir ? » remonte à tort un passage', () => {
-    const r = searchKnowledge('Qui a gagné la finale de football hier soir ?');
-    expect(r.length).toBeGreaterThan(0); // ← devrait être 0
-    expect(r[0].entry.id).toBe('benefices');
-    expect(r[0].score).toBeLessThanOrEqual(2); // score résiduel très faible
+describe('faux positifs par sous-chaîne (régression)', () => {
+  it('« Qui a gagné la finale de football hier soir ? » ne remonte aucun passage', () => {
+    expect(searchKnowledge('Qui a gagné la finale de football hier soir ?')).toEqual([]);
   });
 
-  it('« Donne-moi le cours du bitcoin. » remonte à tort des passages', () => {
-    const r = searchKnowledge('Donne-moi le cours du bitcoin.');
-    expect(r.length).toBeGreaterThan(0); // ← devrait être 0
-    expect(r.every((s) => s.score <= 3)).toBe(true);
+  it('« Donne-moi le cours du bitcoin. » ne remonte aucun passage', () => {
+    expect(searchKnowledge('Donne-moi le cours du bitcoin.')).toEqual([]);
   });
 
-  it('un score plancher de 4 suffirait à filtrer ces faux positifs', () => {
+  it('le plancher filtre le bruit sans écarter les vraies questions métier', () => {
     const bruit = [
       ...searchKnowledge('Qui a gagné la finale de football hier soir ?'),
       ...searchKnowledge('Donne-moi le cours du bitcoin.'),
+      ...searchKnowledge('Quelle est la capitale du Japon ?'),
     ];
-    expect(bruit.filter((s) => s.score >= 4)).toEqual([]);
-    // …alors qu'une vraie question métier dépasse largement ce seuil.
-    expect(searchKnowledge('Combien coûte le plan Pro ?')[0].score).toBeGreaterThanOrEqual(4);
+    expect(bruit).toEqual([]);
+
+    // …alors que les vraies questions métier restent servies.
+    for (const question of [
+      'Combien coûte le plan Pro ?',
+      'Puis-je essayer gratuitement ?',
+      'Comment migrer mes fichiers Excel ?',
+    ]) {
+      const r = searchKnowledge(question);
+      expect(r.length).toBeGreaterThan(0);
+      expect(r[0].score).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('buildKnowledgeContext renvoie une chaîne vide hors périmètre', () => {
+    expect(buildKnowledgeContext('Qui a gagné la finale de football hier soir ?')).toBe('');
   });
 });
 

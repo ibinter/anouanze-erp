@@ -270,6 +270,14 @@ export interface ScoredEntry {
 }
 
 /**
+ * Score minimal pour qu'un passage soit jugé pertinent.
+ * Une correspondance de mot-clé exact vaut 4 et une expression composée 5 :
+ * le seuil laisse donc passer toute vraie question métier, tout en écartant
+ * les scores bâtis uniquement sur des racines communes (2) ou des mots isolés (1).
+ */
+const MIN_RELEVANCE_SCORE = 4;
+
+/**
  * Recherche par mots-clés (RAG léger, sans dépendance externe).
  * Score = correspondances de mots-clés (pondérées) + occurrences dans le contenu.
  */
@@ -297,12 +305,19 @@ export function searchKnowledge(query: string, limit = 3): ScoredEntry[] {
         score += 2;
       }
     }
+    // Occurrences dans le contenu — sur MOTS ENTIERS uniquement.
+    // Un `includes()` brut faisait remonter des passages sur des sous-chaînes
+    // fortuites (« hier » dans « fichiers », « moi » dans « mois »), injectant
+    // un contexte hors-sujet présenté au modèle comme seule source autorisée.
+    const contentWords = new Set(normalizedContent.split(' '));
     for (const token of tokens) {
-      if (normalizedContent.includes(token)) score += 1;
+      if (contentWords.has(token)) score += 1;
     }
     return { entry, score };
   })
-    .filter((s) => s.score > 0)
+    // Plancher : en dessous, le score ne provient que de coïncidences
+    // morphologiques. Une vraie question métier dépasse toujours ce seuil.
+    .filter((s) => s.score >= MIN_RELEVANCE_SCORE)
     .sort((a, b) => b.score - a.score);
 
   return scored.slice(0, limit);
