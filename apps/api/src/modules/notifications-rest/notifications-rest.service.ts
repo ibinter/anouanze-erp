@@ -29,6 +29,60 @@ export class NotificationsRestService {
     return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit), nonLues } };
   }
 
+  /** Compteur léger destiné à la cloche du header (interrogé périodiquement). */
+  async compterNonLues(utilisateurId: string) {
+    const nonLues = await this.prisma.notification.count({
+      where: { utilisateurId, lue: false },
+    });
+    return { nonLues };
+  }
+
+  /**
+   * Aperçu des dernières notifications — utilisé par le panneau déroulant
+   * de la cloche (charge utile volontairement réduite).
+   */
+  async apercu(utilisateurId: string, limit = 8) {
+    const [data, nonLues] = await Promise.all([
+      this.prisma.notification.findMany({
+        where: { utilisateurId },
+        orderBy: [{ lue: 'asc' }, { createdAt: 'desc' }],
+        take: Math.min(Math.max(limit, 1), 20),
+        select: {
+          id: true,
+          titre: true,
+          message: true,
+          type: true,
+          lue: true,
+          lien: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.notification.count({ where: { utilisateurId, lue: false } }),
+    ]);
+
+    return { data, nonLues };
+  }
+
+  /**
+   * Préférences de notification.
+   *
+   * Le schéma Prisma actuel ne comporte aucun modèle de préférences
+   * (cf. rapport technique : modèle `PreferenceNotification` à créer).
+   * On expose donc une réponse honnête que l'interface affiche en
+   * « Bientôt disponible » plutôt que de simuler une fonctionnalité.
+   */
+  async getPreferences(_utilisateurId: string) {
+    return {
+      disponible: false,
+      message:
+        'La personnalisation des préférences de notification sera disponible prochainement.',
+      canaux: [
+        { cle: 'interne', libelle: 'Notifications dans l\'application', actif: true, modifiable: false },
+        { cle: 'email', libelle: 'Notifications par email', actif: true, modifiable: false },
+      ],
+    };
+  }
+
   async marquerLue(utilisateurId: string, id: string) {
     return this.prisma.notification.update({
       where: { id, utilisateurId },

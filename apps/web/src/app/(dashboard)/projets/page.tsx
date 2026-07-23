@@ -62,7 +62,15 @@ function StatutBadge({ statut }: { statut: string }) {
   return <span className={entry.cls}>{entry.label}</span>;
 }
 
-function ProjetCard({ projet, onClick }: { projet: Projet; onClick: () => void }) {
+function ProjetCard({
+  projet,
+  onOpen,
+  onApercu,
+}: {
+  projet: Projet;
+  onOpen: () => void;
+  onApercu: () => void;
+}) {
   const budgetPrev = toNum(projet.budgetPrevisionnel ?? projet.budgetTotal ?? projet.budget);
   const budgetReal = toNum(projet.budgetRealise ?? projet.depenses);
   const pct = budgetPrev > 0
@@ -70,9 +78,11 @@ function ProjetCard({ projet, onClick }: { projet: Projet; onClick: () => void }
     : 0;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
       className="card-hover rounded-2xl p-5 flex flex-col gap-4 text-left w-full cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary-600/30"
     >
       <div className="flex items-start justify-between gap-2">

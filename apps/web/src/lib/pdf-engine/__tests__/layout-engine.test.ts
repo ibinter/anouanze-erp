@@ -2,23 +2,13 @@
  * ============================================================================
  * TESTS DU MOTEUR DE MISE EN PAGE (section 42 du cahier des charges)
  * ----------------------------------------------------------------------------
- * RUNNER : aucun runner (Jest/Vitest) n'est configuré dans apps/web/package.json
- * au moment de l'écriture. Pour NE PAS casser `npx tsc --noEmit` (le paquet
- * `vitest` n'est pas installé), ce fichier embarque un MICRO-HARNAIS local qui
- * imite l'API Vitest (`describe` / `it` / `expect`). Les corps de test sont donc
- * de VRAIS tests Vitest : pour migrer vers Vitest il suffit de :
- *
- *   1. `npm i -D vitest` dans apps/web
- *   2. supprimer le bloc « MICRO-HARNAIS » ci-dessous
- *   3. ajouter en tête :  import { describe, it, expect } from 'vitest';
- *   4. `"scripts": { "test": "vitest run" }`
- *
- * En attendant, on peut exécuter les tests tels quels sans rien installer :
- *   cd apps/web && npx tsx src/lib/pdf-engine/__tests__/layout-engine.test.ts
- * (jsPDF mesure les textes via ses métriques AFM intégrées — fonctionne en Node
- * pur, sans DOM ni canvas.)
+ * RUNNER : Vitest (`cd apps/web && npm test`). Le micro-harnais maison qui
+ * imitait l'API Vitest a été remplacé par de vrais imports `vitest`.
+ * jsPDF mesure les textes via ses métriques AFM intégrées — fonctionne en Node
+ * pur, sans DOM ni canvas (environnement `node` dans vitest.config.ts).
  * ============================================================================
  */
+import { describe, it, expect } from 'vitest';
 import jsPDF from 'jspdf';
 import {
   selectBestDocumentLayout,
@@ -31,37 +21,6 @@ import { COLUMN_RULES } from '../column-rules';
 import { FONT_BOUNDS } from '../types';
 import type { ColumnDef, ColumnType, DocumentExportDefinition } from '../types';
 import { ANOUANZE_BRANDING } from '../export-definitions';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MICRO-HARNAIS compatible Vitest (à supprimer une fois Vitest installé)
-// ─────────────────────────────────────────────────────────────────────────────
-interface Suite { name: string; tests: { name: string; fn: () => void }[]; }
-const SUITES: Suite[] = [];
-let CURRENT: Suite | null = null;
-function describe(name: string, fn: () => void): void {
-  CURRENT = { name, tests: [] };
-  SUITES.push(CURRENT);
-  fn();
-  CURRENT = null;
-}
-function it(name: string, fn: () => void): void {
-  if (!CURRENT) throw new Error('it() hors describe()');
-  CURRENT.tests.push({ name, fn });
-}
-function expect(actual: unknown) {
-  const num = () => {
-    if (typeof actual !== 'number') throw new Error(`attendu un nombre, reçu ${typeof actual}`);
-    return actual;
-  };
-  return {
-    toBe(v: unknown) { if (actual !== v) throw new Error(`toBe: attendu ${String(v)}, reçu ${String(actual)}`); },
-    toBeTruthy() { if (!actual) throw new Error(`toBeTruthy: reçu ${String(actual)}`); },
-    toBeGreaterThan(n: number) { if (!(num() > n)) throw new Error(`> ${n}, reçu ${num()}`); },
-    toBeGreaterThanOrEqual(n: number) { if (!(num() >= n)) throw new Error(`>= ${n}, reçu ${num()}`); },
-    toBeLessThan(n: number) { if (!(num() < n)) throw new Error(`< ${n}, reçu ${num()}`); },
-    toBeLessThanOrEqual(n: number) { if (!(num() <= n)) throw new Error(`<= ${n}, reçu ${num()}`); },
-  };
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fabriques de données de test (jeux paramétrés)
@@ -290,34 +249,3 @@ describe('pageDimensions', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Exécution directe (npx tsx …) — no-op sous Vitest (import.meta.vitest absent).
-// ─────────────────────────────────────────────────────────────────────────────
-function runAll(): void {
-  let passed = 0;
-  let failed = 0;
-  for (const suite of SUITES) {
-    // eslint-disable-next-line no-console
-    console.log(`\n▸ ${suite.name}`);
-    for (const t of suite.tests) {
-      try {
-        t.fn();
-        passed++;
-        // eslint-disable-next-line no-console
-        console.log(`  ✓ ${t.name}`);
-      } catch (e) {
-        failed++;
-        // eslint-disable-next-line no-console
-        console.error(`  ✗ ${t.name}\n      ${(e as Error).message}`);
-      }
-    }
-  }
-  // eslint-disable-next-line no-console
-  console.log(`\n${passed} réussis, ${failed} échoués`);
-  if (failed > 0 && typeof process !== 'undefined') process.exitCode = 1;
-}
-
-// Ne s'exécute que lancé directement en Node/tsx, jamais à l'import Vitest.
-if (typeof process !== 'undefined' && process.argv?.[1]?.includes('layout-engine.test')) {
-  runAll();
-}

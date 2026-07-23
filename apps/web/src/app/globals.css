@@ -41,12 +41,17 @@ iframe {
     --radius: 0.625rem;
   }
 
+  .dark {
+    --color-background: 13 13 13;
+    --color-foreground: 237 237 237;
+  }
+
   * {
-    @apply border-neutral-200;
+    @apply border-neutral-200 dark:border-neutral-700;
   }
 
   body {
-    @apply bg-neutral-50 text-neutral-800;
+    @apply bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-100;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -56,6 +61,23 @@ iframe {
   input, select, textarea {
     @apply focus:ring-primary-600 focus:border-primary-600;
   }
+
+  /* Lisibilité de l'espace interne en sombre SANS modifier les 28 pages :
+     les gris « clairs » figés dans le markup sont réinterprétés, uniquement
+     à l'intérieur du shell applicatif (.app-shell) — la landing reste intacte. */
+  .dark .app-shell .text-neutral-800 { @apply text-neutral-100; }
+  .dark .app-shell .text-neutral-700 { @apply text-neutral-200; }
+  .dark .app-shell .text-neutral-600 { @apply text-neutral-300; }
+  .dark .app-shell .text-neutral-500 { @apply text-neutral-400; }
+  .dark .app-shell .bg-white { background-color: #1f1f1f; }
+  .dark .app-shell .bg-neutral-50 { background-color: #171717; }
+  .dark .app-shell .bg-neutral-100 { background-color: #262626; }
+  .dark .app-shell .border-neutral-100,
+  .dark .app-shell .border-neutral-200 { @apply border-neutral-700; }
+  .dark .app-shell .divide-neutral-100 > :not([hidden]) ~ :not([hidden]),
+  .dark .app-shell .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { @apply border-neutral-700; }
+  .dark .app-shell .hover\:bg-neutral-50:hover { background-color: #262626; }
+  .dark .app-shell .hover\:bg-neutral-100:hover { background-color: #303030; }
 }
 
 @layer components {
@@ -74,7 +96,10 @@ iframe {
            hover:bg-neutral-50 hover:border-neutral-300 active:bg-neutral-100
            focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-200;
+           transition-all duration-200
+           dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-600
+           dark:hover:bg-neutral-700 dark:hover:border-neutral-500 dark:active:bg-neutral-700
+           dark:focus:ring-offset-neutral-900;
   }
 
   .btn-accent {
@@ -87,11 +112,13 @@ iframe {
   }
 
   .card {
-    @apply bg-white rounded-2xl border border-neutral-100 shadow-card;
+    @apply bg-white rounded-2xl border border-neutral-100 shadow-card
+           dark:bg-neutral-800 dark:border-neutral-700 dark:shadow-none;
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 hover:border-neutral-200;
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5 hover:border-neutral-200
+           dark:hover:border-neutral-600;
   }
 
   .input {
@@ -99,11 +126,14 @@ iframe {
            text-sm text-neutral-800 placeholder-neutral-400
            focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20
            disabled:bg-neutral-50 disabled:text-neutral-500
-           transition-all duration-200;
+           transition-all duration-200
+           dark:bg-neutral-900 dark:border-neutral-600 dark:text-neutral-100
+           dark:placeholder-neutral-500 dark:focus:border-primary-400
+           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
   }
 
   .label {
-    @apply block text-sm font-medium text-neutral-700 mb-1;
+    @apply block text-sm font-medium text-neutral-700 mb-1 dark:text-neutral-200;
   }
 
   .badge {
@@ -111,19 +141,23 @@ iframe {
   }
 
   .badge-success {
-    @apply badge bg-primary-50 text-primary-700;
+    @apply badge bg-primary-50 text-primary-700
+           dark:bg-primary-900/50 dark:text-primary-100;
   }
 
   .badge-warning {
-    @apply badge bg-accent-50 text-accent-600;
+    @apply badge bg-accent-50 text-accent-600
+           dark:bg-accent-900/50 dark:text-accent-200;
   }
 
   .badge-error {
-    @apply badge bg-red-50 text-red-700;
+    @apply badge bg-red-50 text-red-700
+           dark:bg-red-900/40 dark:text-red-200;
   }
 
   .badge-neutral {
-    @apply badge bg-neutral-100 text-neutral-600;
+    @apply badge bg-neutral-100 text-neutral-600
+           dark:bg-neutral-700 dark:text-neutral-200;
   }
 
   .stat-card {
@@ -145,7 +179,44 @@ iframe {
   }
 
   .section-title {
-    @apply text-2xl font-bold text-neutral-800 tracking-tight;
+    @apply text-2xl font-bold text-neutral-800 tracking-tight dark:text-neutral-50;
+  }
+
+  /* ─── Navigation inférieure mobile (§9.3) ─────────────────────────────
+     4 accès rapides + « Plus ». Safe-area iOS incluse. */
+  .bottom-nav {
+    @apply fixed inset-x-0 bottom-0 z-30
+           bg-white/95 backdrop-blur border-t border-neutral-200
+           dark:bg-neutral-900/95 dark:border-neutral-700;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center gap-1 py-2 px-1
+           text-neutral-500 dark:text-neutral-400
+           active:bg-neutral-100 dark:active:bg-neutral-800
+           transition-colors duration-150;
+    min-height: 3.5rem;
+  }
+
+  .bottom-nav-item-active {
+    @apply text-primary-600 dark:text-primary-300 font-semibold;
+  }
+
+  .bottom-nav-label {
+    @apply text-[11px] leading-none truncate max-w-full;
+  }
+
+  /* Espace réservé sous le contenu pour ne jamais le masquer (mobile only) */
+  .pb-bottom-nav {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pb-bottom-nav {
+    padding-bottom: 0;
   }
 }
 
@@ -165,6 +236,18 @@ iframe {
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-neutral-400;
+}
+
+/* Scrollbars en mode sombre */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #4a4a4a;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #6b6b6b;
+}
+.dark {
+  scrollbar-color: #4a4a4a transparent;
 }
 
 /* Scrollbar sidebar sombre */

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
@@ -193,6 +195,7 @@ export default function MembresPage() {
 }
 
 function MembresTable() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statut, setStatut] = useState('');
@@ -262,10 +265,15 @@ function MembresTable() {
       key: 'actions',
       header: 'Actions',
       width: '130px',
-      render: () => (
+      render: (row) => (
         <div className="flex items-center gap-2">
-          <button className="text-xs text-primary-600 hover:underline font-medium">Voir</button>
-          <button className="text-xs text-neutral-500 hover:underline">Modifier</button>
+          <Link
+            href={`/membres/${row.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-primary-600 hover:underline font-medium"
+          >
+            Voir la fiche
+          </Link>
         </div>
       ),
     },
@@ -352,6 +360,7 @@ function MembresTable() {
         columns={columns}
         data={membres}
         isLoading={isLoading}
+        onRowClick={(row) => router.push(`/membres/${(row as Membre).id}`)}
       />
 
       {total > limit && (

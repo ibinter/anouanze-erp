@@ -15,15 +15,82 @@ import {
 import { UtilisateursService } from './utilisateurs.service';
 import { UpdateUtilisateurDto } from './dto/update-utilisateur.dto';
 import { ChangerMotDePasseDto } from './dto/changer-mot-de-passe.dto';
+import { InviterUtilisateurDto } from './dto/inviter-utilisateur.dto';
+import { ChangerRoleDto } from './dto/changer-role.dto';
+import { ChangerStatutDto } from './dto/changer-statut.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { OrganisationId } from '../../common/decorators/organisation-id.decorator';
 import { RoleUtilisateur } from '@prisma/client';
+
+interface UtilisateurToken {
+  id: string;
+  email: string;
+  organisationId?: string;
+  role?: RoleUtilisateur;
+}
 
 @ApiTags('utilisateurs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('api/v1/utilisateurs')
 export class UtilisateursController {
   constructor(private readonly service: UtilisateursService) {}
+
+  // ─── Administration des membres de l'organisation courante ───
+  // Déclarées AVANT `:id` pour éviter toute collision de routing.
+  // Cloisonnement : organisationId issu du jeton uniquement, jamais du client.
+
+  @ApiOperation({ summary: "Lister les membres de l'organisation courante" })
+  @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
+  @Get('organisation/membres')
+  listerMembres(@OrganisationId() organisationId?: string) {
+    return this.service.listerMembresOrganisation(organisationId);
+  }
+
+  @ApiOperation({
+    summary: "Matrice rôle × permissions réellement appliquée par l'API",
+  })
+  @Get('organisation/matrice-permissions')
+  matricePermissions() {
+    return this.service.getMatricePermissions();
+  }
+
+  @ApiOperation({ summary: "Inviter un utilisateur dans l'organisation" })
+  @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
+  @Post('organisation/inviter')
+  inviter(
+    @Body() dto: InviterUtilisateurDto,
+    @CurrentUser() auteur: UtilisateurToken,
+  ) {
+    return this.service.inviterDansOrganisation(dto, auteur);
+  }
+
+  @ApiOperation({ summary: "Modifier le rôle d'un membre" })
+  @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
+  @Patch('organisation/membres/:id/role')
+  changerRole(
+    @Param('id') id: string,
+    @Body() dto: ChangerRoleDto,
+    @CurrentUser() auteur: UtilisateurToken,
+  ) {
+    return this.service.changerRoleDansOrganisation(id, dto.role, auteur);
+  }
+
+  @ApiOperation({ summary: "Activer ou désactiver l'accès d'un membre" })
+  @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
+  @Patch('organisation/membres/:id/statut')
+  changerStatut(
+    @Param('id') id: string,
+    @Body() dto: ChangerStatutDto,
+    @CurrentUser() auteur: UtilisateurToken,
+  ) {
+    return this.service.changerStatutDansOrganisation(id, dto.actif, auteur);
+  }
+
+  // ─── Routes existantes ───
 
   @ApiOperation({ summary: 'Lister tous les utilisateurs' })
   @Get()
@@ -59,6 +126,7 @@ export class UtilisateursController {
   }
 
   @ApiOperation({ summary: 'Assigner une organisation à l\'utilisateur' })
+  @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
   @Post(':id/organisations/:orgId')
   assignerOrganisation(
     @Param('id') id: string,

@@ -40,15 +40,15 @@ export function Breadcrumb() {
   }));
 
   return (
-    <nav className="flex items-center gap-1 text-sm text-neutral-500" aria-label="Fil d'Ariane">
+    <nav className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400" aria-label="Fil d'Ariane">
       <Link href="/dashboard" className="hover:text-primary-600 transition-colors">
         <Home className="w-4 h-4" />
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.href} className="flex items-center gap-1">
-          <ChevronRight className="w-3.5 h-3.5 text-neutral-300" />
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-300 dark:text-neutral-600" />
           {crumb.isLast ? (
-            <span className="text-neutral-700 font-medium">{crumb.label}</span>
+            <span className="text-neutral-700 dark:text-neutral-200 font-medium">{crumb.label}</span>
           ) : (
             <Link href={crumb.href} className="hover:text-primary-600 transition-colors">
               {crumb.label}

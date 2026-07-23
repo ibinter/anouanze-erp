@@ -193,7 +193,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={onMobileClose}
           />
-          <aside className={cn('fixed inset-y-0 left-0 z-50 flex flex-col w-72 shadow-2xl lg:hidden', sidebarBg)}>
+          <aside
+            className={cn('fixed inset-y-0 left-0 z-50 flex flex-col w-72 shadow-2xl lg:hidden', sidebarBg)}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          >
             <NavContent />
           </aside>
         </>

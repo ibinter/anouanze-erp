@@ -1,146 +1,504 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
+import {
+  BrandOptions,
+  RenderedEmail,
+  templateAlerteBudget,
+  templateBienvenue,
+  templateConfirmationCotisation,
+  templateConfirmationDemo,
+  templateEssaiExpire,
+  templateFinEssai,
+  templateInvitation,
+  templateNotificationGenerique,
+  templateNouveauTicket,
+  templateRappelCotisation,
+  templateRecuDon,
+  templateReinitMotDePasse,
+  templateRelanceProspect,
+  templateReponseTicket,
+} from './email.templates';
 
 interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  /** Étiquette de journalisation (ex. « bienvenue », « recu-don ») */
+  tag?: string;
+}
+
+/** Résultat d'un envoi « sûr » : ne lève jamais d'exception. */
+export interface EmailDispatchResult {
+  ok: boolean;
+  skipped?: boolean;
+  reason?: string;
 }
 
 @Injectable()
-export class EmailService {
-  private readonly transporter: Transporter;
+export class EmailService implements OnModuleInit {
+  private readonly transporter: Transporter | null;
   private readonly from: string;
+  private readonly appUrl: string;
+  private readonly enabled: boolean;
   private readonly logger = new Logger(EmailService.name);
 
-  constructor(private readonly config: ConfigService) {
-    this.from = this.config.get<string>('EMAIL_FROM', 'no-reply@anouanze.org');
+  /** File d'attente en mémoire — sérialise les envois pour ne pas saturer le SMTP. */
+  private queue: Promise<unknown> = Promise.resolve();
+  private queueLength = 0;
 
-    this.transporter = nodemailer.createTransport({
-      host: this.config.get<string>('SMTP_HOST', 'localhost'),
-      port: this.config.get<number>('SMTP_PORT', 587),
-      secure: false,
-      auth: {
-        user: this.config.get<string>('SMTP_USER'),
-        pass: this.config.get<string>('SMTP_PASSWORD'),
-      },
-    });
+  constructor(private readonly config: ConfigService) {
+    this.from = this.config.get<string>('EMAIL_FROM', 'ANOUANZÊ ERP <no-reply@anouanze-erp.com>');
+    this.appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000').replace(/\/$/, '');
+
+    const host = (this.config.get<string>('SMTP_HOST') ?? '').trim();
+    this.enabled = host.length > 0;
+
+    if (!this.enabled) {
+      this.transporter = null;
+    } else {
+      const user = (this.config.get<string>('SMTP_USER') ?? '').trim();
+      const pass = (this.config.get<string>('SMTP_PASSWORD') ?? '').trim();
+      const port = Number(this.config.get<string | number>('SMTP_PORT', 587)) || 587;
+      const secure =
+        String(this.config.get<string | boolean>('SMTP_SECURE', false)) === 'true' || port === 465;
+
+      this.transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        // Auth optionnelle : les relais locaux (MailHog, Postfix) n'en ont pas.
+        ...(user ? { auth: { user, pass } } : {}),
+        tls: { rejectUnauthorized: false },
+      });
+    }
   }
 
+  onModuleInit(): void {
+    if (!this.enabled) {
+      this.logger.warn(
+        "SMTP non configuré (SMTP_HOST absent) — les emails seront journalisés puis ignorés. L'application fonctionne normalement.",
+      );
+      return;
+    }
+    // Vérification non bloquante : un SMTP injoignable ne doit pas empêcher le démarrage.
+    this.transporter
+      ?.verify()
+      .then(() => this.logger.log(`SMTP opérationnel (${this.config.get('SMTP_HOST')})`))
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `SMTP injoignable au démarrage (${(err as Error).message}) — les envois seront tentés puis journalisés en cas d'échec.`,
+        ),
+      );
+  }
+
+  /** Le service dispose-t-il d'un relais SMTP configuré ? */
+  isConfigured(): boolean {
+    return this.enabled;
+  }
+
+  /** Nombre d'emails en attente dans la file interne. */
+  getQueueLength(): number {
+    return this.queueLength;
+  }
+
+  private brand(overrides?: BrandOptions): BrandOptions {
+    return { appUrl: this.appUrl, ...(overrides ?? {}) };
+  }
+
+  private url(path: string): string {
+    return `${this.appUrl}${path.startsWith('/') ? path : '/' + path}`;
+  }
+
+  // ------------------------------------------------------------
+  // Envoi bas niveau
+  // ------------------------------------------------------------
+
+  /**
+   * Envoi direct. Lève une exception en cas d'échec — réservé aux appels
+   * qui doivent connaître le résultat (envoi de masse, tests de configuration).
+   * Pour tout envoi transactionnel, préférer `dispatch()`.
+   */
   async sendEmail(options: SendEmailOptions): Promise<void> {
+    if (!this.enabled || !this.transporter) {
+      this.logger.warn(
+        `[email:${options.tag ?? 'brut'}] SMTP non configuré — envoi ignoré (destinataire ${options.to}, sujet « ${options.subject} »)`,
+      );
+      return;
+    }
+
     try {
-      await this.transporter.sendMail({
+      const info = await this.transporter.sendMail({
         from: this.from,
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text,
       });
+      this.logger.log(
+        `[email:${options.tag ?? 'brut'}] envoyé à ${options.to} — « ${options.subject} » (id ${(info as { messageId?: string })?.messageId ?? 'n/a'})`,
+      );
     } catch (err) {
-      this.logger.error(`Échec envoi email à ${options.to}: ${(err as Error).message}`);
+      this.logger.error(
+        `[email:${options.tag ?? 'brut'}] échec envoi à ${options.to} — ${(err as Error).message}`,
+      );
       throw new InternalServerErrorException(`Échec envoi email : ${(err as Error).message}`);
     }
   }
 
-  async sendWelcome(to: string, nom: string, organisationNom: string): Promise<void> {
-    await this.sendEmail({
-      to,
-      subject: `Bienvenue dans ${organisationNom}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#146C43">Bienvenue, ${nom} !</h2>
-          <p>Votre compte a été créé avec succès sur la plateforme <strong>${organisationNom}</strong>.</p>
-          <p>Vous pouvez désormais vous connecter et accéder à toutes les fonctionnalités disponibles.</p>
-          <hr style="border:1px solid #eee"/>
-          <p style="color:#888;font-size:12px">ANOUANZÊ ERP — Plateforme de gestion pour ONG et associations africaines</p>
-        </div>
-      `,
+  /**
+   * Envoi « sûr », asynchrone et journalisé : ne lève JAMAIS d'exception et
+   * ne bloque pas l'action métier appelante. Les envois sont sérialisés dans
+   * une file en mémoire.
+   *
+   * (Aucune file BullMQ n'est configurée dans ce projet — voir le rapport
+   * technique. Le jour où Redis/BullMQ sera branché, seule cette méthode
+   * est à réécrire, les appelants restent inchangés.)
+   */
+  dispatch(to: string | undefined | null, mail: RenderedEmail, tag: string): Promise<EmailDispatchResult> {
+    if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      this.logger.warn(`[email:${tag}] destinataire absent ou invalide — envoi ignoré`);
+      return Promise.resolve({ ok: false, skipped: true, reason: 'destinataire-invalide' });
+    }
+
+    if (!this.enabled) {
+      this.logger.warn(
+        `[email:${tag}] SMTP non configuré — email « ${mail.subject} » destiné à ${to} non envoyé (journalisé uniquement)`,
+      );
+      return Promise.resolve({ ok: false, skipped: true, reason: 'smtp-non-configure' });
+    }
+
+    this.queueLength += 1;
+    const task = this.queue.then(async (): Promise<EmailDispatchResult> => {
+      try {
+        await this.sendEmail({ to, subject: mail.subject, html: mail.html, text: mail.text, tag });
+        return { ok: true };
+      } catch (err) {
+        // Déjà journalisé dans sendEmail — on absorbe pour ne rien casser en amont.
+        return { ok: false, reason: (err as Error).message };
+      } finally {
+        this.queueLength -= 1;
+      }
     });
+
+    // La file continue même si une tâche échoue.
+    this.queue = task.catch(() => undefined);
+    return task;
   }
 
-  async sendPasswordReset(to: string, nom: string, resetUrl: string): Promise<void> {
-    await this.sendEmail({
+  // ------------------------------------------------------------
+  // Cycle de vie du compte
+  // ------------------------------------------------------------
+
+  /** Bienvenue après inscription / création de compte. */
+  async sendWelcome(
+    to: string,
+    nom: string,
+    organisationNom?: string,
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
       to,
-      subject: 'Réinitialisation de votre mot de passe',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#146C43">Réinitialisation du mot de passe</h2>
-          <p>Bonjour <strong>${nom}</strong>,</p>
-          <p>Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous :</p>
-          <div style="text-align:center;margin:30px 0">
-            <a href="${resetUrl}" style="background:#146C43;color:#fff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold">
-              Réinitialiser mon mot de passe
-            </a>
-          </div>
-          <p style="color:#888;font-size:12px">Ce lien expire dans 1 heure. Si vous n'avez pas effectué cette demande, ignorez cet email.</p>
-        </div>
-      `,
-    });
+      templateBienvenue({
+        nom,
+        organisationNom,
+        loginUrl: this.url('/login'),
+        brand: this.brand(brand),
+      }),
+      'bienvenue',
+    );
   }
 
+  /** Invitation d'un utilisateur à rejoindre une organisation. */
+  async sendInvitation(
+    to: string,
+    params: {
+      nomInvite?: string;
+      invitePar: string;
+      organisationNom: string;
+      role?: string;
+      token?: string;
+      inviteUrl?: string;
+      expireLe?: Date | string;
+    },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    const inviteUrl =
+      params.inviteUrl ??
+      this.url(`/invitation?token=${encodeURIComponent(params.token ?? '')}&email=${encodeURIComponent(to)}`);
+
+    return this.dispatch(
+      to,
+      templateInvitation({ ...params, inviteUrl, brand: this.brand(brand) }),
+      'invitation',
+    );
+  }
+
+  /** Réinitialisation de mot de passe (le lien est fourni par AuthService). */
+  async sendPasswordReset(
+    to: string,
+    nom: string,
+    resetUrl: string,
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateReinitMotDePasse({ nom, resetUrl, dureeValiditeMinutes: 60, brand: this.brand(brand) }),
+      'reinit-mot-de-passe',
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Cycle commercial (prospects)
+  // ------------------------------------------------------------
+
+  /** Confirmation d'une demande de démonstration. */
+  async sendConfirmationDemo(
+    to: string,
+    params: { nomContact: string; organisationNom?: string; dateSouhaitee?: Date | string },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateConfirmationDemo({ ...params, brand: this.brand(brand) }),
+      'demande-demo',
+    );
+  }
+
+  /** Relance commerciale prospect (J+3 puis J+7). */
+  async sendRelanceProspect(
+    to: string,
+    params: { nomContact: string; organisationNom?: string; jours: number },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateRelanceProspect({
+        ...params,
+        demoUrl: this.url('/demo'),
+        brand: this.brand(brand),
+      }),
+      `relance-prospect-j${params.jours}`,
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Cycle d'essai / abonnement
+  // ------------------------------------------------------------
+
+  /** Fin d'essai approchante (J-7, J-1). */
+  async sendFinEssaiProche(
+    to: string,
+    params: { nom: string; organisationNom: string; joursRestants: number; dateFin?: Date | string },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateFinEssai({
+        ...params,
+        abonnementUrl: this.url('/parametres/abonnement'),
+        brand: this.brand(brand),
+      }),
+      `fin-essai-j${params.joursRestants}`,
+    );
+  }
+
+  /** Essai expiré. */
+  async sendEssaiExpire(
+    to: string,
+    params: { nom: string; organisationNom: string },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateEssaiExpire({
+        ...params,
+        abonnementUrl: this.url('/parametres/abonnement'),
+        brand: this.brand(brand),
+      }),
+      'essai-expire',
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Dons & cotisations
+  // ------------------------------------------------------------
+
+  /**
+   * Reçu de don. Signature historique conservée (donateur / don) pour ne pas
+   * casser les appelants existants.
+   */
+  async sendRecuDon(
+    to: string,
+    donateur: { nom: string; prenom?: string },
+    don: { montant?: number | null; dateDon: Date | string; numeroRecu?: string; type: string },
+    organisationNom?: string,
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    const donateurNom = [donateur.prenom, donateur.nom].filter(Boolean).join(' ') || 'Donateur';
+    return this.dispatch(
+      to,
+      templateRecuDon({
+        donateurNom,
+        montant: don.montant,
+        dateDon: don.dateDon,
+        numeroRecu: don.numeroRecu,
+        typeDon: don.type,
+        organisationNom,
+        brand: this.brand(brand),
+      }),
+      'recu-don',
+    );
+  }
+
+  /** Confirmation d'une cotisation réglée. */
+  async sendConfirmationCotisation(
+    to: string,
+    params: {
+      nom: string;
+      montant: number;
+      devise?: string;
+      periode?: string;
+      datePaiement: Date | string;
+      reference?: string;
+      organisationNom?: string;
+    },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateConfirmationCotisation({ ...params, brand: this.brand(brand) }),
+      'confirmation-cotisation',
+    );
+  }
+
+  /**
+   * Rappel de cotisation. Signature historique conservée
+   * (to, nom, montant, echeance) + paramètres optionnels.
+   */
   async sendCotisationReminder(
     to: string,
     nom: string,
     montant: number,
-    echeance: string,
-  ): Promise<void> {
-    await this.sendEmail({
+    echeance: Date | string,
+    options?: { joursRetard?: number; devise?: string; organisationNom?: string },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
       to,
-      subject: 'Rappel de cotisation',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#F28C25">Rappel de cotisation</h2>
-          <p>Bonjour <strong>${nom}</strong>,</p>
-          <p>Nous vous rappelons que votre cotisation de <strong>${montant.toLocaleString('fr-FR')} FCFA</strong> est due le <strong>${echeance}</strong>.</p>
-          <p>Merci de procéder au règlement dans les meilleurs délais.</p>
-          <hr style="border:1px solid #eee"/>
-          <p style="color:#888;font-size:12px">ANOUANZÊ ERP</p>
-        </div>
-      `,
-    });
+      templateRappelCotisation({
+        nom,
+        montant,
+        echeance,
+        joursRetard: options?.joursRetard,
+        devise: options?.devise,
+        organisationNom: options?.organisationNom,
+        paiementUrl: this.url('/cotisations'),
+        brand: this.brand(brand),
+      }),
+      'rappel-cotisation',
+    );
   }
 
-  async sendRecuDon(
+  /** Alerte budgétaire (seuil atteint ou enveloppe dépassée). */
+  async sendAlerteBudget(
     to: string,
-    donateur: { nom: string; prenom?: string },
-    don: { montant?: number; dateDon: Date; numeroRecu?: string; type: string },
-  ): Promise<void> {
-    const nomComplet = [donateur.prenom, donateur.nom].filter(Boolean).join(' ');
-
-    await this.sendEmail({
+    params: {
+      nom: string;
+      budgetNom: string;
+      pourcentageConsomme: number;
+      montantConsomme?: number;
+      montantTotal?: number;
+      devise?: string;
+      budgetId?: string;
+    },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
       to,
-      subject: `Reçu de don ${don.numeroRecu ?? ''}`.trim(),
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#146C43">Reçu de don</h2>
-          <p>Cher/Chère <strong>${nomComplet}</strong>,</p>
-          <p>Nous avons bien reçu votre don et vous en remercions sincèrement.</p>
-          <table style="width:100%;border-collapse:collapse;margin:20px 0">
-            <tr style="background:#f5f5f5">
-              <td style="padding:10px;border:1px solid #ddd">Numéro de reçu</td>
-              <td style="padding:10px;border:1px solid #ddd"><strong>${don.numeroRecu ?? 'N/A'}</strong></td>
-            </tr>
-            <tr>
-              <td style="padding:10px;border:1px solid #ddd">Type de don</td>
-              <td style="padding:10px;border:1px solid #ddd">${don.type}</td>
-            </tr>
-            <tr style="background:#f5f5f5">
-              <td style="padding:10px;border:1px solid #ddd">Montant</td>
-              <td style="padding:10px;border:1px solid #ddd">${don.montant != null ? don.montant.toLocaleString('fr-FR') + ' FCFA' : 'Don en nature'}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px;border:1px solid #ddd">Date</td>
-              <td style="padding:10px;border:1px solid #ddd">${new Date(don.dateDon).toLocaleDateString('fr-FR')}</td>
-            </tr>
-          </table>
-          <p>Merci pour votre générosité !</p>
-          <hr style="border:1px solid #eee"/>
-          <p style="color:#888;font-size:12px">ANOUANZÊ ERP</p>
-        </div>
-      `,
-    });
+      templateAlerteBudget({
+        ...params,
+        budgetUrl: this.url(params.budgetId ? `/budget?id=${params.budgetId}` : '/budget'),
+        brand: this.brand(brand),
+      }),
+      'alerte-budget',
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Support
+  // ------------------------------------------------------------
+
+  /** Accusé de réception d'un nouveau ticket support. */
+  async sendNouveauTicket(
+    to: string,
+    params: {
+      nom: string;
+      reference: string;
+      sujet: string;
+      priorite?: string;
+      categorie?: string;
+      ticketId?: string;
+    },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateNouveauTicket({
+        ...params,
+        ticketUrl: this.url(params.ticketId ? `/support/${params.ticketId}` : '/support'),
+        brand: this.brand(brand),
+      }),
+      'ticket-nouveau',
+    );
+  }
+
+  /** Notification d'une réponse apportée à un ticket. */
+  async sendReponseTicket(
+    to: string,
+    params: {
+      nom: string;
+      reference: string;
+      sujet: string;
+      auteur?: string;
+      message: string;
+      statut?: string;
+      ticketId?: string;
+    },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateReponseTicket({
+        ...params,
+        ticketUrl: this.url(params.ticketId ? `/support/${params.ticketId}` : '/support'),
+        brand: this.brand(brand),
+      }),
+      'ticket-reponse',
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Générique (relais des notifications internes)
+  // ------------------------------------------------------------
+
+  async sendNotificationGenerique(
+    to: string,
+    params: { nom?: string; titre: string; message: string; lien?: string },
+    brand?: BrandOptions,
+  ): Promise<EmailDispatchResult> {
+    return this.dispatch(
+      to,
+      templateNotificationGenerique({
+        nom: params.nom,
+        titre: params.titre,
+        message: params.message,
+        lienUrl: params.lien ? this.url(params.lien) : undefined,
+        brand: this.brand(brand),
+      }),
+      'notification',
+    );
   }
 }

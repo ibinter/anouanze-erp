@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 interface SearchResult {
   type: 'membre' | 'projet' | 'donateur' | 'bailleur' | 'document';
@@ -120,7 +121,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
   const SearchDropdown = ({ results, searching, query, open }: { results: SearchResult[]; searching: boolean; query: string; open: boolean }) => {
     if (!open) return null;
     return (
-      <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-xl border border-neutral-100 z-50 overflow-hidden">
+      <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-xl border border-neutral-100 z-50 overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
         {searching && <div className="px-4 py-3 text-sm text-neutral-400">Recherche…</div>}
         {!searching && results.length === 0 && query.length >= 2 && (
           <div className="px-4 py-3 text-sm text-neutral-400">Aucun résultat pour « {query} »</div>
@@ -130,14 +131,14 @@ export function Header({ onHamburgerClick }: HeaderProps) {
             {results.map((r) => (
               <li key={`${r.type}-${r.id}`}>
                 <button
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700/60 transition-colors"
                   onClick={() => handleSelect(r)}
                 >
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 font-medium whitespace-nowrap">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-100 font-medium whitespace-nowrap">
                     {TYPE_LABELS[r.type] ?? r.type}
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-neutral-800 block truncate">{r.label}</span>
+                    <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 block truncate">{r.label}</span>
                     {r.sublabel && <span className="text-xs text-neutral-400 truncate block">{r.sublabel}</span>}
                   </span>
                 </button>
@@ -150,19 +151,19 @@ export function Header({ onHamburgerClick }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-neutral-100 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 gap-3">
+    <header className="h-16 bg-white border-b border-neutral-100 dark:bg-neutral-800 dark:border-neutral-700 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 gap-3">
       {/* Mobile: hamburger + search icon */}
       <div className="flex items-center gap-2 lg:hidden">
         <button
           onClick={onHamburgerClick}
-          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500"
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700"
           aria-label="Ouvrir le menu"
         >
           <Menu className="w-5 h-5" />
         </button>
         <button
           onClick={openMobileSearch}
-          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500"
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700"
           aria-label="Rechercher"
         >
           <Search className="w-5 h-5" />
@@ -191,7 +192,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
 
       {/* Mobile: expanded search bar */}
       {mobileSearchOpen && (
-        <div className="absolute inset-x-0 top-0 h-16 bg-white z-50 flex items-center px-4 gap-2 lg:hidden border-b border-neutral-100">
+        <div className="absolute inset-x-0 top-0 h-16 bg-white dark:bg-neutral-800 z-50 flex items-center px-4 gap-2 lg:hidden border-b border-neutral-100 dark:border-neutral-700">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
             <input
@@ -224,8 +225,11 @@ export function Header({ onHamburgerClick }: HeaderProps) {
 
       {/* Actions droite */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Thème clair / sombre / système */}
+        <ThemeToggle />
+
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-neutral-100 text-neutral-500">
+        <button className="relative p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent-400 rounded-full" />
         </button>
@@ -234,15 +238,15 @@ export function Header({ onHamburgerClick }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 p-1.5 pr-2 sm:pr-3 rounded-lg hover:bg-neutral-100 transition-colors"
+            className="flex items-center gap-2 p-1.5 pr-2 sm:pr-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-semibold text-primary-700">
+            <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-semibold text-primary-700 dark:text-primary-50">
                 {session?.user?.name?.[0]?.toUpperCase() ?? 'U'}
               </span>
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-sm font-medium text-neutral-800 leading-none">
+              <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
                 {session?.user?.name ?? 'Utilisateur'}
               </p>
               <p className="text-xs text-neutral-400 mt-0.5">
@@ -254,16 +258,16 @@ export function Header({ onHamburgerClick }: HeaderProps) {
 
           {menuOpen && (
             <div className="absolute right-0 mt-1 w-48 card shadow-lg py-1 z-50">
-              <a href="/profil" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+              <a href="/profil" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-700/60">
                 Mon profil
               </a>
-              <a href="/parametres" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50">
+              <a href="/parametres" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-700/60">
                 Paramètres
               </a>
-              <hr className="my-1 border-neutral-100" />
+              <hr className="my-1 border-neutral-100 dark:border-neutral-700" />
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 Se déconnecter
               </button>

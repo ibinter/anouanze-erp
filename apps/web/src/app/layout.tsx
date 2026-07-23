@@ -6,6 +6,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'sonner';
 import PWARegister from '@/components/pwa/PWARegister';
+import { ThemeProvider, themeInitScript } from '@/components/theme/ThemeProvider';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -50,13 +51,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} font-sans antialiased bg-neutral-50 text-neutral-800`}>
+      <body
+        className={`${plusJakarta.variable} font-sans antialiased bg-neutral-50 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-100`}
+      >
+        {/* Anti-flash : applique la classe `dark` avant le premier rendu */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>
-            {children}
-            <Toaster richColors position="top-right" />
-            <PWARegister />
-          </Providers>
+          <ThemeProvider>
+            <Providers>
+              {children}
+              <Toaster richColors position="top-right" />
+              <PWARegister />
+            </Providers>
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -29,6 +29,25 @@ export class NotificationsRestController {
     });
   }
 
+  @Get('non-lues/count')
+  @ApiOperation({ summary: 'Nombre de notifications non lues (cloche du header)' })
+  compterNonLues(@Request() req) {
+    return this.service.compterNonLues(req.user.id);
+  }
+
+  @Get('apercu')
+  @ApiOperation({ summary: 'Aperçu des dernières notifications (panneau de la cloche)' })
+  @ApiQuery({ name: 'limit', required: false })
+  apercu(@Request() req, @Query('limit') limit?: string) {
+    return this.service.apercu(req.user.id, limit ? parseInt(limit, 10) : undefined);
+  }
+
+  @Get('preferences')
+  @ApiOperation({ summary: 'Préférences de notification de l\'utilisateur' })
+  getPreferences(@Request() req) {
+    return this.service.getPreferences(req.user.id);
+  }
+
   @Patch(':id/lue')
   @ApiOperation({ summary: 'Marquer une notification comme lue' })
   marquerLue(@Request() req, @Param('id') id: string) {
