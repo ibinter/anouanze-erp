@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Script from 'next/script';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import HeroSlider from '@/components/sara/HeroSlider';
@@ -10,6 +9,7 @@ import WhatsAppButton from '@/components/landing/WhatsAppButton';
 import CookieBanner from '@/components/landing/CookieBanner';
 import PWABanner from '@/components/landing/PWABanner';
 import LandingNav from '@/components/landing/LandingNav';
+import IbigSolutions from '@/components/landing/IbigSolutions';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('metadata');
@@ -555,14 +555,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ══ ÉCOSYSTÈME IBIG SOFT (script universel — carrousel des solutions) ══ */}
-      <div data-ibig="solutions" />
-      <Script
-        src="/ibigsoft-universal.js"
-        data-solution="anouanze"
-        data-render="solutions"
-        data-accent="#146C43"
-        strategy="afterInteractive"
-      />
+      <IbigSolutions />
 
       {/* ══ FOOTER ══ */}
       <footer className="bg-[#0a0f0d] text-neutral-400">
@@ -652,24 +645,20 @@ export default async function LandingPage() {
                   ['/cookies', 'cookies'],
                   ['/licence', 'eula'],
                   ['/propriete-intellectuelle', 'ip'],
+                  ['/conditions-commerciales', 'commercial'],
+                  ['/politique-sauvegarde', 'backup'],
+                  ['/politique-support', 'support'],
+                  ['/politique-resiliation', 'termination'],
+                  ['/politique-remboursement', 'refund'],
+                  ['/traitement-donnees', 'dataProcessing'],
+                  ['/protection-marque', 'trademark'],
+                  ['/conditions-essai', 'trial'],
+                  ['/conditions-sara', 'saraTerms'],
+                  ['/limitation-responsabilite-ia', 'aiLiability'],
+                  ['/gestion-compte', 'account'],
+                  ['/reclamations', 'claims'],
                 ] as const).map(([href, key]) => (
                   <li key={key}><Link href={href} className="hover:text-white transition-colors">{t(`footer.legal.${key}`)}</Link></li>
-                ))}
-                {([
-                  ['/conditions-commerciales', 'Conditions commerciales'],
-                  ['/politique-sauvegarde', 'Politique de sauvegarde'],
-                  ['/politique-support', 'Politique de support'],
-                  ['/politique-resiliation', 'Politique de résiliation'],
-                  ['/politique-remboursement', 'Politique de remboursement'],
-                  ['/traitement-donnees', 'Traitement des données'],
-                  ['/protection-marque', 'Protection de la marque'],
-                  ['/conditions-essai', "Conditions d'essai"],
-                  ['/conditions-sara', 'Conditions SARA'],
-                  ['/limitation-responsabilite-ia', "Limitation de responsabilité IA"],
-                  ['/gestion-compte', 'Gestion du compte'],
-                  ['/reclamations', 'Réclamations'],
-                ] as const).map(([href, label]) => (
-                  <li key={href}><Link href={href} className="hover:text-white transition-colors">{label}</Link></li>
                 ))}
               </ul>
               <h4 className="text-primary-400 font-bold mb-3 text-[11px] uppercase tracking-widest">{t('footer.contactTitle')}</h4>

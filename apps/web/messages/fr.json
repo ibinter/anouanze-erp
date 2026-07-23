@@ -6,20 +6,66 @@
     "ogTitle": "ANOUANZÊ ERP — L'ERP des ONG et associations d'Afrique",
     "ogDescription": "Solution de gestion tout-en-un pour associations, ONG et organisations à but non lucratif. Conforme SYCEBNL · Norme OHADA."
   },
-
+  "hero": {
+    "slides": {
+      "0": {
+        "badge": "Conforme SYCEBNL · Norme OHADA · Adapté à l’Afrique francophone",
+        "title": "Pilotez votre impact.<br></br><accent>Gérez avec</accent><br></br>excellence.",
+        "subtitle": "La solution ERP tout-en-un conçue pour les <b>associations, ONG et organisations à but non lucratif</b> d’Afrique francophone.",
+        "cta": "Démarrer l’essai gratuit — 30 jours →",
+        "secondary": "Voir les fonctionnalités"
+      },
+      "1": {
+        "badge": "12 modules · Tout inclus · Zéro installation",
+        "title": "<accent>12 modules</accent><br></br>intégrés pour<br></br>votre ONG.",
+        "subtitle": "Gouvernance, Membres, Comptabilité SYCEBNL, Projets MEAL, RH, Donateurs, Budget, Achats, Documents, Événements, BI et Assistant IA — <b>dans une seule plateforme.</b>",
+        "cta": "Découvrir les modules →",
+        "secondary": "Voir les tarifs"
+      },
+      "2": {
+        "badge": "Essai gratuit 30 jours · Sans carte bancaire",
+        "title": "30 jours<br></br><accent>gratuits,</accent><br></br>sans risque.",
+        "subtitle": "Testez ANOUANZÊ ERP pendant 30 jours complets. <b>Aucune carte bancaire requise.</b> Résiliation en un clic. Données hébergées en Afrique.",
+        "cta": "Commencer maintenant — Gratuit →",
+        "secondary": "Comparer les plans"
+      }
+    },
+    "reassurance": [
+      "Sans carte bancaire",
+      "Résiliation à tout moment",
+      "Données hébergées en Afrique"
+    ],
+    "stats": [
+      {
+        "val": "12+",
+        "label": "Modules intégrés"
+      },
+      {
+        "val": "11",
+        "label": "Niveaux de droits"
+      },
+      {
+        "val": "100%",
+        "label": "Conforme SYCEBNL"
+      },
+      {
+        "val": "30j",
+        "label": "Essai gratuit"
+      }
+    ],
+    "slideLabel": "Diapositive {n}"
+  },
   "languageSwitcher": {
     "aria": "Changer la langue",
     "french": "Français",
     "english": "English"
   },
-
   "infoBar": {
     "trial": "Essai gratuit 30 jours · Sans carte bancaire",
     "phone": "📞 +225 05 55 05 99 01",
     "ibig": "Une solution IBIG SOFT →",
     "close": "Fermer"
   },
-
   "nav": {
     "features": "Fonctionnalités",
     "howItWorks": "Comment ça marche",
@@ -35,13 +81,16 @@
     "closeMenu": "Fermer le menu",
     "logoAlt": "ANOUANZÊ ERP"
   },
-
   "certifications": {
     "label": "Certifications & conformités",
-    "items": ["SYCEBNL", "OHADA", "ISO 27001*", "RGPD Conforme"],
+    "items": [
+      "SYCEBNL",
+      "OHADA",
+      "ISO 27001*",
+      "RGPD Conforme"
+    ],
     "note": "* En cours"
   },
-
   "problems": {
     "badge": "Avant / Après",
     "titleLine1": "Les problèmes que nous",
@@ -74,70 +123,173 @@
       }
     ]
   },
-
   "benefits": {
     "badge": "Bénéfices",
     "titleLine1": "Ce que vous gagnez",
     "titleLine2": "concrètement",
     "subtitle": "Des résultats mesurables dès les premières semaines d'utilisation.",
     "items": [
-      { "icon": "⏱️", "title": "Gagner du temps", "desc": "Automatisez les tâches répétitives : relances, rapports, fiches de paie." },
-      { "icon": "🎯", "title": "Piloter avec précision", "desc": "Indicateurs clés, tableaux de bord et alertes en temps réel." },
-      { "icon": "✅", "title": "Réduire les erreurs", "desc": "Saisie unique, calculs automatiques, contrôles intégrés." },
-      { "icon": "🔒", "title": "Sécuriser vos données", "desc": "Accès par rôles, sauvegardes quotidiennes, connexions chiffrées." },
-      { "icon": "📋", "title": "Faciliter les audits", "desc": "Traçabilité complète, historique des actions, piste d'audit intégrée." },
-      { "icon": "🌍", "title": "Travailler partout", "desc": "Web, mobile, tablette — accessible depuis n'importe quel appareil." }
+      {
+        "icon": "⏱️",
+        "title": "Gagner du temps",
+        "desc": "Automatisez les tâches répétitives : relances, rapports, fiches de paie."
+      },
+      {
+        "icon": "🎯",
+        "title": "Piloter avec précision",
+        "desc": "Indicateurs clés, tableaux de bord et alertes en temps réel."
+      },
+      {
+        "icon": "✅",
+        "title": "Réduire les erreurs",
+        "desc": "Saisie unique, calculs automatiques, contrôles intégrés."
+      },
+      {
+        "icon": "🔒",
+        "title": "Sécuriser vos données",
+        "desc": "Accès par rôles, sauvegardes quotidiennes, connexions chiffrées."
+      },
+      {
+        "icon": "📋",
+        "title": "Faciliter les audits",
+        "desc": "Traçabilité complète, historique des actions, piste d'audit intégrée."
+      },
+      {
+        "icon": "🌍",
+        "title": "Travailler partout",
+        "desc": "Web, mobile, tablette — accessible depuis n'importe quel appareil."
+      }
     ]
   },
-
   "modules": {
     "badge": "12 Modules",
     "titleLine1": "Tout ce dont votre",
     "titleLine2": "organisation a besoin",
     "subtitle": "Un écosystème complet de modules pensés pour la réalité des ONG et associations d'Afrique.",
     "items": [
-      { "icon": "🏛️", "title": "Gouvernance", "desc": "Assemblées générales, résolutions, mandats, organes de direction. Tout votre appareil institutionnel numérisé." },
-      { "icon": "👥", "title": "Membres & Cotisations", "desc": "Registre complet, suivi des cotisations, relances automatiques, historique des adhésions." },
-      { "icon": "❤️", "title": "Donateurs & Bailleurs", "desc": "CRM dédié aux donateurs individuels et bailleurs institutionnels. Suivi des dons et conventions." },
-      { "icon": "🗂️", "title": "Projets & MEAL", "desc": "Planification, cadre logique, indicateurs de suivi, évaluation et rapports bailleurs automatisés." },
-      { "icon": "🧑‍💼", "title": "Ressources Humaines", "desc": "Salariés, volontaires, contrats, congés, fiches de paie conformes au droit ivoirien." },
-      { "icon": "📊", "title": "Comptabilité SYCEBNL", "desc": "Plan comptable OHADA intégré, journaux, écritures, balance, états financiers conformes." },
-      { "icon": "💰", "title": "Budget & Trésorerie", "desc": "Planification budgétaire par projet, rapprochement bancaire, prévisions de flux." },
-      { "icon": "🛒", "title": "Achats & Stocks", "desc": "Bons de commande, fournisseurs, réception, gestion de stock terrain en temps réel." },
-      { "icon": "📄", "title": "Documents", "desc": "GED intégrée, classement par projet/bailleur, signatures électroniques, versioning." },
-      { "icon": "📅", "title": "Événements", "desc": "Agenda organisationnel, invitations, présences, comptes-rendus automatiques." },
-      { "icon": "📈", "title": "Rapports & BI", "desc": "Tableaux de bord temps réel, exports Excel/PDF, rapports bailleurs en un clic." },
-      { "icon": "🤖", "title": "Assistant IA", "desc": "Posez vos questions en français, obtenez des analyses, rapports et recommandations instantanés." }
+      {
+        "icon": "🏛️",
+        "title": "Gouvernance",
+        "desc": "Assemblées générales, résolutions, mandats, organes de direction. Tout votre appareil institutionnel numérisé."
+      },
+      {
+        "icon": "👥",
+        "title": "Membres & Cotisations",
+        "desc": "Registre complet, suivi des cotisations, relances automatiques, historique des adhésions."
+      },
+      {
+        "icon": "❤️",
+        "title": "Donateurs & Bailleurs",
+        "desc": "CRM dédié aux donateurs individuels et bailleurs institutionnels. Suivi des dons et conventions."
+      },
+      {
+        "icon": "🗂️",
+        "title": "Projets & MEAL",
+        "desc": "Planification, cadre logique, indicateurs de suivi, évaluation et rapports bailleurs automatisés."
+      },
+      {
+        "icon": "🧑‍💼",
+        "title": "Ressources Humaines",
+        "desc": "Salariés, volontaires, contrats, congés, fiches de paie conformes au droit ivoirien."
+      },
+      {
+        "icon": "📊",
+        "title": "Comptabilité SYCEBNL",
+        "desc": "Plan comptable OHADA intégré, journaux, écritures, balance, états financiers conformes."
+      },
+      {
+        "icon": "💰",
+        "title": "Budget & Trésorerie",
+        "desc": "Planification budgétaire par projet, rapprochement bancaire, prévisions de flux."
+      },
+      {
+        "icon": "🛒",
+        "title": "Achats & Stocks",
+        "desc": "Bons de commande, fournisseurs, réception, gestion de stock terrain en temps réel."
+      },
+      {
+        "icon": "📄",
+        "title": "Documents",
+        "desc": "GED intégrée, classement par projet/bailleur, signatures électroniques, versioning."
+      },
+      {
+        "icon": "📅",
+        "title": "Événements",
+        "desc": "Agenda organisationnel, invitations, présences, comptes-rendus automatiques."
+      },
+      {
+        "icon": "📈",
+        "title": "Rapports & BI",
+        "desc": "Tableaux de bord temps réel, exports Excel/PDF, rapports bailleurs en un clic."
+      },
+      {
+        "icon": "🤖",
+        "title": "Assistant IA",
+        "desc": "Posez vos questions en français, obtenez des analyses, rapports et recommandations instantanés."
+      }
     ]
   },
-
   "audiences": {
     "badge": "Pour qui ?",
     "titleLine1": "Conçu pour toutes les",
     "titleLine2": "organisations à but non lucratif",
     "subtitle": "ANOUANZÊ ERP s'adapte à la taille et au secteur de chaque organisation.",
     "items": [
-      { "icon": "🏥", "title": "ONG de santé", "desc": "Santé communautaire, nutrition, SIDA, eau et assainissement." },
-      { "icon": "🎓", "title": "ONG éducation", "desc": "Alphabétisation, bourses, centres de formation, écoles communautaires." },
-      { "icon": "👩‍🌾", "title": "ONG agricoles", "desc": "Développement rural, coopératives, filières agricoles." },
-      { "icon": "🏘️", "title": "Associations locales", "desc": "Groupements de femmes, jeunes, quartier, culturels et sportifs." },
-      { "icon": "⛪", "title": "Organisations religieuses", "desc": "Paroisses, diocèses, institutions confessionnelles à but non lucratif." },
-      { "icon": "🌐", "title": "Réseaux & fédérations", "desc": "Fédérations nationales, réseaux multi-pays, coordinations." }
+      {
+        "icon": "🏥",
+        "title": "ONG de santé",
+        "desc": "Santé communautaire, nutrition, SIDA, eau et assainissement."
+      },
+      {
+        "icon": "🎓",
+        "title": "ONG éducation",
+        "desc": "Alphabétisation, bourses, centres de formation, écoles communautaires."
+      },
+      {
+        "icon": "👩‍🌾",
+        "title": "ONG agricoles",
+        "desc": "Développement rural, coopératives, filières agricoles."
+      },
+      {
+        "icon": "🏘️",
+        "title": "Associations locales",
+        "desc": "Groupements de femmes, jeunes, quartier, culturels et sportifs."
+      },
+      {
+        "icon": "⛪",
+        "title": "Organisations religieuses",
+        "desc": "Paroisses, diocèses, institutions confessionnelles à but non lucratif."
+      },
+      {
+        "icon": "🌐",
+        "title": "Réseaux & fédérations",
+        "desc": "Fédérations nationales, réseaux multi-pays, coordinations."
+      }
     ]
   },
-
   "steps": {
     "badge": "Mise en route",
     "title": "Opérationnel en 3 étapes",
     "subtitle": "De l'inscription à la première clôture comptable, notre équipe vous accompagne à chaque étape.",
     "items": [
-      { "num": "01", "title": "Créez votre espace", "desc": "Inscrivez votre organisation en 5 minutes. Notre équipe configure votre espace et importe vos données existantes." },
-      { "num": "02", "title": "Paramétrez vos modules", "desc": "Activez uniquement les modules dont vous avez besoin. Configurez votre plan comptable, vos projets, vos membres." },
-      { "num": "03", "title": "Pilotez votre impact", "desc": "Accédez à vos tableaux de bord en temps réel, générez vos rapports et prenez de meilleures décisions." }
+      {
+        "num": "01",
+        "title": "Créez votre espace",
+        "desc": "Inscrivez votre organisation en 5 minutes. Notre équipe configure votre espace et importe vos données existantes."
+      },
+      {
+        "num": "02",
+        "title": "Paramétrez vos modules",
+        "desc": "Activez uniquement les modules dont vous avez besoin. Configurez votre plan comptable, vos projets, vos membres."
+      },
+      {
+        "num": "03",
+        "title": "Pilotez votre impact",
+        "desc": "Accédez à vos tableaux de bord en temps réel, générez vos rapports et prenez de meilleures décisions."
+      }
     ],
     "cta": "Demander une démonstration gratuite →"
   },
-
   "sara": {
     "badge": "Intelligence Artificielle",
     "titleLine1": "SARA, votre assistante",
@@ -161,20 +313,34 @@
     "chatBot2After": " est limité à 3 projets actifs sans RH ni IA. 👉 Je vous conseille le Pro pour une ONG active.",
     "poweredBy": "Propulsé par Groq · LLaMA 3.3 70B · IBIG SOFT"
   },
-
   "security": {
     "badge": "Sécurité",
     "titleLine1": "Vos données sont",
     "titleLine2": "protégées",
     "subtitle": "La sécurité de vos données est notre priorité absolue.",
     "items": [
-      { "icon": "🔐", "title": "Connexions chiffrées", "desc": "SSL/TLS sur toutes les communications entre votre navigateur et nos serveurs." },
-      { "icon": "👤", "title": "Accès par rôles", "desc": "11 niveaux de droits d'accès. Chaque utilisateur ne voit que ce qu'il est autorisé à voir." },
-      { "icon": "💾", "title": "Sauvegardes quotidiennes", "desc": "Vos données sont sauvegardées automatiquement chaque nuit. Restauration disponible sur demande." },
-      { "icon": "📝", "title": "Piste d'audit complète", "desc": "Chaque action est tracée : qui a fait quoi, quand et depuis où. Idéal pour les audits." }
+      {
+        "icon": "🔐",
+        "title": "Connexions chiffrées",
+        "desc": "SSL/TLS sur toutes les communications entre votre navigateur et nos serveurs."
+      },
+      {
+        "icon": "👤",
+        "title": "Accès par rôles",
+        "desc": "11 niveaux de droits d'accès. Chaque utilisateur ne voit que ce qu'il est autorisé à voir."
+      },
+      {
+        "icon": "💾",
+        "title": "Sauvegardes quotidiennes",
+        "desc": "Vos données sont sauvegardées automatiquement chaque nuit. Restauration disponible sur demande."
+      },
+      {
+        "icon": "📝",
+        "title": "Piste d'audit complète",
+        "desc": "Chaque action est tracée : qui a fait quoi, quand et depuis où. Idéal pour les audits."
+      }
     ]
   },
-
   "pwa": {
     "badge": "Application Web Progressive",
     "titleLine1": "Installez ANOUANZÊ ERP",
@@ -188,9 +354,12 @@
       "Compatible Android, Windows, Chrome, Edge"
     ],
     "iphoneNote": "Sur iPhone : Partager → Ajouter à l'écran d'accueil",
-    "devices": ["Ordinateur", "Smartphone", "Tablette"]
+    "devices": [
+      "Ordinateur",
+      "Smartphone",
+      "Tablette"
+    ]
   },
-
   "pricing": {
     "badge": "Tarifs",
     "titleLine1": "Des prix adaptés à",
@@ -205,19 +374,97 @@
     "compareTitle": "Comparatif détaillé",
     "compareFeature": "Fonctionnalité",
     "compareRows": [
-      ["Utilisateurs", "3", "8", "15", "Illimités"],
-      ["Membres & Cotisations", "✓", "✓", "✓", "✓"],
-      ["Comptabilité SYCEBNL", "Basique", "✓", "✓", "✓"],
-      ["Budget & Trésorerie", "✓", "✓", "✓", "✓"],
-      ["Projets actifs", "—", "3", "Illimités", "Illimités"],
-      ["MEAL & Rapports bailleurs", "—", "—", "✓", "✓"],
-      ["RH & Paie", "—", "—", "✓", "✓"],
-      ["Achats & Stocks", "—", "—", "✓", "✓"],
-      ["Assistant IA", "—", "—", "✓", "✓"],
-      ["Stockage documents", "1 Go", "5 Go", "20 Go", "Illimité"],
-      ["API & Intégrations", "—", "—", "—", "✓"],
-      ["Multi-organisations", "—", "—", "—", "✓"],
-      ["Support", "Email 72h", "Email 24h", "Prioritaire 4h", "Dédié 24/7"]
+      [
+        "Utilisateurs",
+        "3",
+        "8",
+        "15",
+        "Illimités"
+      ],
+      [
+        "Membres & Cotisations",
+        "✓",
+        "✓",
+        "✓",
+        "✓"
+      ],
+      [
+        "Comptabilité SYCEBNL",
+        "Basique",
+        "✓",
+        "✓",
+        "✓"
+      ],
+      [
+        "Budget & Trésorerie",
+        "✓",
+        "✓",
+        "✓",
+        "✓"
+      ],
+      [
+        "Projets actifs",
+        "—",
+        "3",
+        "Illimités",
+        "Illimités"
+      ],
+      [
+        "MEAL & Rapports bailleurs",
+        "—",
+        "—",
+        "✓",
+        "✓"
+      ],
+      [
+        "RH & Paie",
+        "—",
+        "—",
+        "✓",
+        "✓"
+      ],
+      [
+        "Achats & Stocks",
+        "—",
+        "—",
+        "✓",
+        "✓"
+      ],
+      [
+        "Assistant IA",
+        "—",
+        "—",
+        "✓",
+        "✓"
+      ],
+      [
+        "Stockage documents",
+        "1 Go",
+        "5 Go",
+        "20 Go",
+        "Illimité"
+      ],
+      [
+        "API & Intégrations",
+        "—",
+        "—",
+        "—",
+        "✓"
+      ],
+      [
+        "Multi-organisations",
+        "—",
+        "—",
+        "—",
+        "✓"
+      ],
+      [
+        "Support",
+        "Email 72h",
+        "Email 24h",
+        "Prioritaire 4h",
+        "Dédié 24/7"
+      ]
     ],
     "plans": {
       "essentiel": {
@@ -225,8 +472,20 @@
         "price": "12 900",
         "annual": "129 000",
         "desc": "Pour les petits groupements et associations naissantes",
-        "features": ["3 utilisateurs inclus", "Membres & cotisations", "Trésorerie de base", "Comptabilité simplifiée", "Documents (1 Go)", "Support par email (72h)"],
-        "not": ["Projets & MEAL", "RH & Paie", "Assistant IA", "API & intégrations"],
+        "features": [
+          "3 utilisateurs inclus",
+          "Membres & cotisations",
+          "Trésorerie de base",
+          "Comptabilité simplifiée",
+          "Documents (1 Go)",
+          "Support par email (72h)"
+        ],
+        "not": [
+          "Projets & MEAL",
+          "RH & Paie",
+          "Assistant IA",
+          "API & intégrations"
+        ],
         "cta": "Démarrer"
       },
       "starter": {
@@ -234,8 +493,21 @@
         "price": "29 900",
         "annual": "299 000",
         "desc": "Pour les associations structurées et ONG locales",
-        "features": ["8 utilisateurs inclus", "Membres & cotisations", "Comptabilité SYCEBNL complète", "Budget & Trésorerie", "Projets (3 projets actifs)", "Documents (5 Go)", "Événements & Agenda", "Support prioritaire (24h)"],
-        "not": ["RH & Paie", "Assistant IA", "API & intégrations"],
+        "features": [
+          "8 utilisateurs inclus",
+          "Membres & cotisations",
+          "Comptabilité SYCEBNL complète",
+          "Budget & Trésorerie",
+          "Projets (3 projets actifs)",
+          "Documents (5 Go)",
+          "Événements & Agenda",
+          "Support prioritaire (24h)"
+        ],
+        "not": [
+          "RH & Paie",
+          "Assistant IA",
+          "API & intégrations"
+        ],
         "cta": "Commencer l'essai"
       },
       "pro": {
@@ -243,7 +515,17 @@
         "price": "59 900",
         "annual": "599 000",
         "desc": "Pour les ONG actives avec projets et équipes",
-        "features": ["15 utilisateurs inclus", "Tous les modules inclus", "Projets & MEAL illimités", "RH, Paie & Volontaires", "Achats & Stocks", "Assistant IA inclus", "Documents illimités (20 Go)", "Rapports bailleurs automatiques", "Support prioritaire (4h)"],
+        "features": [
+          "15 utilisateurs inclus",
+          "Tous les modules inclus",
+          "Projets & MEAL illimités",
+          "RH, Paie & Volontaires",
+          "Achats & Stocks",
+          "Assistant IA inclus",
+          "Documents illimités (20 Go)",
+          "Rapports bailleurs automatiques",
+          "Support prioritaire (4h)"
+        ],
         "not": [],
         "cta": "Essayer 30 jours gratuits"
       },
@@ -252,92 +534,192 @@
         "price": "Sur devis",
         "annual": "",
         "desc": "Pour les réseaux, fédérations et grandes ONG",
-        "features": ["Utilisateurs illimités", "Multi-organisations", "Console superadmin", "Stockage illimité", "Intégrations sur mesure (API)", "Formation & déploiement inclus", "SLA garanti & support 24/7", "Hébergement on-premise possible", "Accompagnement dédié IBIG SOFT"],
+        "features": [
+          "Utilisateurs illimités",
+          "Multi-organisations",
+          "Console superadmin",
+          "Stockage illimité",
+          "Intégrations sur mesure (API)",
+          "Formation & déploiement inclus",
+          "SLA garanti & support 24/7",
+          "Hébergement on-premise possible",
+          "Accompagnement dédié IBIG SOFT"
+        ],
         "not": [],
         "cta": "Nous contacter"
       }
     }
   },
-
   "ibig": {
     "badge": "Pourquoi IBIG SOFT ?",
     "titleLine1": "L'éditeur de confiance",
     "titleLine2": "des ONG africaines",
     "subtitle": "IBIG SOFT conçoit des solutions pensées pour les réalités africaines depuis Abidjan, Côte d'Ivoire.",
     "items": [
-      { "icon": "🌍", "title": "Conçu pour l'Afrique", "desc": "Adapté aux réalités fiscales, réglementaires et opérationnelles des organisations africaines." },
-      { "icon": "🔄", "title": "Mises à jour continues", "desc": "Évolutions réglementaires et nouvelles fonctionnalités livrées automatiquement sans frais." },
-      { "icon": "🎓", "title": "Formation incluse", "desc": "Accompagnement à la prise en main, guides, tutoriels vidéo et support dédié." },
-      { "icon": "🛡️", "title": "Données sécurisées", "desc": "Infrastructure sécurisée, chiffrement, contrôle d'accès par rôles et sauvegardes." },
-      { "icon": "📱", "title": "Multi-devices", "desc": "Ordinateur, tablette, smartphone — et installation PWA pour un accès instantané." },
-      { "icon": "🤝", "title": "Support réactif", "desc": "Équipe IBIG SOFT disponible par email, téléphone et WhatsApp selon votre plan." }
+      {
+        "icon": "🌍",
+        "title": "Conçu pour l'Afrique",
+        "desc": "Adapté aux réalités fiscales, réglementaires et opérationnelles des organisations africaines."
+      },
+      {
+        "icon": "🔄",
+        "title": "Mises à jour continues",
+        "desc": "Évolutions réglementaires et nouvelles fonctionnalités livrées automatiquement sans frais."
+      },
+      {
+        "icon": "🎓",
+        "title": "Formation incluse",
+        "desc": "Accompagnement à la prise en main, guides, tutoriels vidéo et support dédié."
+      },
+      {
+        "icon": "🛡️",
+        "title": "Données sécurisées",
+        "desc": "Infrastructure sécurisée, chiffrement, contrôle d'accès par rôles et sauvegardes."
+      },
+      {
+        "icon": "📱",
+        "title": "Multi-devices",
+        "desc": "Ordinateur, tablette, smartphone — et installation PWA pour un accès instantané."
+      },
+      {
+        "icon": "🤝",
+        "title": "Support réactif",
+        "desc": "Équipe IBIG SOFT disponible par email, téléphone et WhatsApp selon votre plan."
+      }
     ],
     "cta": "Découvrir IBIG SOFT →"
   },
-
   "testimonials": {
     "badge": "Témoignages",
     "title": "Ils nous font confiance",
     "subtitle": "Des organisations à travers l'Afrique de l'Ouest utilisent ANOUANZÊ ERP au quotidien.",
     "items": [
-      { "name": "Aminata Coulibaly", "role": "Directrice exécutive", "org": "ONG Espoir Côte d'Ivoire", "avatar": "AC", "text": "ANOUANZÊ ERP a transformé notre façon de rendre compte à nos bailleurs. Les rapports financiers sont désormais générés en quelques minutes, contre plusieurs jours auparavant." },
-      { "name": "Kouassi Brou", "role": "Trésorier général", "org": "Association YMCA Abidjan", "avatar": "KB", "text": "La conformité SYCEBNL était notre principal défi lors des audits. Avec ANOUANZÊ, notre comptabilité est parfaitement structurée dès le départ. Nos auditeurs sont impressionnés." },
-      { "name": "Fatou Diallo", "role": "Coordinatrice de projets", "org": "Réseau Femmes Leaders Mali", "avatar": "FD", "text": "Le module MEAL nous permet de suivre nos indicateurs en temps réel. La production des rapports pour nos partenaires techniques et financiers est devenue un vrai plaisir." },
-      { "name": "Jean-Baptiste Kouamé", "role": "Directeur administratif", "org": "CARITAS Bouaké", "avatar": "JK", "text": "Nous gérons 28 employés et 12 projets simultanément. ANOUANZÊ ERP nous donne une vision consolidée en temps réel. Indispensable pour notre organisation." },
-      { "name": "Mariam Sanogo", "role": "Présidente", "org": "Association Femmes Rurales BF", "avatar": "MS", "text": "En tant que petite association, le plan Essentiel nous suffit largement. Interface simple, formation rapide. Notre trésorière a été opérationnelle en moins d'une journée." },
-      { "name": "Dr. Sékou Traoré", "role": "Directeur pays", "org": "ONG Santé Mondiale Niger", "avatar": "ST", "text": "L'assistant IA est bluffant. Il génère des analyses de nos données financières en langage naturel. Un vrai gain de temps pour nos réunions de pilotage." }
+      {
+        "name": "Aminata Coulibaly",
+        "role": "Directrice exécutive",
+        "org": "ONG Espoir Côte d'Ivoire",
+        "avatar": "AC",
+        "text": "ANOUANZÊ ERP a transformé notre façon de rendre compte à nos bailleurs. Les rapports financiers sont désormais générés en quelques minutes, contre plusieurs jours auparavant."
+      },
+      {
+        "name": "Kouassi Brou",
+        "role": "Trésorier général",
+        "org": "Association YMCA Abidjan",
+        "avatar": "KB",
+        "text": "La conformité SYCEBNL était notre principal défi lors des audits. Avec ANOUANZÊ, notre comptabilité est parfaitement structurée dès le départ. Nos auditeurs sont impressionnés."
+      },
+      {
+        "name": "Fatou Diallo",
+        "role": "Coordinatrice de projets",
+        "org": "Réseau Femmes Leaders Mali",
+        "avatar": "FD",
+        "text": "Le module MEAL nous permet de suivre nos indicateurs en temps réel. La production des rapports pour nos partenaires techniques et financiers est devenue un vrai plaisir."
+      },
+      {
+        "name": "Jean-Baptiste Kouamé",
+        "role": "Directeur administratif",
+        "org": "CARITAS Bouaké",
+        "avatar": "JK",
+        "text": "Nous gérons 28 employés et 12 projets simultanément. ANOUANZÊ ERP nous donne une vision consolidée en temps réel. Indispensable pour notre organisation."
+      },
+      {
+        "name": "Mariam Sanogo",
+        "role": "Présidente",
+        "org": "Association Femmes Rurales BF",
+        "avatar": "MS",
+        "text": "En tant que petite association, le plan Essentiel nous suffit largement. Interface simple, formation rapide. Notre trésorière a été opérationnelle en moins d'une journée."
+      },
+      {
+        "name": "Dr. Sékou Traoré",
+        "role": "Directeur pays",
+        "org": "ONG Santé Mondiale Niger",
+        "avatar": "ST",
+        "text": "L'assistant IA est bluffant. Il génère des analyses de nos données financières en langage naturel. Un vrai gain de temps pour nos réunions de pilotage."
+      }
     ]
   },
-
   "partners": {
     "badge": "Programme partenaire",
     "titleLine1": "Développez vos revenus",
     "titleLine2": "avec IBIG PARTNERS",
     "desc": "Rejoignez gratuitement le programme de partenariat IBIG et recommandez nos solutions à votre réseau. Accédez aux outils, suivez vos recommandations et percevez vos commissions.",
     "features": [
-      { "icon": "🆓", "label": "Inscription gratuite" },
-      { "icon": "📊", "label": "Suivi en temps réel" },
-      { "icon": "💰", "label": "Commissions attractives" }
+      {
+        "icon": "🆓",
+        "label": "Inscription gratuite"
+      },
+      {
+        "icon": "📊",
+        "label": "Suivi en temps réel"
+      },
+      {
+        "icon": "💰",
+        "label": "Commissions attractives"
+      }
     ],
     "ctaPrimary": "Devenir partenaire →",
     "ctaSecondary": "Découvrir le programme",
     "disclaimer": "Aucune promesse de revenu garanti. Commissions variables selon les conditions du programme."
   },
-
   "faq": {
     "badge": "FAQ",
     "title": "Questions fréquentes",
     "items": [
-      { "q": "Mes données sont-elles sécurisées ?", "a": "Oui. Vos données sont hébergées sur des serveurs sécurisés avec chiffrement SSL, sauvegardes quotidiennes automatiques et accès restreint par rôles. Vous restez propriétaire de vos données à tout moment." },
-      { "q": "Puis-je changer de plan à tout moment ?", "a": "Absolument. Vous pouvez passer à un plan supérieur immédiatement (facturation au prorata). La migration vers un plan inférieur est possible en fin de période." },
-      { "q": "Y a-t-il une période d'essai gratuite ?", "a": "Oui, 30 jours d'essai gratuit sans carte bancaire pour les plans Starter et Pro. Le plan Essentiel est disponible en essai de 14 jours." },
-      { "q": "Le logiciel fonctionne-t-il sans connexion internet ?", "a": "ANOUANZÊ ERP est une application web. Une connexion internet est requise. Nous recommandons une connexion minimum de 1 Mbps pour une utilisation optimale." },
-      { "q": "Comment se passe la migration de mes données existantes ?", "a": "Notre équipe vous accompagne pour importer vos données (Excel, CSV, anciens logiciels). Ce service est inclus dans les plans Pro et Enterprise, en option pour les autres." },
-      { "q": "Est-ce conforme aux normes comptables africaines ?", "a": "Oui. ANOUANZÊ ERP implémente le référentiel SYCEBNL (Système Comptable des Entités à But Non Lucratif) de l'OHADA, en vigueur dans 17 pays d'Afrique." },
-      { "q": "Combien coûte la formation ?", "a": "La formation initiale est incluse dans tous les plans (2h en ligne). Des formations avancées sur site sont disponibles en option. Le plan Enterprise inclut une formation complète." },
-      { "q": "Puis-je utiliser ANOUANZÊ ERP sur mobile ?", "a": "Oui. L'interface web est entièrement responsive et s'adapte aux smartphones et tablettes. Vous pouvez également l'installer comme application depuis votre navigateur (PWA)." }
+      {
+        "q": "Mes données sont-elles sécurisées ?",
+        "a": "Oui. Vos données sont hébergées sur des serveurs sécurisés avec chiffrement SSL, sauvegardes quotidiennes automatiques et accès restreint par rôles. Vous restez propriétaire de vos données à tout moment."
+      },
+      {
+        "q": "Puis-je changer de plan à tout moment ?",
+        "a": "Absolument. Vous pouvez passer à un plan supérieur immédiatement (facturation au prorata). La migration vers un plan inférieur est possible en fin de période."
+      },
+      {
+        "q": "Y a-t-il une période d'essai gratuite ?",
+        "a": "Oui, 30 jours d'essai gratuit sans carte bancaire pour les plans Starter et Pro. Le plan Essentiel est disponible en essai de 14 jours."
+      },
+      {
+        "q": "Le logiciel fonctionne-t-il sans connexion internet ?",
+        "a": "ANOUANZÊ ERP est une application web. Une connexion internet est requise. Nous recommandons une connexion minimum de 1 Mbps pour une utilisation optimale."
+      },
+      {
+        "q": "Comment se passe la migration de mes données existantes ?",
+        "a": "Notre équipe vous accompagne pour importer vos données (Excel, CSV, anciens logiciels). Ce service est inclus dans les plans Pro et Enterprise, en option pour les autres."
+      },
+      {
+        "q": "Est-ce conforme aux normes comptables africaines ?",
+        "a": "Oui. ANOUANZÊ ERP implémente le référentiel SYCEBNL (Système Comptable des Entités à But Non Lucratif) de l'OHADA, en vigueur dans 17 pays d'Afrique."
+      },
+      {
+        "q": "Combien coûte la formation ?",
+        "a": "La formation initiale est incluse dans tous les plans (2h en ligne). Des formations avancées sur site sont disponibles en option. Le plan Enterprise inclut une formation complète."
+      },
+      {
+        "q": "Puis-je utiliser ANOUANZÊ ERP sur mobile ?",
+        "a": "Oui. L'interface web est entièrement responsive et s'adapte aux smartphones et tablettes. Vous pouvez également l'installer comme application depuis votre navigateur (PWA)."
+      }
     ],
     "moreQuestions": "Vous avez d'autres questions ?",
     "contactCta": "📧 Nous contacter",
     "saraCta": "🤖 Poser la question à SARA"
   },
-
   "help": {
     "title": "Centre d'aide IBIG SOFT",
     "desc": "Guides utilisateurs, tutoriels vidéo, documentation technique et assistance humaine disponible selon votre plan.",
     "ticketCta": "Ouvrir un ticket →",
     "phone": "📞 +225 05 55 05 99 01"
   },
-
   "finalCta": {
     "titleLine1": "Prêt à moderniser la gestion",
     "titleLine2": "de votre organisation ?",
     "subtitle": "Essayez ANOUANZÊ ERP, demandez une démonstration ou échangez immédiatement avec SARA.",
     "primary": "Commencer gratuitement →",
     "secondary": "Demander une démonstration",
-    "reassurance": ["✓ Sans carte bancaire", "✓ Résiliation à tout moment", "✓ Données hébergées en Afrique"]
+    "reassurance": [
+      "✓ Sans carte bancaire",
+      "✓ Résiliation à tout moment",
+      "✓ Données hébergées en Afrique"
+    ]
   },
-
   "footer": {
     "tagline": "L'ERP des associations, ONG et organisations à but non lucratif d'Afrique.",
     "compliance": "Conforme SYCEBNL · Norme OHADA.",
@@ -376,7 +758,19 @@
       "cgu": "CGU",
       "cookies": "Politique cookies",
       "eula": "CLUF",
-      "ip": "Propriété intellectuelle"
+      "ip": "Propriété intellectuelle",
+      "commercial": "Conditions commerciales",
+      "backup": "Politique de sauvegarde",
+      "support": "Politique de support",
+      "termination": "Politique de résiliation",
+      "refund": "Politique de remboursement",
+      "dataProcessing": "Traitement des données",
+      "trademark": "Protection de la marque",
+      "trial": "Conditions d’essai",
+      "saraTerms": "Conditions SARA",
+      "aiLiability": "Limitation de responsabilité IA",
+      "account": "Gestion du compte",
+      "claims": "Réclamations"
     },
     "contactTitle": "Contact",
     "city": "Abidjan, Côte d'Ivoire",
