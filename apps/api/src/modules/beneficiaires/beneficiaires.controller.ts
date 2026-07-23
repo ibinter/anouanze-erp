@@ -2,10 +2,18 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { BeneficiairesService } from './beneficiaires.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_PROJET,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('beneficiaires')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/beneficiaires')
 export class BeneficiairesController {
   constructor(private readonly beneficiairesService: BeneficiairesService) {}
@@ -29,6 +37,7 @@ export class BeneficiairesController {
   }
 
   @ApiOperation({ summary: 'Créer un bénéficiaire' })
+  @Roles(...ROLES_ECRITURE_PROJET)
   @Post()
   create(@Request() req: any, @Body() dto: any) {
     return this.beneficiairesService.create(req.user.organisationId, dto);

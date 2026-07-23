@@ -30,7 +30,10 @@ import { CreateVolontaireDto } from './dto/create-volontaire.dto';
 
 @ApiTags('rh')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut du contrôleur : lecture restreinte — les données RH sont nominatives
+// (salaires, congés, contrats). Chaque route redéclare @Roles si besoin.
+@Roles(...ROLES_LECTURE_RH)
 @Controller('api/v1/rh')
 export class RhController {
   constructor(private readonly rhService: RhService) {}
@@ -38,6 +41,8 @@ export class RhController {
   // ─── Stats ────────────────────────────────────────────────
 
   @ApiOperation({ summary: 'Statistiques RH' })
+  // Agrégats non nominatifs, affichés sur le tableau de bord : lecture large.
+  @Roles(...ROLES_LECTURE_LARGE)
   @Get('stats')
   getStats(@Request() req: any) {
     return this.rhService.getStats(req.user.organisationId);
@@ -73,12 +78,14 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Créer un employé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Post('employes')
   createEmploye(@Request() req: any, @Body() dto: CreateEmployeDto) {
     return this.rhService.createEmploye(req.user.organisationId, dto);
   }
 
   @ApiOperation({ summary: 'Modifier un employé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Put('employes/:id')
   updateEmploye(
     @Param('id') id: string,
@@ -89,6 +96,7 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Supprimer un employé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Delete('employes/:id')
   deleteEmploye(@Param('id') id: string, @Request() req: any) {
     return this.rhService.deleteEmploye(id, req.user.organisationId);
@@ -103,6 +111,7 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Générer une fiche de paie' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Post('employes/:id/fiches-paie/:periode')
   genererFichePaie(
     @Param('id') id: string,
@@ -113,6 +122,7 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Valider une fiche de paie' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Patch('fiches-paie/:id/valider')
   validerFichePaie(@Param('id') id: string) {
     return this.rhService.validerFichePaie(id);
@@ -127,18 +137,21 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Demander un congé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Post('employes/:id/conges')
   demanderConge(@Param('id') id: string, @Body() dto: DemanderCongeDto) {
     return this.rhService.demanderConge(id, dto);
   }
 
   @ApiOperation({ summary: 'Approuver un congé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Patch('conges/:id/approuver')
   approuverConge(@Param('id') id: string) {
     return this.rhService.approuverConge(id);
   }
 
   @ApiOperation({ summary: 'Rejeter un congé' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Patch('conges/:id/rejeter')
   rejeterConge(@Param('id') id: string) {
     return this.rhService.rejeterConge(id);
@@ -147,6 +160,8 @@ export class RhController {
   // ─── Volontaires ──────────────────────────────────────────
 
   @ApiOperation({ summary: 'Liste des volontaires' })
+  // Donnée peu sensible et utile aux équipes projet : lecture large.
+  @Roles(...ROLES_LECTURE_LARGE)
   @Get('volontaires')
   findAllVolontaires(
     @Request() req: any,
@@ -162,6 +177,7 @@ export class RhController {
   }
 
   @ApiOperation({ summary: 'Créer un volontaire' })
+  @Roles(...ROLES_ECRITURE_RH)
   @Post('volontaires')
   createVolontaire(@Request() req: any, @Body() dto: CreateVolontaireDto) {
     return this.rhService.createVolontaire(req.user.organisationId, dto);

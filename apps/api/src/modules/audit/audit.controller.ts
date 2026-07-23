@@ -2,10 +2,15 @@ import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AuditService } from './audit.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { ROLES_LECTURE_AUDIT } from '../../common/constants/roles-groupes';
 
 @ApiTags('audit')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Journal d'audit : lecture réservée à la direction, à l'auditeur et au comptable.
+@Roles(...ROLES_LECTURE_AUDIT)
 @Controller('api/v1/audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}

@@ -3,6 +3,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { NotificationsRestService } from './notifications-rest.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TypeNotification } from '@prisma/client';
+import { MajPreferencesNotificationDto } from './dto/preferences-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -46,6 +47,12 @@ export class NotificationsRestController {
   @ApiOperation({ summary: 'Préférences de notification de l\'utilisateur' })
   getPreferences(@Request() req) {
     return this.service.getPreferences(req.user.id);
+  }
+
+  @Patch('preferences')
+  @ApiOperation({ summary: 'Modifier mes préférences de notification' })
+  majPreferences(@Request() req, @Body() dto: MajPreferencesNotificationDto) {
+    return this.service.majPreferences(req.user.id, dto.preferences);
   }
 
   @Patch(':id/lue')

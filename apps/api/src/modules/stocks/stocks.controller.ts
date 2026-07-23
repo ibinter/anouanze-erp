@@ -14,10 +14,18 @@ import { StocksService } from './stocks.service';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { MouvementStockDto } from './dto/mouvement-stock.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_OPERATIONNELLE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('stocks')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/stocks')
 export class StocksController {
   constructor(private readonly stocksService: StocksService) {}
@@ -53,24 +61,28 @@ export class StocksController {
   }
 
   @Post()
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Créer un article en stock' })
   create(@Request() req, @Body() dto: CreateStockDto) {
     return this.stocksService.create(req.user.organisationId, dto);
   }
 
   @Patch(':id')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Modifier un article en stock' })
   update(@Param('id') id: string, @Request() req, @Body() dto: Partial<CreateStockDto>) {
     return this.stocksService.update(id, req.user.organisationId, dto);
   }
 
   @Post(':id/entree')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Enregistrer une entrée de stock' })
   entree(@Param('id') id: string, @Body() dto: MouvementStockDto) {
     return this.stocksService.entree(id, dto);
   }
 
   @Post(':id/sortie')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Enregistrer une sortie de stock' })
   sortie(@Param('id') id: string, @Body() dto: MouvementStockDto) {
     return this.stocksService.sortie(id, dto);

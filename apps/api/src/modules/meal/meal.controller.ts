@@ -17,10 +17,18 @@ import { MealService } from './meal.service';
 import { CreateIndicateurDto } from './dto/create-indicateur.dto';
 import { CreateCollecteDto } from './dto/create-collecte.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_PROJET,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('meal')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/meal/projets/:projetId')
 export class MealController {
   constructor(private readonly mealService: MealService) {}
@@ -32,12 +40,14 @@ export class MealController {
   }
 
   @Post('indicateurs')
+  @Roles(...ROLES_ECRITURE_PROJET)
   @ApiOperation({ summary: 'Créer un indicateur SMART' })
   createIndicateur(@Param('projetId') projetId: string, @Body() dto: CreateIndicateurDto) {
     return this.mealService.createIndicateur(projetId, dto);
   }
 
   @Patch('indicateurs/:indicateurId')
+  @Roles(...ROLES_ECRITURE_PROJET)
   @ApiOperation({ summary: 'Mettre à jour un indicateur (valeur réalisée)' })
   updateIndicateur(
     @Param('projetId') projetId: string,
@@ -57,6 +67,7 @@ export class MealController {
   }
 
   @Post('indicateurs/:indicateurId/collectes')
+  @Roles(...ROLES_ECRITURE_PROJET)
   @ApiOperation({ summary: 'Enregistrer une collecte de données' })
   createCollecte(
     @Param('projetId') projetId: string,

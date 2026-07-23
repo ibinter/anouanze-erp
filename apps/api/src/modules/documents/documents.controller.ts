@@ -23,6 +23,13 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ADMIN,
+  ROLES_ECRITURE_OPERATIONNELLE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { DocumentsService } from './documents.service';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
@@ -30,7 +37,9 @@ import { StatutDocument } from '@prisma/client';
 
 @ApiTags('documents')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
@@ -82,6 +91,7 @@ export class DocumentsController {
     },
   })
   @UseInterceptors(FileInterceptor('fichier'))
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @Post()
   upload(
     @Request() req: any,
@@ -92,6 +102,7 @@ export class DocumentsController {
   }
 
   @ApiOperation({ summary: 'Modifier les métadonnées d\'un document' })
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @Put(':id')
   update(
     @Param('id') id: string,
@@ -102,6 +113,7 @@ export class DocumentsController {
   }
 
   @ApiOperation({ summary: 'Supprimer un document' })
+  @Roles(...ROLES_ADMIN)
   @Delete(':id')
   delete(@Param('id') id: string, @Request() req: any) {
     return this.documentsService.delete(id, req.user.organisationId);
@@ -114,6 +126,7 @@ export class DocumentsController {
   }
 
   @ApiOperation({ summary: 'Archiver un document' })
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @Patch(':id/archiver')
   archiverDocument(@Param('id') id: string, @Request() req: any) {
     return this.documentsService.archiverDocument(id, req.user.organisationId);

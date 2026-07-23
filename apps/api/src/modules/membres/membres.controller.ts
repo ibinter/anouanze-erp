@@ -20,11 +20,21 @@ import { MembresService } from './membres.service';
 import { CreateMembreDto } from './dto/create-membre.dto';
 import { CreateCotisationDto } from './dto/create-cotisation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ADMIN,
+  ROLES_ECRITURE_FINANCE,
+  ROLES_ECRITURE_MEMBRES,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { StatutMembre } from '@prisma/client';
 
 @ApiTags('membres')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/membres')
 export class MembresController {
   constructor(private readonly membresService: MembresService) {}
@@ -58,18 +68,21 @@ export class MembresController {
   }
 
   @Post()
+  @Roles(...ROLES_ECRITURE_MEMBRES)
   @ApiOperation({ summary: 'Créer un membre' })
   create(@Request() req, @Body() dto: CreateMembreDto) {
     return this.membresService.create(req.user.organisationId, dto);
   }
 
   @Patch(':id')
+  @Roles(...ROLES_ECRITURE_MEMBRES)
   @ApiOperation({ summary: 'Modifier un membre' })
   update(@Param('id') id: string, @Request() req, @Body() dto: Partial<CreateMembreDto>) {
     return this.membresService.update(id, req.user.organisationId, dto);
   }
 
   @Delete(':id')
+  @Roles(...ROLES_ADMIN)
   @ApiOperation({ summary: 'Supprimer un membre' })
   delete(@Param('id') id: string, @Request() req) {
     return this.membresService.delete(id, req.user.organisationId);
@@ -82,6 +95,7 @@ export class MembresController {
   }
 
   @Post(':id/cotisations')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer une cotisation pour un membre' })
   createCotisation(@Param('id') id: string, @Body() dto: CreateCotisationDto) {
     return this.membresService.createCotisation(id, dto);

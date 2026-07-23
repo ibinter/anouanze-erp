@@ -15,6 +15,13 @@ import {
 } from '@nestjs/swagger';
 import { IaService } from './ia.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_ECRITURE_OPERATIONNELLE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { ChatMessageDto } from './dto/chat-message.dto';
 import { IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -50,7 +57,11 @@ class TraduireDto {
 
 @ApiTags('ia')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : les analyses IA sont en lecture seule (POST par commodité d'API),
+// ouvertes à tous les rôles. Les routes qui produisent un livrable engageant
+// (budget prévisionnel, rapport narratif) redéclarent @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/ia')
 export class IaController {
   constructor(private readonly iaService: IaService) {}
@@ -62,12 +73,14 @@ export class IaController {
   }
 
   @Post('rapport-narratif')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Générer un rapport narratif assisté par IA' })
   genererRapportNarratif(@Request() req, @Body() dto: RapportNarratifDto) {
     return this.iaService.genererRapportNarratif(req.user.organisationId, dto.type, dto.params ?? {});
   }
 
   @Post('proposer-budget')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Proposition de budget prévisionnel par IA' })
   proposerBudget(@Request() req, @Body() dto: ProposerBudgetDto) {
     return this.iaService.proposerBudget(req.user.organisationId, dto.exercice);

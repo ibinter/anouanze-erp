@@ -11,10 +11,15 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { Response } from 'express';
 import { ReportingService } from './reporting.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { ROLES_LECTURE_LARGE } from '../../common/constants/roles-groupes';
 
 @ApiTags('reporting')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Module exclusivement consultatif : lecture ouverte à tous les rôles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/reporting')
 export class ReportingController {
   constructor(private readonly reportingService: ReportingService) {}

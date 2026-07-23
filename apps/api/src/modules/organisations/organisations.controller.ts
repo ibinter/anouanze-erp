@@ -21,15 +21,26 @@ import { OrganisationsService } from './organisations.service';
 import { CreateOrganisationDto } from './dto/create-organisation.dto';
 import { UpdateOrganisationDto } from './dto/update-organisation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ADMINISTRATION,
+  ROLES_LECTURE_LARGE,
+  ROLES_SUPER_ADMIN,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('organisations')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : consultation de sa propre organisation ouverte à tous les rôles.
+// Le cycle de vie des organisations relève de la console SUPER_ADMIN.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/organisations')
 export class OrganisationsController {
   constructor(private readonly service: OrganisationsService) {}
 
   @ApiOperation({ summary: 'Créer une organisation' })
+  @Roles(...ROLES_SUPER_ADMIN)
   @Post()
   create(@Body() dto: CreateOrganisationDto) {
     return this.service.create(dto);
@@ -39,6 +50,8 @@ export class OrganisationsController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'search', required: false })
+  // Liste inter-organisations : console SUPER_ADMIN uniquement.
+  @Roles(...ROLES_SUPER_ADMIN)
   @Get()
   findAll(
     @Query('page') page?: string,
@@ -65,12 +78,14 @@ export class OrganisationsController {
   }
 
   @ApiOperation({ summary: 'Mettre à jour une organisation' })
+  @Roles(...ROLES_ADMINISTRATION)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateOrganisationDto) {
     return this.service.update(id, dto);
   }
 
   @ApiOperation({ summary: 'Supprimer une organisation' })
+  @Roles(...ROLES_SUPER_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   delete(@Param('id') id: string) {

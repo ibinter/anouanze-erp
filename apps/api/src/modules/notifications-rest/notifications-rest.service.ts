@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { TypeNotification } from '@prisma/client';
+import { CanalNotification, TypeNotification } from '@prisma/client';
+import { TYPES_EVENEMENT } from '../../common/notifications/types-evenement';
 
 @Injectable()
 export class NotificationsRestService {
@@ -64,23 +65,71 @@ export class NotificationsRestService {
   }
 
   /**
-   * Préférences de notification.
+   * Préférences de notification de l'utilisateur.
    *
-   * Le schéma Prisma actuel ne comporte aucun modèle de préférences
-   * (cf. rapport technique : modèle `PreferenceNotification` à créer).
-   * On expose donc une réponse honnête que l'interface affiche en
-   * « Bientôt disponible » plutôt que de simuler une fonctionnalité.
+   * Le modèle `PreferenceNotification` ne stocke que les *dérogations* :
+   * l'absence de ligne vaut « activé ». On renvoie donc la matrice complète
+   * (canal × type d'évènement) en fusionnant les valeurs par défaut avec
+   * les enregistrements existants.
    */
-  async getPreferences(_utilisateurId: string) {
-    return {
-      disponible: false,
-      message:
-        'La personnalisation des préférences de notification sera disponible prochainement.',
-      canaux: [
-        { cle: 'interne', libelle: 'Notifications dans l\'application', actif: true, modifiable: false },
-        { cle: 'email', libelle: 'Notifications par email', actif: true, modifiable: false },
-      ],
-    };
+  async getPreferences(utilisateurId: string) {
+    const enregistrees = await this.prisma.preferenceNotification.findMany({
+      where: { utilisateurId },
+      orderBy: [{ canal: 'asc' }, { typeEvenement: 'asc' }],
+    });
+
+    const index = new Map(
+      enregistrees.map((p) => [`${p.canal}:${p.typeEvenement}`, p.actif]),
+    );
+
+    const canaux = [CanalNotification.APPLICATION, CanalNotification.EMAIL].map((canal) => ({
+      canal,
+      libelle:
+        canal === CanalNotification.EMAIL
+          ? 'Notifications par email'
+          : "Notifications dans l'application",
+      evenements: TYPES_EVENEMENT.map((evt) => ({
+        typeEvenement: evt.cle,
+        libelle: evt.libelle,
+        actif: index.get(`${canal}:${evt.cle}`) ?? true,
+      })),
+    }));
+
+    return { disponible: true, canaux, typesEvenement: TYPES_EVENEMENT };
+  }
+
+  /**
+   * Met à jour une ou plusieurs préférences (upsert sur la clé unique
+   * utilisateur × canal × évènement).
+   */
+  async majPreferences(
+    utilisateurId: string,
+    preferences: Array<{ canal: CanalNotification; typeEvenement: string; actif: boolean }>,
+  ) {
+    const valides = (preferences ?? []).filter(
+      (p) => p && p.canal && typeof p.typeEvenement === 'string' && p.typeEvenement.length > 0,
+    );
+
+    for (const pref of valides) {
+      await this.prisma.preferenceNotification.upsert({
+        where: {
+          utilisateurId_canal_typeEvenement: {
+            utilisateurId,
+            canal: pref.canal,
+            typeEvenement: pref.typeEvenement,
+          },
+        },
+        create: {
+          utilisateurId,
+          canal: pref.canal,
+          typeEvenement: pref.typeEvenement,
+          actif: pref.actif !== false,
+        },
+        update: { actif: pref.actif !== false },
+      });
+    }
+
+    return this.getPreferences(utilisateurId);
   }
 
   async marquerLue(utilisateurId: string, id: string) {

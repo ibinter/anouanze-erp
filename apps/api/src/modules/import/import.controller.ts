@@ -7,10 +7,19 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagg
 import { Response } from 'express';
 import { ImportService } from './import.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_ECRITURE_MEMBRES,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('import')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : téléchargement des modèles ouvert ; les imports réels sont restreints.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/import')
 export class ImportController {
   constructor(private readonly service: ImportService) {}
@@ -27,6 +36,7 @@ export class ImportController {
   }
 
   @Post('valider/:type')
+  @Roles(...ROLES_ECRITURE_MEMBRES)
   @ApiOperation({ summary: 'Valider un fichier sans importer' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('fichier'))
@@ -36,6 +46,7 @@ export class ImportController {
   }
 
   @Post('membres')
+  @Roles(...ROLES_ECRITURE_MEMBRES)
   @ApiOperation({ summary: 'Importer des membres depuis Excel' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('fichier'))
@@ -45,6 +56,7 @@ export class ImportController {
   }
 
   @Post('donateurs')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Importer des donateurs depuis Excel' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('fichier'))

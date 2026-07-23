@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RoleUtilisateur, TypeNotification } from '@prisma/client';
+import { CanalNotification, RoleUtilisateur, TypeNotification } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { NotificationsGateway } from './notifications.gateway';
@@ -34,6 +34,11 @@ export interface NotificationPayload {
   lien?: string;
   /** Envoyer aussi un email de relais aux destinataires (défaut : false). */
   email?: boolean;
+  /**
+   * Clé du catalogue `TYPES_EVENEMENT` — sert au filtrage par les
+   * préférences de notification. Absente = évènement « generique ».
+   */
+  evenement?: string;
 }
 
 interface CibleUtilisateur {
@@ -72,8 +77,21 @@ export class NotificationEventsService {
     organisationId: string | null | undefined,
     payload: NotificationPayload,
   ): Promise<void> {
-    const ids = Array.from(new Set(utilisateurIds.filter(Boolean)));
-    if (ids.length === 0) return;
+    const tous = Array.from(new Set(utilisateurIds.filter(Boolean)));
+    if (tous.length === 0) return;
+
+    const evenement = payload.evenement ?? 'generique';
+    const ids = await this.filtrerParPreference(tous, CanalNotification.APPLICATION, evenement);
+    if (ids.length === 0) {
+      this.logger.debug(
+        `Notification « ${payload.titre} » ignorée : aucun destinataire n'accepte l'évènement « ${evenement} » dans l'application`,
+      );
+      // Le canal email peut rester actif même si l'application est coupée.
+      if (payload.email) {
+        await this.relayerParEmail(tous, payload);
+      }
+      return;
+    }
 
     try {
       await this.prisma.notification.createMany({
@@ -107,7 +125,7 @@ export class NotificationEventsService {
       );
 
       if (payload.email) {
-        await this.relayerParEmail(ids, payload);
+        await this.relayerParEmail(tous, payload);
       }
     } catch (err) {
       this.logger.error(
@@ -162,11 +180,51 @@ export class NotificationEventsService {
     }
   }
 
+  /**
+   * Retire les utilisateurs ayant désactivé ce canal pour cet évènement.
+   * L'absence de préférence enregistrée vaut « activé ».
+   * En cas d'incident base, on n'exclut personne (dégradation sûre).
+   */
+  private async filtrerParPreference(
+    utilisateurIds: string[],
+    canal: CanalNotification,
+    typeEvenement: string,
+  ): Promise<string[]> {
+    if (utilisateurIds.length === 0) return [];
+    try {
+      const desactivees = await this.prisma.preferenceNotification.findMany({
+        where: {
+          utilisateurId: { in: utilisateurIds },
+          canal,
+          typeEvenement: { in: [typeEvenement, '*'] },
+          actif: false,
+        },
+        select: { utilisateurId: true },
+      });
+
+      if (desactivees.length === 0) return utilisateurIds;
+      const exclus = new Set(desactivees.map((p) => p.utilisateurId));
+      return utilisateurIds.filter((id) => !exclus.has(id));
+    } catch (err) {
+      this.logger.warn(
+        `Lecture des préférences de notification impossible (${(err as Error).message}) — envoi à tous les destinataires`,
+      );
+      return utilisateurIds;
+    }
+  }
+
   private async relayerParEmail(utilisateurIds: string[], payload: NotificationPayload): Promise<void> {
     if (!this.email.isConfigured()) return;
     try {
+      const autorises = await this.filtrerParPreference(
+        utilisateurIds,
+        CanalNotification.EMAIL,
+        payload.evenement ?? 'generique',
+      );
+      if (autorises.length === 0) return;
+
       const users: CibleUtilisateur[] = await this.prisma.utilisateur.findMany({
-        where: { id: { in: utilisateurIds }, actif: true },
+        where: { id: { in: autorises }, actif: true },
         select: { id: true, email: true, prenom: true, nom: true },
       });
 
@@ -208,6 +266,7 @@ export class NotificationEventsService {
 
     await this.notifierRoles(params.organisationId, ROLES_FINANCE, {
       type: TypeNotification.AVERTISSEMENT,
+      evenement: 'cotisation-retard',
       titre: 'Cotisation en retard',
       message: `La cotisation de ${params.membreNom} (${montant}) est échue${retard}.`,
       lien: '/cotisations',
@@ -216,6 +275,7 @@ export class NotificationEventsService {
     if (params.utilisateurId) {
       await this.notifierUtilisateur(params.utilisateurId, params.organisationId, {
         type: TypeNotification.RAPPEL,
+        evenement: 'cotisation-retard',
         titre: 'Votre cotisation est en retard',
         message: `Votre cotisation de ${montant} est échue${retard}. Merci de régulariser votre situation.`,
         lien: '/cotisations',
@@ -258,6 +318,7 @@ export class NotificationEventsService {
 
     await this.notifierRoles(params.organisationId, ROLES_FINANCE, {
       type: depasse ? TypeNotification.ALERTE : TypeNotification.AVERTISSEMENT,
+      evenement: 'budget-seuil',
       titre: depasse ? `Budget dépassé : ${params.budgetNom}` : `Budget à ${pct} % : ${params.budgetNom}`,
       message: depasse
         ? `L'enveloppe du budget « ${params.budgetNom} » est dépassée (${pct} % consommés).`
@@ -281,6 +342,7 @@ export class NotificationEventsService {
     if (params.organisationId) {
       await this.notifierRoles(params.organisationId, ROLES_ADMIN, {
         type: params.priorite === 'URGENTE' ? TypeNotification.ALERTE : TypeNotification.INFO,
+        evenement: 'ticket-nouveau',
         titre: `Nouveau ticket ${params.reference}`,
         message: `${params.auteurNom ?? 'Un utilisateur'} a ouvert le ticket « ${params.sujet} »${
           params.priorite ? ` (priorité ${params.priorite})` : ''
@@ -292,6 +354,7 @@ export class NotificationEventsService {
     if (params.auteurUtilisateurId) {
       await this.notifierUtilisateur(params.auteurUtilisateurId, params.organisationId, {
         type: TypeNotification.SUCCES,
+        evenement: 'ticket-nouveau',
         titre: `Ticket ${params.reference} enregistré`,
         message: `Votre demande « ${params.sujet} » a bien été transmise au support.`,
         lien: `/support/${params.ticketId}`,
@@ -326,6 +389,7 @@ export class NotificationEventsService {
     if (params.destinataireUtilisateurId) {
       await this.notifierUtilisateur(params.destinataireUtilisateurId, params.organisationId, {
         type: TypeNotification.INFO,
+        evenement: 'ticket-reponse',
         titre: `Réponse au ticket ${params.reference}`,
         message: `${params.auteur ?? 'Le support'} a répondu à « ${params.sujet} ».`,
         lien: `/support/${params.ticketId}`,
@@ -359,6 +423,7 @@ export class NotificationEventsService {
 
     const payload: NotificationPayload = {
       type: TypeNotification.RAPPEL,
+      evenement: 'resolution-attente',
       titre: 'Résolution en attente',
       message: `La résolution « ${params.intitule} » est toujours en attente${ech}.`,
       lien: '/gouvernance',
@@ -390,6 +455,7 @@ export class NotificationEventsService {
 
     await this.notifierRoles(params.organisationId, ROLES_FINANCE, {
       type: TypeNotification.SUCCES,
+      evenement: 'don-recu',
       titre: 'Nouveau don reçu',
       message: `${params.donateurNom} a effectué un don de ${montantTxt}.`,
       lien: '/donateurs',
@@ -428,6 +494,7 @@ export class NotificationEventsService {
     if (params.utilisateurId) {
       await this.notifierUtilisateur(params.utilisateurId, params.organisationId, {
         type: TypeNotification.SUCCES,
+        evenement: 'cotisation-reglee',
         titre: 'Cotisation enregistrée',
         message: `Votre cotisation de ${montant} a bien été enregistrée.`,
         lien: '/cotisations',

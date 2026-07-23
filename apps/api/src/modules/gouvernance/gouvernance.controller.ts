@@ -2,11 +2,20 @@ import { Controller, Get, Post, Patch, Body, Param, Query, Request, UseGuards } 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { GouvernanceService } from './gouvernance.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ADMIN,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { StatutResolution, TypeOrgane } from '@prisma/client';
 
 @ApiTags('gouvernance')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; l'écriture est réservée à la
+// direction (organes, réunions et résolutions engagent l'organisation).
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/gouvernance')
 export class GouvernanceController {
   constructor(private readonly service: GouvernanceService) {}
@@ -23,12 +32,14 @@ export class GouvernanceController {
     return this.service.getOrganes(req.user.organisationId);
   }
 
+  @Roles(...ROLES_ADMIN)
   @Post('organes')
   @ApiOperation({ summary: 'Créer un organe' })
   createOrgane(@Request() req, @Body() body: { nom: string; type?: TypeOrgane; description?: string; nbMembres?: number }) {
     return this.service.createOrgane(req.user.organisationId, body);
   }
 
+  @Roles(...ROLES_ADMIN)
   @Patch('organes/:id')
   updateOrgane(@Request() req, @Param('id') id: string, @Body() body: any) {
     return this.service.updateOrgane(req.user.organisationId, id, body);
@@ -41,12 +52,14 @@ export class GouvernanceController {
     return this.service.getReunions(req.user.organisationId, organeId);
   }
 
+  @Roles(...ROLES_ADMIN)
   @Post('organes/:organeId/reunions')
   @ApiOperation({ summary: 'Planifier une réunion' })
   createReunion(@Param('organeId') organeId: string, @Body() body: { titre: string; dateReunion: string; lieu?: string; ordre?: string[] }) {
     return this.service.createReunion(organeId, { ...body, dateReunion: new Date(body.dateReunion) });
   }
 
+  @Roles(...ROLES_ADMIN)
   @Patch('reunions/:id')
   updateReunion(@Param('id') id: string, @Body() body: any) {
     return this.service.updateReunion(id, body);
@@ -70,12 +83,14 @@ export class GouvernanceController {
     });
   }
 
+  @Roles(...ROLES_ADMIN)
   @Post('resolutions')
   @ApiOperation({ summary: 'Créer une résolution' })
   createResolution(@Request() req, @Body() body: any) {
     return this.service.createResolution(req.user.organisationId, body);
   }
 
+  @Roles(...ROLES_ADMIN)
   @Patch('resolutions/:id')
   updateResolution(@Request() req, @Param('id') id: string, @Body() body: any) {
     return this.service.updateResolution(req.user.organisationId, id, body);
