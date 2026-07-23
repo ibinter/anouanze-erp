@@ -563,7 +563,7 @@ export default async function LandingPage() {
         <div className="h-1 bg-gradient-to-r from-primary-600 via-accent-400 to-primary-600" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-16 pb-8 sm:pb-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-10 mb-14">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6 sm:gap-10 mb-14">
             {/* Brand */}
             <div className="col-span-2 lg:col-span-2">
               <div className="flex items-center gap-3 mb-5">
@@ -634,10 +634,10 @@ export default async function LandingPage() {
               </ul>
             </div>
 
-            {/* Légal + Contact */}
-            <div>
+            {/* Légal + Contact — 18 liens : sur 2 colonnes pour ne pas étirer le footer */}
+            <div className="sm:col-span-2 lg:col-span-2">
               <h4 className="text-primary-400 font-bold mb-4 text-[11px] uppercase tracking-widest">{t('footer.legalTitle')}</h4>
-              <ul className="space-y-2.5 text-sm mb-7">
+              <ul className="text-sm mb-7 sm:columns-2 sm:gap-x-6 [&>li]:break-inside-avoid [&>li]:mb-2.5 space-y-2.5 sm:space-y-0">
                 {([
                   ['/mentions-legales', 'mentions'],
                   ['/confidentialite', 'privacy'],

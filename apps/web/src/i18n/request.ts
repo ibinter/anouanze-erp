@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers';
+import type { AbstractIntlMessages } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
 import { defaultLocale, isLocale, locales, LOCALE_COOKIE, type Locale } from './config';
 
@@ -45,12 +46,38 @@ export function resolveLocale(): Locale {
   return detectFromHeaders();
 }
 
+/**
+ * Domaines de traduction de l'espace interne, chacun dans son fichier.
+ * Ce découpage permet de faire évoluer un module sans toucher aux autres
+ * (et évite les conflits d'écriture quand plusieurs chantiers avancent
+ * en parallèle). L'ordre n'a pas d'importance : les clés sont disjointes.
+ */
+const DOMAINES = ['shell', 'relations', 'finance', 'activites', 'outils'] as const;
+
+async function chargerMessages(locale: Locale): Promise<AbstractIntlMessages> {
+  const base = (await import(`../../messages/${locale}.json`)).default;
+
+  const domaines = await Promise.all(
+    DOMAINES.map(async (domaine) => {
+      try {
+        return (await import(`../../messages/${locale}/${domaine}.json`)).default;
+      } catch {
+        // Domaine pas encore traduit : on ignore silencieusement plutôt que
+        // de casser le rendu de toute l'application.
+        return {};
+      }
+    }),
+  );
+
+  return Object.assign({}, base, ...domaines);
+}
+
 export default getRequestConfig(async () => {
   const locale = resolveLocale();
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: await chargerMessages(locale),
     timeZone: 'Africa/Abidjan',
     now: new Date(),
   };

@@ -6,12 +6,6 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--workspace=@anouanze/web"],
       "port": 3099
-    },
-    {
-      "name": "anouanze-api",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--workspace=@anouanze/api"],
-      "port": 4000
     }
   ]
 }
