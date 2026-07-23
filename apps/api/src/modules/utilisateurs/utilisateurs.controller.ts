@@ -22,7 +22,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { OrganisationId } from '../../common/decorators/organisation-id.decorator';
 import { RoleUtilisateur } from '@prisma/client';
 
 interface UtilisateurToken {
@@ -46,8 +45,9 @@ export class UtilisateursController {
   @ApiOperation({ summary: "Lister les membres de l'organisation courante" })
   @Roles(RoleUtilisateur.SUPER_ADMIN, RoleUtilisateur.ADMIN_ORGANISATION)
   @Get('organisation/membres')
-  listerMembres(@OrganisationId() organisationId?: string) {
-    return this.service.listerMembresOrganisation(organisationId);
+  listerMembres(@CurrentUser() auteur: UtilisateurToken) {
+    // organisationId lu dans le jeton uniquement (pas d'en-tête x-organisation-id)
+    return this.service.listerMembresOrganisation(auteur?.organisationId);
   }
 
   @ApiOperation({

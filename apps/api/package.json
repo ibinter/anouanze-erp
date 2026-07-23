@@ -18,6 +18,17 @@
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": ["**/*.(t|j)s"],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.0.0",
     "@aws-sdk/s3-request-presigner": "^3.1085.0",
@@ -65,6 +76,7 @@
     "@nestjs/testing": "^10.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
+    "@types/jest": "^29.5.14",
     "@types/lodash": "^4.14.200",
     "@types/multer": "^1.4.11",
     "@types/nodemailer": "^6.4.14",
