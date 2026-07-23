@@ -35,6 +35,26 @@ export class ReportingController {
     );
   }
 
+  @Get('evolution-depenses')
+  @ApiOperation({ summary: 'Dépenses réelles sur les N derniers mois glissants' })
+  @ApiQuery({ name: 'mois', required: false, type: Number, description: 'Nombre de mois (défaut 6)' })
+  getEvolutionDepenses(@Request() req, @Query('mois') mois?: string) {
+    return this.reportingService.getEvolutionDepenses(
+      req.user.organisationId,
+      mois ? Number(mois) : 6,
+    );
+  }
+
+  @Get('repartition-secteurs')
+  @ApiOperation({ summary: 'Répartition des dépenses par secteur d\'intervention' })
+  @ApiQuery({ name: 'exercice', required: false, type: Number })
+  getRepartitionSecteurs(@Request() req, @Query('exercice') exercice?: string) {
+    return this.reportingService.getRepartitionSecteurs(
+      req.user.organisationId,
+      exercice ? Number(exercice) : new Date().getFullYear(),
+    );
+  }
+
   @Get('depenses-par-projet')
   @ApiOperation({ summary: 'Dépenses par projet' })
   @ApiQuery({ name: 'exercice', required: false, type: Number })

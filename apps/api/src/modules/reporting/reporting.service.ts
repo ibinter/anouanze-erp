@@ -1,9 +1,148 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
+const MOIS_COURTS = [
+  'Jan',
+  'Fév',
+  'Mar',
+  'Avr',
+  'Mai',
+  'Juin',
+  'Juil',
+  'Août',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Déc',
+];
+
+const SECTEUR_LABELS: Record<string, string> = {
+  sante: 'Santé',
+  education: 'Éducation',
+  agriculture: 'Agriculture',
+  eau_assainissement: 'Eau & Assainissement',
+  environnement: 'Environnement',
+  genre: 'Genre',
+  securite_alimentaire: 'Sécurité alimentaire',
+  gouvernance: 'Gouvernance',
+  formation: 'Formation',
+  microfinance: 'Microfinance',
+  non_categorise: 'Non catégorisé',
+};
+
+function libelleSecteur(slug: string): string {
+  const connu = SECTEUR_LABELS[slug];
+  if (connu) return connu;
+  const nettoye = slug.replace(/[_-]+/g, ' ').trim();
+  return nettoye.charAt(0).toUpperCase() + nettoye.slice(1);
+}
+
 @Injectable()
 export class ReportingService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Dépenses réelles (comptes de charges classe 6) sur les N derniers mois
+   * glissants — traverse les bornes d'exercice, contrairement à
+   * getDepensesParMois qui est borné à un exercice civil.
+   */
+  async getEvolutionDepenses(orgId: string, nbMois: number) {
+    const taille = Math.min(Math.max(Number(nbMois) || 6, 1), 24);
+    const now = new Date();
+
+    const periodes: { periode: string; mois: string; annee: number }[] = [];
+    for (let i = taille - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      periodes.push({
+        periode: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        mois: MOIS_COURTS[d.getMonth()],
+        annee: d.getFullYear(),
+      });
+    }
+
+    const ecritures = await this.prisma.ecritureComptable.findMany({
+      where: {
+        organisationId: orgId,
+        valide: true,
+        periode: { in: periodes.map((p) => p.periode) },
+      },
+      select: {
+        periode: true,
+        lignes: {
+          select: { debit: true, credit: true, compte: { select: { numero: true } } },
+        },
+      },
+    });
+
+    const totaux: Record<string, number> = {};
+    for (const p of periodes) totaux[p.periode] = 0;
+
+    for (const e of ecritures) {
+      const montant = e.lignes
+        .filter((l) => l.compte.numero.startsWith('6'))
+        .reduce((s, l) => s + Number(l.debit) - Number(l.credit), 0);
+      if (totaux[e.periode] !== undefined) totaux[e.periode] += montant;
+    }
+
+    return periodes.map((p) => ({
+      periode: p.periode,
+      mois: p.mois,
+      annee: p.annee,
+      montant: Math.round(Math.max(0, totaux[p.periode] ?? 0)),
+    }));
+  }
+
+  /**
+   * Répartition des dépenses réelles par secteur d'intervention.
+   * Le montant d'un projet est réparti à parts égales entre ses secteurs.
+   * Retourne un tableau vide s'il n'y a aucune dépense (jamais de valeur fictive).
+   */
+  async getRepartitionSecteurs(orgId: string, exercice: number) {
+    const projets = await this.prisma.projet.findMany({
+      where: { organisationId: orgId },
+      select: {
+        secteurs: true,
+        ecritures: {
+          where: { exercice, valide: true },
+          select: {
+            lignes: {
+              select: { debit: true, credit: true, compte: { select: { numero: true } } },
+            },
+          },
+        },
+      },
+    });
+
+    const parSecteur: Record<string, number> = {};
+
+    for (const p of projets) {
+      const montant = p.ecritures.reduce(
+        (s, e) =>
+          s +
+          e.lignes
+            .filter((l) => l.compte.numero.startsWith('6'))
+            .reduce((ls, l) => ls + Number(l.debit) - Number(l.credit), 0),
+        0,
+      );
+      if (montant <= 0) continue;
+
+      const secteurs = p.secteurs.length > 0 ? p.secteurs : ['non_categorise'];
+      const part = montant / secteurs.length;
+      for (const s of secteurs) parSecteur[s] = (parSecteur[s] ?? 0) + part;
+    }
+
+    const total = Object.values(parSecteur).reduce((s, v) => s + v, 0);
+    if (total <= 0) return [];
+
+    return Object.entries(parSecteur)
+      .map(([secteur, montant]) => ({
+        secteur,
+        libelle: libelleSecteur(secteur),
+        montant: Math.round(montant),
+        pourcentage: Math.round((montant / total) * 100),
+      }))
+      .sort((a, b) => b.montant - a.montant);
+  }
 
   async getTableauBord(orgId: string) {
     const now = new Date();

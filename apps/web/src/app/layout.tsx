@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'sonner';
+import PWARegister from '@/components/pwa/PWARegister';
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -40,14 +43,21 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Locale résolue côté serveur : cookie NEXT_LOCALE → Accept-Language → 'fr'
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${plusJakarta.variable} font-sans antialiased bg-neutral-50 text-neutral-800`}>
-        <Providers>
-          {children}
-          <Toaster richColors position="top-right" />
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            {children}
+            <Toaster richColors position="top-right" />
+            <PWARegister />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

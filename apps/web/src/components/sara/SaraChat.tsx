@@ -15,6 +15,11 @@ export default function SaraChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Identifiant de session stable côté client — sert au suivi et aux quotas serveur.
+  const sessionIdRef = useRef<string>('');
+  if (!sessionIdRef.current) {
+    sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,7 +36,7 @@ export default function SaraChat() {
       const res = await fetch('/api/sara', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, sessionId: sessionIdRef.current }),
       });
       const data = await res.json();
       setMessages([...newMessages, { role: 'assistant', content: data.content || 'Désolée, je n\'ai pas pu répondre. Veuillez réessayer.' }]);

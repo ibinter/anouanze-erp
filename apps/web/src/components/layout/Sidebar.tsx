@@ -8,7 +8,7 @@ import {
   BarChart3, Settings, Shield, Calendar, HelpCircle,
   ChevronLeft, ChevronRight, Landmark, Briefcase,
   PiggyBank, UserSquare2, PackageSearch, Bot, X,
-  MessageSquare, Upload, CreditCard,
+  MessageSquare, Upload, CreditCard, GraduationCap,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -57,6 +57,7 @@ const navSections = [
       { label: 'Assistant IA', href: '/ia', icon: Bot, tourId: 'ia' },
       { label: 'Import de données', href: '/import', icon: Upload },
       { label: 'Audit', href: '/audit', icon: Shield },
+      { label: 'Académie', href: '/academie', icon: GraduationCap },
       { label: 'Support', href: '/tickets', icon: MessageSquare },
     ],
   },

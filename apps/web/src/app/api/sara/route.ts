@@ -1,99 +1,139 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { getSaraConfig } from '@/lib/sara/config';
+import { getProviderStatuses, runSara } from '@/lib/sara/engine';
+import {
+  consumeSessionQuota,
+  getActiveSessionCount,
+  sanitizeMessages,
+} from '@/lib/sara/guardrails';
+import {
+  QUOTA_REACHED_ANSWER,
+  SERVICE_UNAVAILABLE_ANSWER,
+} from '@/lib/sara/system-prompt';
+import {
+  getAverageLatencyMs,
+  getCounters,
+  getLogCount,
+  getLogs,
+  pushLog,
+  recordQuotaBlock,
+  recordRequest,
+} from '@/lib/sara/telemetry';
+import { resolveFallbackProviderId, resolvePrimaryProviderId } from '@/lib/sara/providers';
 
-const SYSTEM_PROMPT = `Tu es SARA, l'assistante virtuelle intelligente d'ANOUANZÊ ERP, la solution de gestion tout-en-un pour les associations, ONG et organisations à but non lucratif d'Afrique francophone, éditée par IBIG SOFT (Intermark Business International Group).
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-Tu aides les visiteurs du site à :
-- Comprendre les fonctionnalités d'ANOUANZÊ ERP (12 modules : Gouvernance, Membres, Donateurs, Projets MEAL, RH, Comptabilité SYCEBNL, Budget, Achats, Documents, Événements, Rapports BI, Assistant IA)
-- Choisir le bon plan tarifaire (Essentiel 12 900 FCFA/mois, Starter 29 900 FCFA/mois, Pro 59 900 FCFA/mois, Enterprise sur devis)
-- Comprendre la conformité SYCEBNL et OHADA
-- Démarrer un essai gratuit (30 jours sans carte bancaire)
-- Contacter l'équipe IBIG SOFT
-
-Coordonnées IBIG SOFT :
-- Email : contact@ibigsoft.com
-- Tél : +225 27 22 27 60 14 / +225 05 55 05 99 01
-- Site : ibigsoft.com
-- Partenaires : ibigpartners.com
-
-Règles :
-- Réponds toujours en français, de manière cordiale, professionnelle et concise
-- Si la question dépasse tes connaissances sur le produit, redirige vers contact@ibigsoft.com
-- Mets en valeur les avantages d'ANOUANZÊ ERP pour les ONG africaines
-- Utilise **texte** pour le gras quand c'est pertinent
-- Sois proactive : propose des démonstrations, des essais gratuits`;
-
-// Store in-memory pour tracking admin (réinitialisé au redémarrage)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const saraLogs: Array<{
-  id: string;
-  timestamp: string;
-  userMessage: string;
-  saraResponse: string;
-  sessionId: string;
-}> = [];
-
+/**
+ * POST /api/sara — Chat SARA.
+ * Contrat de réponse inchangé pour le client : { content, sessionId }.
+ * Les clés API restent strictement côté serveur : aucune n'est renvoyée.
+ */
 export async function POST(req: NextRequest) {
+  const config = getSaraConfig();
+  recordRequest();
+
   try {
-    const { messages, sessionId } = await req.json();
-    const sid = sessionId || `session_${Date.now()}`;
+    const body = (await req.json()) as { messages?: unknown; sessionId?: unknown };
+    const sid =
+      typeof body.sessionId === 'string' && body.sessionId.trim()
+        ? body.sessionId.trim().slice(0, 100)
+        : `session_${Date.now()}`;
 
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey) {
-      return NextResponse.json({ content: 'Service temporairement indisponible. Contactez-nous à contact@ibigsoft.com.' });
+    const sanitized = sanitizeMessages(body.messages, config);
+    if (!sanitized.ok || !sanitized.lastUserMessage) {
+      return NextResponse.json({
+        content: 'Je n\'ai pas reçu de question exploitable. Pouvez-vous reformuler ?',
+        sessionId: sid,
+      });
     }
 
-    const groqMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages.map((m: { role: string; content: string }) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    ];
+    // Quota de messages par session.
+    const quota = consumeSessionQuota(sid, config);
+    if (!quota.allowed) {
+      recordQuotaBlock();
+      return NextResponse.json({ content: QUOTA_REACHED_ANSWER, sessionId: sid });
+    }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
+    const result = await runSara(sanitized.messages, sanitized.lastUserMessage);
+
+    pushLog(
+      {
+        id: `sara_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: new Date().toISOString(),
+        userMessage: sanitized.lastUserMessage,
+        saraResponse: result.content,
+        sessionId: sid,
+        provider: result.provider,
+        model: result.model,
+        fallbackUsed: result.fallbackUsed,
+        latencyMs: result.latencyMs,
+        totalTokens: result.totalTokens,
       },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: groqMessages,
-        max_tokens: 512,
-        temperature: 0.7,
-      }),
-    });
+      config.maxLogEntries,
+    );
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('Groq error:', err);
-      return NextResponse.json({ content: 'Je rencontre une difficulté technique. Réessayez ou contactez contact@ibigsoft.com.' });
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || 'Je n\'ai pas pu générer de réponse.';
-
-    // Log pour admin console
-    const userMessage = messages[messages.length - 1]?.content || '';
-    saraLogs.unshift({
-      id: `sara_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      userMessage,
-      saraResponse: content,
-      sessionId: sid,
-    });
-    if (saraLogs.length > 500) saraLogs.splice(500);
-
-    return NextResponse.json({ content, sessionId: sid });
+    return NextResponse.json({ content: result.content, sessionId: sid });
   } catch (error) {
-    console.error('SARA error:', error);
-    return NextResponse.json({ content: 'Une erreur est survenue. Contactez-nous à contact@ibigsoft.com.' });
+    console.error('[SARA] Erreur route :', error instanceof Error ? error.message : error);
+    return NextResponse.json({ content: SERVICE_UNAVAILABLE_ANSWER });
   }
 }
 
-export async function GET() {
+/**
+ * GET /api/sara — Console superadmin (lecture seule).
+ * Expose le fournisseur actif, le modèle, le statut et les compteurs.
+ * N'expose JAMAIS de clé API — uniquement un booléen « configuré ».
+ *
+ * Accès réservé au rôle SUPER_ADMIN : cet endpoint restitue les conversations
+ * des visiteurs, il ne doit pas être public.
+ */
+export async function GET(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || (token as { role?: string }).role !== 'SUPER_ADMIN') {
+    return NextResponse.json({ error: 'Accès non autorisé.' }, { status: 401 });
+  }
+
+  const config = getSaraConfig();
+  const primary = resolvePrimaryProviderId();
+  const fallback = resolveFallbackProviderId(primary);
+  const providers = getProviderStatuses();
+  const counters = getCounters();
+
+  const primaryStatus = providers.find((p) => p.id === primary);
+  const operational = providers.some((p) => p.configured);
+
   return NextResponse.json({
-    total: saraLogs.length,
-    logs: saraLogs.slice(0, 100),
+    total: getLogCount(),
+    logs: getLogs(100),
+    engine: {
+      primaryProvider: primary,
+      primaryModel: primaryStatus?.model ?? null,
+      primaryConfigured: primaryStatus?.configured ?? false,
+      fallbackProvider: fallback,
+      status: operational ? 'operationnel' : 'non-configure',
+      providers,
+    },
+    limits: {
+      maxMessagesPerSession: config.maxMessagesPerSession,
+      maxTokens: config.maxTokens,
+      maxInputChars: config.maxInputChars,
+      maxHistoryTurns: config.maxHistoryTurns,
+      timeoutMs: config.timeoutMs,
+      temperature: config.temperature,
+    },
+    usage: {
+      requests: counters.requests,
+      success: counters.success,
+      errors: counters.errors,
+      fallbacks: counters.fallbacks,
+      quotaBlocks: counters.quotaBlocks,
+      totalTokens: counters.totalTokens,
+      averageLatencyMs: getAverageLatencyMs(),
+      activeSessions: getActiveSessionCount(),
+      byProvider: counters.byProvider,
+      startedAt: counters.startedAt,
+    },
   });
 }

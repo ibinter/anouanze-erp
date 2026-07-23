@@ -3,18 +3,21 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
 
+// Les ancres restent en français : ce sont les `id` des sections de la landing.
 const NAV_LINKS = [
-  { href: '#fonctionnalites', label: 'Fonctionnalités' },
-  { href: '#comment-ca-marche', label: 'Comment ça marche' },
-  { href: '#tarifs', label: 'Tarifs' },
-  { href: '#temoignages', label: 'Témoignages' },
-  { href: '#faq', label: 'FAQ' },
-  { href: '/contact', label: 'Contact' },
-];
+  { href: '#fonctionnalites', key: 'features' },
+  { href: '#comment-ca-marche', key: 'howItWorks' },
+  { href: '#tarifs', key: 'pricing' },
+  { href: '#temoignages', key: 'testimonials' },
+  { href: '#faq', key: 'faq' },
+  { href: '/contact', key: 'contact' },
+] as const;
 
 export default function LandingNav() {
+  const t = useTranslations('nav');
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function LandingNav() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0 min-w-0" onClick={close}>
-            <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0" />
+            <img src="/logo.svg" alt={t('logoAlt')} className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0" />
             <div className="flex items-baseline gap-1 leading-none min-w-0">
               <span className="font-extrabold text-primary-700 text-base sm:text-lg tracking-tight truncate">ANOUANZÊ</span>
               <span className="font-bold text-accent-400 text-[10px] sm:text-[11px] bg-accent-50 border border-accent-200 px-1.5 py-0.5 rounded-md leading-none flex-shrink-0">ERP</span>
@@ -46,9 +49,9 @@ export default function LandingNav() {
 
           {/* Nav centre — xl only */}
           <div className="hidden xl:flex items-center gap-1 text-[13.5px] text-neutral-600 font-medium">
-            {NAV_LINKS.map(({ href, label }) => (
+            {NAV_LINKS.map(({ href, key }) => (
               <a key={href} href={href} className="hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
-                {label}
+                {t(key)}
               </a>
             ))}
           </div>
@@ -62,13 +65,13 @@ export default function LandingNav() {
               rel="noopener noreferrer"
               className="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent-500 hover:text-accent-600 border border-accent-300 hover:border-accent-400 hover:bg-accent-50 px-3 py-2 rounded-xl transition-colors whitespace-nowrap"
             >
-              🤝 Devenir partenaire
+              {t('partner')}
             </a>
             <Link href="/login" className="text-[13px] font-semibold text-neutral-700 hover:text-primary-600 hover:bg-neutral-100 transition-colors px-3 py-2 rounded-lg whitespace-nowrap">
-              Connexion
+              {t('login')}
             </Link>
             <Link href="/demo" className="bg-primary-600 hover:bg-primary-700 text-white text-[13px] font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-px whitespace-nowrap">
-              Essai gratuit
+              {t('trial')}
             </Link>
           </div>
 
@@ -78,7 +81,7 @@ export default function LandingNav() {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-700 flex-shrink-0"
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menuOpen ? t('closeMenu') : t('openMenu')}
               aria-expanded={menuOpen}
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -100,14 +103,14 @@ export default function LandingNav() {
           >
             {/* Liens nav */}
             <div className="px-4 py-3 space-y-0.5">
-              {NAV_LINKS.map(({ href, label }) => (
+              {NAV_LINKS.map(({ href, key }) => (
                 <a
                   key={href}
                   href={href}
                   onClick={close}
                   className="flex items-center py-3 px-4 rounded-xl text-base font-semibold text-neutral-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
                 >
-                  {label}
+                  {t(key)}
                 </a>
               ))}
               <a
@@ -117,7 +120,7 @@ export default function LandingNav() {
                 onClick={close}
                 className="flex items-center py-3 px-4 rounded-xl text-base font-semibold text-accent-500 hover:bg-accent-50 transition-colors"
               >
-                🤝 Devenir partenaire
+                {t('partner')}
               </a>
             </div>
 
@@ -128,14 +131,14 @@ export default function LandingNav() {
                 onClick={close}
                 className="flex items-center justify-center w-full py-3.5 rounded-xl border-2 border-neutral-200 text-base font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
-                Connexion
+                {t('login')}
               </Link>
               <Link
                 href="/demo"
                 onClick={close}
                 className="flex items-center justify-center w-full py-3.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-base font-bold transition-colors shadow-sm"
               >
-                Essai gratuit — 30 jours →
+                {t('trialMobile')}
               </Link>
             </div>
           </div>
