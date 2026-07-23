@@ -12,7 +12,15 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { PaiementsService } from './paiements.service';
 import { InitierPaiementDto } from './dto/initier-paiement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
+// Attention : les routes `webhook/*` sont volontairement publiques (appels
+// entrants des agrégateurs de paiement) — ni JwtAuthGuard ni RolesGuard.
 @ApiTags('paiements')
 @Controller('api/v1/paiements')
 export class PaiementsController {
@@ -20,7 +28,8 @@ export class PaiementsController {
 
   @Post('initier')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Initier un paiement' })
   initierPaiement(@Request() req, @Body() dto: InitierPaiementDto) {
     return this.paiementsService.initierPaiement(req.user.organisationId, dto);
@@ -28,7 +37,8 @@ export class PaiementsController {
 
   @Get('statut/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_LECTURE_LARGE)
   @ApiOperation({ summary: 'Vérifier le statut d\'une transaction' })
   verifierStatut(@Param('id') id: string): Promise<any> {
     return this.paiementsService.verifierStatut(id);
@@ -48,7 +58,8 @@ export class PaiementsController {
 
   @Get('transactions')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_LECTURE_LARGE)
   @ApiOperation({ summary: 'Liste des transactions' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -71,7 +82,8 @@ export class PaiementsController {
 
   @Get('stats')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_LECTURE_LARGE)
   @ApiOperation({ summary: 'Statistiques de paiement' })
   getStats(@Request() req) {
     return this.paiementsService.getStats(req.user.organisationId);

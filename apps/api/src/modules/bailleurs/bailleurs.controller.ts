@@ -11,6 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { BailleursService } from './bailleurs.service';
 import { CreateBailleurDto } from './dto/create-bailleur.dto';
 import { CreateConventionDto } from './dto/create-convention.dto';
@@ -18,7 +24,9 @@ import { CreateDecaissementDto } from './dto/create-decaissement.dto';
 
 @ApiTags('bailleurs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/bailleurs')
 export class BailleursController {
   constructor(private readonly bailleursService: BailleursService) {}
@@ -48,12 +56,14 @@ export class BailleursController {
   }
 
   @ApiOperation({ summary: 'Créer un bailleur' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Post()
   create(@Request() req: any, @Body() dto: CreateBailleurDto) {
     return this.bailleursService.create(req.user.organisationId, dto);
   }
 
   @ApiOperation({ summary: 'Modifier un bailleur' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Put(':id')
   update(
     @Param('id') id: string,
@@ -70,6 +80,7 @@ export class BailleursController {
   }
 
   @ApiOperation({ summary: 'Créer une convention' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Post(':id/conventions')
   createConvention(@Param('id') id: string, @Body() dto: CreateConventionDto) {
     return this.bailleursService.createConvention(id, dto);
@@ -82,6 +93,7 @@ export class BailleursController {
   }
 
   @ApiOperation({ summary: 'Créer un décaissement' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Post('conventions/:conventionId/decaissements')
   createDecaissement(
     @Param('conventionId') conventionId: string,

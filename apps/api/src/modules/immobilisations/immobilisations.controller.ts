@@ -19,10 +19,18 @@ import { ImmobilisationsService } from './immobilisations.service';
 import { CreateImmobilisationDto } from './dto/create-immobilisation.dto';
 import { CederImmobilisationDto } from './dto/ceder-immobilisation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('immobilisations')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/immobilisations')
 export class ImmobilisationsController {
   constructor(private readonly immobilisationsService: ImmobilisationsService) {}
@@ -62,18 +70,21 @@ export class ImmobilisationsController {
   }
 
   @Post()
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Enregistrer une immobilisation' })
   create(@Request() req, @Body() dto: CreateImmobilisationDto) {
     return this.immobilisationsService.create(req.user.organisationId, dto);
   }
 
   @Put(':id')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Modifier une immobilisation' })
   update(@Param('id') id: string, @Request() req, @Body() dto: Partial<CreateImmobilisationDto>) {
     return this.immobilisationsService.update(id, req.user.organisationId, dto);
   }
 
   @Post(':id/ceder')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Enregistrer la cession d\'une immobilisation' })
   ceder(@Param('id') id: string, @Request() req, @Body() dto: CederImmobilisationDto) {
     return this.immobilisationsService.ceder(id, req.user.organisationId, dto);

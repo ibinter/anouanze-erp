@@ -174,6 +174,14 @@ model Organisation {
   exerciceComptableDebut Int          @default(1)   // mois (1=janvier)
   exerciceComptableFin   Int          @default(12)  // mois
   actif             Boolean           @default(true)
+
+  // Cycle d'essai / abonnement
+  dateDebutEssai         DateTime?
+  dateFinEssai           DateTime?
+  statutAbonnement       StatutAbonnement @default(ESSAI)
+  relanceEssaiJ7EnvoyeeLe DateTime?
+  relanceEssaiJ1EnvoyeeLe DateTime?
+
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -201,6 +209,8 @@ model Organisation {
   resolutions       Resolution[]
   notifications     Notification[]
   tickets           TicketSupport[]
+  invitations       Invitation[]
+  emailLogs         EmailLog[]
 
   @@map("organisations")
 }
@@ -235,6 +245,7 @@ model Utilisateur {
   documents      Document[]    @relation("DocumentCree")
   notifications  Notification[]
   tickets        TicketSupport[]
+  preferencesNotification PreferenceNotification[]
 
   @@map("utilisateurs")
 }
@@ -1144,4 +1155,127 @@ model MessageTicket {
   ticket    TicketSupport @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@map("messages_ticket")
+}
+
+// ============================================================
+// PROSPECTS (cycle commercial — formulaire de démonstration)
+// ============================================================
+
+enum StatutProspect {
+  NOUVEAU
+  A_CONTACTER
+  CONTACTE
+  QUALIFIE
+  DEMO_PREVUE
+  DEMO_REALISEE
+  OFFRE_ENVOYEE
+  NEGOCIATION
+  GAGNE
+  PERDU
+}
+
+model Prospect {
+  id                String         @id @default(uuid())
+  nom               String
+  prenom            String?
+  email             String
+  telephone         String?
+  organisation      String?
+  fonction          String?
+  pays              String?
+  secteur           String?
+  tailleStructure   String?
+  besoin            String?
+  nbUtilisateurs    Int?
+  dateSouhaitee     DateTime?
+  source            String?        @default("site-web")
+  statut            StatutProspect @default(NOUVEAU)
+  consentement      Boolean        @default(false)
+  notes             String?
+  relanceJ3EnvoyeeLe DateTime?
+  relanceJ7EnvoyeeLe DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([statut])
+  @@index([email])
+  @@map("prospects")
+}
+
+// ============================================================
+// INVITATIONS
+// ============================================================
+
+model Invitation {
+  id             String          @id @default(uuid())
+  email          String
+  token          String          @unique
+  role           RoleUtilisateur @default(LECTEUR)
+  organisationId String
+  expireLe       DateTime
+  accepteeLe     DateTime?
+  statut         String          @default("EN_ATTENTE") // EN_ATTENTE | ACCEPTEE | EXPIREE | ANNULEE
+  createdAt      DateTime        @default(now())
+
+  organisation   Organisation    @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([email])
+  @@map("invitations")
+}
+
+// ============================================================
+// ABONNEMENT / ESSAI
+// ============================================================
+
+enum StatutAbonnement {
+  ESSAI
+  ACTIF
+  SUSPENDU
+  EXPIRE
+}
+
+// ============================================================
+// PRÉFÉRENCES DE NOTIFICATION
+// ============================================================
+
+enum CanalNotification {
+  EMAIL
+  APPLICATION
+}
+
+model PreferenceNotification {
+  id             String            @id @default(uuid())
+  utilisateurId  String
+  canal          CanalNotification
+  typeEvenement  String            // ex. « cotisation-retard », « budget-seuil », « * »
+  actif          Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  utilisateur    Utilisateur       @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+
+  @@unique([utilisateurId, canal, typeEvenement])
+  @@map("preferences_notification")
+}
+
+// ============================================================
+// JOURNAL DES EMAILS
+// ============================================================
+
+model EmailLog {
+  id             String        @id @default(uuid())
+  destinataire   String
+  sujet          String
+  template       String
+  statut         String        @default("ENVOYE") // ENVOYE | ECHEC | IGNORE
+  erreur         String?
+  organisationId String?
+  createdAt      DateTime      @default(now())
+
+  organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+
+  @@index([destinataire])
+  @@index([template])
+  @@map("email_logs")
 }

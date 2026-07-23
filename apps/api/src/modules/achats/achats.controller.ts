@@ -14,10 +14,19 @@ import { AchatsService } from './achats.service';
 import { CreateFournisseurDto } from './dto/create-fournisseur.dto';
 import { CreateCommandeDto } from './dto/create-commande.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ADMIN,
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('achats')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/achats')
 export class AchatsController {
   constructor(private readonly achatsService: AchatsService) {}
@@ -41,12 +50,14 @@ export class AchatsController {
   }
 
   @Post('fournisseurs')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer un fournisseur' })
   createFournisseur(@Request() req, @Body() dto: CreateFournisseurDto) {
     return this.achatsService.createFournisseur(req.user.organisationId, dto);
   }
 
   @Patch('fournisseurs/:id')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Modifier un fournisseur' })
   updateFournisseur(
     @Param('id') id: string,
@@ -87,18 +98,21 @@ export class AchatsController {
   }
 
   @Post('commandes')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer une commande' })
   createCommande(@Request() req, @Body() dto: CreateCommandeDto) {
     return this.achatsService.createCommande(req.user.organisationId, dto);
   }
 
   @Post('commandes/:id/valider')
+  @Roles(...ROLES_ADMIN)
   @ApiOperation({ summary: 'Valider une commande' })
   validerCommande(@Param('id') id: string, @Request() req) {
     return this.achatsService.validerCommande(id, req.user.organisationId);
   }
 
   @Post('commandes/:id/recevoir')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Marquer une commande comme reçue' })
   recevoirCommande(@Param('id') id: string, @Request() req) {
     return this.achatsService.recevoirCommande(id, req.user.organisationId);

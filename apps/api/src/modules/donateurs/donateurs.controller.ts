@@ -12,13 +12,21 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { DonateursService } from './donateurs.service';
 import { CreateDonateurDto } from './dto/create-donateur.dto';
 import { CreateDonDto } from './dto/create-don.dto';
 
 @ApiTags('donateurs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : lecture ouverte à tous les rôles ; chaque écriture redéclare @Roles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/donateurs')
 export class DonateursController {
   constructor(private readonly donateursService: DonateursService) {}
@@ -54,12 +62,14 @@ export class DonateursController {
   }
 
   @ApiOperation({ summary: 'Créer un donateur' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Post()
   create(@Request() req: any, @Body() dto: CreateDonateurDto) {
     return this.donateursService.create(req.user.organisationId, dto);
   }
 
   @ApiOperation({ summary: 'Modifier un donateur' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Put(':id')
   update(
     @Param('id') id: string,
@@ -83,12 +93,14 @@ export class DonateursController {
   }
 
   @ApiOperation({ summary: 'Enregistrer un don' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Post(':id/dons')
   createDon(@Param('id') id: string, @Body() dto: CreateDonDto) {
     return this.donateursService.createDon(id, dto);
   }
 
   @ApiOperation({ summary: 'Générer un reçu de don' })
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @Patch('dons/:donId/recu')
   genererRecu(@Param('donId') donId: string) {
     return this.donateursService.genererRecu(donId);

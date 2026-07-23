@@ -21,10 +21,20 @@ import { CreateCompteDto } from './dto/create-compte.dto';
 import { CreateJournalDto } from './dto/create-journal.dto';
 import { CreateEcritureDto } from './dto/create-ecriture.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_FINANCE,
+  ROLES_LECTURE_LARGE,
+  ROLES_ADMIN,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('comptabilite')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut du contrôleur : lecture ouverte à tous les rôles.
+// Chaque route d'écriture redéclare @Roles et écrase ce défaut.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/comptabilite')
 export class ComptabiliteController {
   constructor(private readonly comptabiliteService: ComptabiliteService) {}
@@ -36,12 +46,14 @@ export class ComptabiliteController {
   }
 
   @Post('plan-comptable')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer un compte comptable' })
   createCompte(@Request() req, @Body() dto: CreateCompteDto) {
     return this.comptabiliteService.createCompte(req.user.organisationId, dto);
   }
 
   @Post('plan-comptable/init-sycebnl')
+  @Roles(...ROLES_ADMIN)
   @ApiOperation({ summary: 'Initialiser le plan comptable SYCEBNL standard' })
   initPlanComptable(@Request() req) {
     return this.comptabiliteService.initPlanComptableSYCEBNL(req.user.organisationId);
@@ -54,6 +66,7 @@ export class ComptabiliteController {
   }
 
   @Post('journaux')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer un journal comptable' })
   createJournal(@Request() req, @Body() dto: CreateJournalDto) {
     return this.comptabiliteService.createJournal(req.user.organisationId, dto);
@@ -81,12 +94,14 @@ export class ComptabiliteController {
   }
 
   @Post('ecritures')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Créer une écriture comptable' })
   createEcriture(@Request() req, @Body() dto: CreateEcritureDto) {
     return this.comptabiliteService.createEcriture(req.user.organisationId, dto);
   }
 
   @Post('ecritures/:id/valider')
+  @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: 'Valider une écriture comptable' })
   validerEcriture(@Param('id') id: string, @Request() req) {
     return this.comptabiliteService.validerEcriture(id, req.user.organisationId);

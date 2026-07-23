@@ -15,6 +15,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_RH,
+  ROLES_LECTURE_RH,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { RhService } from './rh.service';
 import { CreateEmployeDto } from './dto/create-employe.dto';
 import { GenererFichePaieDto } from './dto/generer-fiche-paie.dto';

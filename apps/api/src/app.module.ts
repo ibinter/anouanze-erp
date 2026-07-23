@@ -34,6 +34,7 @@ import { GouvernanceModule } from './modules/gouvernance/gouvernance.module';
 import { NotificationsRestModule } from './modules/notifications-rest/notifications-rest.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { ImportModule } from './modules/import/import.module';
+import { ProspectsModule } from './modules/prospects/prospects.module';
 import { StorageModule } from './common/storage/storage.module';
 import { OrganisationGuard } from './common/guards/organisation.guard';
 import { EmailModule } from './common/email/email.module';
@@ -92,6 +93,7 @@ import { NotificationsModule } from './common/notifications/notifications.module
     NotificationsRestModule,
     TicketsModule,
     ImportModule,
+    ProspectsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
