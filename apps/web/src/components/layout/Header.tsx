@@ -1,11 +1,12 @@
 'use client';
 
-import { Bell, Search, ChevronDown, X, Menu } from 'lucide-react';
+import { Search, ChevronDown, X, Menu } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface SearchResult {
   type: 'membre' | 'projet' | 'donateur' | 'bailleur' | 'document';
@@ -229,10 +230,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
         <ThemeToggle />
 
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent-400 rounded-full" />
-        </button>
+        <NotificationBell />
 
         {/* Profil */}
         <div className="relative">

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Search, Plus, Heart, TrendingUp, Calendar, Eye, X, Coins } from 'lucide-react';
@@ -206,6 +208,7 @@ function NouveauDonModal({ donateur, onClose }: { donateur: Donateur; onClose: (
 }
 
 export default function DonateursPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -262,12 +265,19 @@ export default function DonateursPage() {
       render: (r) => <span className="font-mono font-semibold">{formatMontant(toNum((r as any).totalDons))}</span>,
     },
     {
-      key: 'actions', header: 'Actions', width: '160px',
+      key: 'actions', header: 'Actions', width: '220px',
       render: (r) => (
         <div className="flex items-center gap-2">
+          <Link
+            href={`/donateurs/${r.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-primary-600 hover:underline font-medium"
+          >
+            Voir la fiche
+          </Link>
           <button
             onClick={(e) => { e.stopPropagation(); setSelected(r); }}
-            className="flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium"
+            className="flex items-center gap-1 text-xs text-neutral-500 hover:underline font-medium"
           >
             <Eye className="w-3 h-3" /> Historique
           </button>
@@ -363,7 +373,7 @@ export default function DonateursPage() {
         columns={columns as Column<Donateur & Record<string, unknown>>[]}
         data={donateurs as (Donateur & Record<string, unknown>)[]}
         isLoading={isLoading}
-        onRowClick={(r) => setSelected(r as Donateur)}
+        onRowClick={(r) => router.push(`/donateurs/${(r as Donateur).id}`)}
       />
 
       {total > limit && (
@@ -389,12 +399,17 @@ export default function DonateursPage() {
                 <p className="text-sm font-semibold text-neutral-700">{(selected as any)._count?.dons ?? dons.length} don(s)</p>
                 <p className="text-xs text-neutral-500">Total : <span className="font-mono font-semibold text-primary-700">{formatMontant(dons.reduce((s, d) => s + toNum(d.montant), 0))}</span></p>
               </div>
-              <button
-                onClick={() => { setDonForModal(selected); setSelected(null); }}
-                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
-              >
-                <Plus className="w-3 h-3" /> Nouveau don
-              </button>
+              <div className="flex items-center gap-2">
+                <Link href={`/donateurs/${selected.id}`} className="btn-secondary text-xs py-1.5 px-3">
+                  Fiche complète
+                </Link>
+                <button
+                  onClick={() => { setDonForModal(selected); setSelected(null); }}
+                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Nouveau don
+                </button>
+              </div>
             </div>
             <div className="space-y-3">
               {donsLoading && <p className="text-sm text-neutral-400 text-center py-4">Chargement…</p>}

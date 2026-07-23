@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatDate, formatMontant, toNum, cn } from '@/lib/utils';
@@ -130,11 +132,20 @@ function ProjetCard({
         </div>
       )}
 
-      <span className="mt-auto inline-flex items-center gap-2 text-sm font-medium text-primary-600 group-hover:gap-3 transition-all">
-        Voir détails
-        <ArrowRight className="w-3.5 h-3.5" />
-      </span>
-    </button>
+      <div className="mt-auto flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 group-hover:gap-3 transition-all">
+          Voir la fiche
+          <ArrowRight className="w-3.5 h-3.5" />
+        </span>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onApercu(); }}
+          className="text-xs text-neutral-500 hover:text-neutral-700 hover:underline"
+        >
+          Aperçu rapide
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -204,6 +215,7 @@ function ProjetDetail({ projet }: { projet: Projet }) {
 const PROJET_INIT = { nom: '', description: '', statut: 'EN_COURS' as string, dateDebut: '', dateFin: '', budgetTotal: '' };
 
 export default function ProjetsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [statut, setStatut] = useState('');
   const [secteur, setSecteur] = useState('');
@@ -340,7 +352,12 @@ export default function ProjetsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projets.map((projet) => (
-            <ProjetCard key={projet.id} projet={projet} onClick={() => setSelectedProjet(projet)} />
+            <ProjetCard
+              key={projet.id}
+              projet={projet}
+              onOpen={() => router.push(`/projets/${projet.id}`)}
+              onApercu={() => setSelectedProjet(projet)}
+            />
           ))}
         </div>
       )}
@@ -401,6 +418,13 @@ export default function ProjetsPage() {
         onOpenChange={(open) => { if (!open) setSelectedProjet(null); }}
         title={selectedProjet?.nom ?? 'Détail du projet'}
         size="lg"
+        footer={
+          selectedProjet ? (
+            <Link href={`/projets/${selectedProjet.id}`} className="btn-primary">
+              Ouvrir la fiche complète
+            </Link>
+          ) : undefined
+        }
       >
         {selectedProjet && <ProjetDetail projet={selectedProjet} />}
       </Modal>

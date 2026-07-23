@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Search, Globe, Plus, Building2, FileText, MapPin } from 'lucide-react';
@@ -40,6 +42,7 @@ const BAILLEUR_TYPES = ['MULTILATERAL', 'BILATERAL', 'FONDATION', 'PRIVE'];
 const FORM_INIT = { nom: '', sigle: '', type: 'BILATERAL', pays: '', contactNom: '', contactEmail: '' };
 
 export default function BailleursPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Bailleur | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -120,14 +123,23 @@ export default function BailleursPage() {
       render: (r) => <span className="badge badge-neutral">{(r as any)._count?.conventions ?? 0}</span>,
     },
     {
-      key: 'actions', header: '', width: '100px',
+      key: 'actions', header: '', width: '190px',
       render: (r) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); setSelected(selected?.id === r.id ? null : r); }}
-          className={cn('text-xs font-medium', selected?.id === r.id ? 'text-accent-400' : 'text-primary-600 hover:underline')}
-        >
-          {selected?.id === r.id ? 'Masquer' : 'Conventions'}
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/bailleurs/${r.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs font-medium text-primary-600 hover:underline"
+          >
+            Voir la fiche
+          </Link>
+          <button
+            onClick={(e) => { e.stopPropagation(); setSelected(selected?.id === r.id ? null : r); }}
+            className={cn('text-xs font-medium', selected?.id === r.id ? 'text-accent-400' : 'text-neutral-500 hover:underline')}
+          >
+            {selected?.id === r.id ? 'Masquer' : 'Conventions'}
+          </button>
+        </div>
       ),
     },
   ];
@@ -189,15 +201,20 @@ export default function BailleursPage() {
         columns={columns as Column<Bailleur & Record<string, unknown>>[]}
         data={bailleurs as (Bailleur & Record<string, unknown>)[]}
         isLoading={isLoading}
-        onRowClick={(r) => setSelected(selected?.id === (r as Bailleur).id ? null : (r as Bailleur))}
+        onRowClick={(r) => router.push(`/bailleurs/${(r as Bailleur).id}`)}
       />
 
       {selected && (
         <div className="space-y-4">
-          <h2 className="text-base font-semibold text-neutral-700">
-            Conventions — {selected.nom}
-            <span className="ml-2 badge badge-neutral">{conventions.length}</span>
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-neutral-700">
+              Conventions — {selected.nom}
+              <span className="ml-2 badge badge-neutral">{conventions.length}</span>
+            </h2>
+            <Link href={`/bailleurs/${selected.id}`} className="btn-secondary text-xs py-1.5 px-3">
+              Fiche complète
+            </Link>
+          </div>
           {convLoading && <p className="text-sm text-neutral-400">Chargement des conventions…</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {conventions.map((conv) => {
