@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, ChevronRight, ChevronDown, FileSpreadsheet, FileText as FilePdf } from 'lucide-react';
@@ -13,12 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatMontant, formatDate, toNum, cn } from '@/lib/utils';
 
-const TABS = [
-  { id: 'plan', label: 'Plan comptable' },
-  { id: 'journal', label: 'Journal' },
-  { id: 'ecritures', label: 'Écritures' },
-  { id: 'balance', label: 'Balance' },
-];
+const TAB_IDS = ['plan', 'journal', 'ecritures', 'balance'] as const;
 
 interface CompteComptable {
   id?: string;
@@ -53,6 +49,8 @@ interface BalanceLigne {
 }
 
 function PlanComptable() {
+  const t = useTranslations('finance.comptabilite');
+  const tc = useTranslations('finance.common');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const { data, isLoading } = useQuery({
@@ -72,10 +70,10 @@ function PlanComptable() {
     grouped[cls].push(c);
   });
 
-  if (isLoading) return <div className="card p-6 text-center text-neutral-400 text-sm">Chargement…</div>;
+  if (isLoading) return <div className="card p-6 text-center text-neutral-400 text-sm">{tc('loading')}</div>;
 
   if (Object.keys(grouped).length === 0) {
-    return <div className="card p-6 text-center text-neutral-400 text-sm">Plan comptable vide. Initialisez le plan SYCEBNL.</div>;
+    return <div className="card p-6 text-center text-neutral-400 text-sm">{t('plan.empty')}</div>;
   }
 
   return (
@@ -92,7 +90,7 @@ function PlanComptable() {
               <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
             )}
             <span className="font-semibold text-primary-600 w-8 shrink-0">{cls}</span>
-            <span className="font-medium text-neutral-800">Classe {cls}</span>
+            <span className="font-medium text-neutral-800">{t('plan.classe', { classe: cls })}</span>
             <span className="badge badge-neutral ml-auto">{comptes.length}</span>
           </button>
           {expanded[cls] && (
@@ -112,6 +110,8 @@ function PlanComptable() {
 }
 
 function TableauEcritures() {
+  const t = useTranslations('finance.comptabilite');
+  const tc = useTranslations('finance.common');
   const [page, setPage] = useState(1);
   const limit = 20;
 
@@ -138,17 +138,17 @@ function TableauEcritures() {
         <table className="w-full text-sm min-w-[540px]">
           <thead>
             <tr className="bg-neutral-50 border-b border-neutral-100">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Date</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Journal</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Libellé</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Débit</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Crédit</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Statut</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.date')}</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.journal')}</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.libelle')}</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.debit')}</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.credit')}</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('ecritures.statut')}</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">Chargement…</td></tr>}
-            {!isLoading && ecritures.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucune écriture.</td></tr>}
+            {isLoading && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">{tc('loading')}</td></tr>}
+            {!isLoading && ecritures.length === 0 && <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400 text-sm">{t('ecritures.empty')}</td></tr>}
             {ecritures.map((e) => {
               const debit = e.montantDebit != null
                 ? toNum(e.montantDebit)
@@ -167,8 +167,8 @@ function TableauEcritures() {
                   <td className="px-4 py-3 text-right font-mono text-neutral-800">{credit > 0 ? formatMontant(credit) : '—'}</td>
                   <td className="px-4 py-3 text-center">
                     {e.statut === 'VALIDE' || e.statut === 'valide'
-                      ? <span className="badge badge-success">Validé</span>
-                      : <span className="badge badge-warning">Brouillon</span>}
+                      ? <span className="badge badge-success">{t('ecritures.valide')}</span>
+                      : <span className="badge badge-warning">{t('ecritures.brouillon')}</span>}
                   </td>
                 </tr>
               );
@@ -182,6 +182,8 @@ function TableauEcritures() {
 }
 
 function Balance() {
+  const t = useTranslations('finance.comptabilite');
+  const tc = useTranslations('finance.common');
   const exercice = new Date().getFullYear();
 
   const { data, isLoading } = useQuery({
@@ -199,16 +201,16 @@ function Balance() {
       <table className="w-full text-sm min-w-[480px]">
         <thead>
           <tr className="bg-neutral-50 border-b border-neutral-100">
-            <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Compte</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Libellé</th>
-            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Débit cumulé</th>
-            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Crédit cumulé</th>
-            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Solde</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('balance.compte')}</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('balance.libelle')}</th>
+            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('balance.debitCumule')}</th>
+            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('balance.creditCumule')}</th>
+            <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('balance.solde')}</th>
           </tr>
         </thead>
         <tbody>
-          {isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Chargement…</td></tr>}
-          {!isLoading && lignes.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucune donnée pour l&apos;exercice {exercice}.</td></tr>}
+          {isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">{tc('loading')}</td></tr>}
+          {!isLoading && lignes.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">{t('balance.empty', { exercice: String(exercice) })}</td></tr>}
           {lignes.map((ligne, i) => {
             const debit = toNum(ligne.debitCumul ?? ligne.totalDebit);
             const credit = toNum(ligne.creditCumul ?? ligne.totalCredit);
@@ -235,6 +237,8 @@ function Balance() {
 interface LigneEcriture { compte: string; libelle: string; debit: string; credit: string; }
 
 function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations('finance.comptabilite');
+  const tc = useTranslations('finance.common');
   const [journalId, setJournalId] = useState('');
   const [libelle, setLibelle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -291,26 +295,26 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
       setError('');
       onClose();
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? tc('error')),
   });
 
   const handleSubmit = () => {
-    if (!libelle.trim()) { setError('Le libellé est requis.'); return; }
-    if (!journalId) { setError('Sélectionnez un journal.'); return; }
-    if (!equilibre) { setError("L'écriture n'est pas équilibrée (débit ≠ crédit)."); return; }
+    if (!libelle.trim()) { setError(t('errors.libelleRequis')); return; }
+    if (!journalId) { setError(t('errors.journalRequis')); return; }
+    if (!equilibre) { setError(t('errors.nonEquilibre')); return; }
     const missing = lignes.find((l) => l.compte && !compteMap[l.compte]);
-    if (missing) { setError(`Compte introuvable : ${missing.compte}`); return; }
+    if (missing) { setError(t('errors.compteIntrouvable', { compte: missing.compte })); return; }
     setError('');
     mutation.mutate();
   };
 
   return (
-    <Modal open={open} onOpenChange={onClose} title="Nouvelle écriture comptable" size="xl"
+    <Modal open={open} onOpenChange={onClose} title={t('modal.title')} size="xl"
       footer={
         <>
-          <button className="btn-secondary" onClick={onClose}>Annuler</button>
+          <button className="btn-secondary" onClick={onClose}>{tc('cancel')}</button>
           <button className="btn-primary" disabled={mutation.isPending} onClick={handleSubmit}>
-            {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
+            {mutation.isPending ? tc('saving') : tc('save')}
           </button>
         </>
       }
@@ -318,54 +322,54 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="label">Journal</label>
+            <label className="label">{t('modal.journal')}</label>
             <select className="input w-full" value={journalId} onChange={(e) => setJournalId(e.target.value)}>
-              <option value="">— Choisir —</option>
+              <option value="">{t('modal.chooseJournal')}</option>
               {journaux.map((j) => (
                 <option key={j.id} value={j.id}>{j.code} – {j.libelle}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="label">Date</label>
+            <label className="label">{t('modal.date')}</label>
             <input type="date" className="input w-full" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div>
-            <label className="label">Libellé général</label>
-            <input type="text" className="input w-full" placeholder="Libellé…" value={libelle} onChange={(e) => setLibelle(e.target.value)} />
+            <label className="label">{t('modal.libelleGeneral')}</label>
+            <input type="text" className="input w-full" placeholder={t('modal.libellePlaceholder')} value={libelle} onChange={(e) => setLibelle(e.target.value)} />
           </div>
         </div>
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="label mb-0">Lignes d&apos;écriture</label>
+            <label className="label mb-0">{t('modal.lignes')}</label>
             <button type="button" className="text-xs text-primary-600 hover:underline font-medium flex items-center gap-1"
               onClick={() => setLignes((prev) => [...prev, { compte: '', libelle: '', debit: '', credit: '' }])}>
-              <Plus className="w-3 h-3" /> Ajouter une ligne
+              <Plus className="w-3 h-3" /> {t('modal.addLigne')}
             </button>
           </div>
           <div className="border border-neutral-200 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-100">
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-neutral-500">Compte</th>
-                  <th className="text-left px-3 py-2 text-xs font-semibold text-neutral-500">Libellé</th>
-                  <th className="text-right px-3 py-2 text-xs font-semibold text-neutral-500">Débit</th>
-                  <th className="text-right px-3 py-2 text-xs font-semibold text-neutral-500">Crédit</th>
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-neutral-500">{t('modal.colCompte')}</th>
+                  <th className="text-left px-3 py-2 text-xs font-semibold text-neutral-500">{t('modal.colLibelle')}</th>
+                  <th className="text-right px-3 py-2 text-xs font-semibold text-neutral-500">{t('modal.colDebit')}</th>
+                  <th className="text-right px-3 py-2 text-xs font-semibold text-neutral-500">{t('modal.colCredit')}</th>
                   <th className="w-8" />
                 </tr>
               </thead>
               <tbody>
                 {lignes.map((ligne, i) => (
                   <tr key={i} className="border-b border-neutral-50">
-                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-20" placeholder="Ex: 52" value={ligne.compte} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, compte: e.target.value } : l))} /></td>
-                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-full" placeholder="Libellé" value={ligne.libelle} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, libelle: e.target.value } : l))} /></td>
-                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-28 text-right" placeholder="0" value={ligne.debit} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, debit: e.target.value } : l))} /></td>
-                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-28 text-right" placeholder="0" value={ligne.credit} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, credit: e.target.value } : l))} /></td>
+                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-20" placeholder={t('modal.comptePlaceholder')} value={ligne.compte} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, compte: e.target.value } : l))} /></td>
+                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-full" placeholder={t('modal.ligneLibellePlaceholder')} value={ligne.libelle} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, libelle: e.target.value } : l))} /></td>
+                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-28 text-right" placeholder={t('modal.montantPlaceholder')} value={ligne.debit} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, debit: e.target.value } : l))} /></td>
+                    <td className="px-2 py-1.5"><input className="input text-sm py-1 w-28 text-right" placeholder={t('modal.montantPlaceholder')} value={ligne.credit} onChange={(e) => setLignes((prev) => prev.map((l, idx) => idx === i ? { ...l, credit: e.target.value } : l))} /></td>
                     <td className="px-2 py-1.5">{lignes.length > 2 && <button type="button" onClick={() => setLignes((prev) => prev.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600">×</button>}</td>
                   </tr>
                 ))}
                 <tr className="bg-neutral-50 border-t border-neutral-200">
-                  <td colSpan={2} className="px-3 py-2 text-xs font-semibold text-neutral-600">TOTAUX</td>
+                  <td colSpan={2} className="px-3 py-2 text-xs font-semibold text-neutral-600">{t('modal.totaux')}</td>
                   <td className="px-3 py-2 text-right text-xs font-mono font-semibold text-neutral-800">{formatMontant(totalDebit)}</td>
                   <td className="px-3 py-2 text-right text-xs font-mono font-semibold text-neutral-800">{formatMontant(totalCredit)}</td>
                   <td />
@@ -374,7 +378,9 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
             </table>
           </div>
           <div className={cn('mt-2 text-xs font-medium', equilibre ? 'text-green-600' : 'text-red-500')}>
-            {equilibre ? '✓ Écriture équilibrée' : `⚠ Déséquilibre : ${formatMontant(Math.abs(totalDebit - totalCredit))}`}
+            {equilibre
+              ? t('modal.equilibre')
+              : t('modal.desequilibre', { montant: formatMontant(Math.abs(totalDebit - totalCredit)) })}
           </div>
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -384,9 +390,13 @@ function ModalNouvelleEcriture({ open, onClose }: { open: boolean; onClose: () =
 }
 
 export default function ComptabilitePage() {
+  const t = useTranslations('finance.comptabilite');
+  const tc = useTranslations('finance.common');
   const [activeTab, setActiveTab] = useState('plan');
   const [modalOpen, setModalOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  const tabs = TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }));
 
   const handleExportEcritures = async () => {
     setExporting(true);
@@ -434,30 +444,30 @@ export default function ComptabilitePage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Comptabilité SYCEBNL</h1>
-          <p className="text-sm text-neutral-500 mt-1">Plan comptable, journaux et balance</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">{t('title')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {(activeTab === 'ecritures' || activeTab === 'balance') && (
             <button onClick={handleExportEcritures} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
               {activeTab === 'balance' ? <FilePdf className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
-              {exporting ? 'Export…' : activeTab === 'balance' ? 'PDF Balance' : 'Excel Écritures'}
+              {exporting ? tc('exporting') : activeTab === 'balance' ? t('actions.exportBalancePdf') : t('actions.exportEcrituresExcel')}
             </button>
           )}
           <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4" />
-            Nouvelle écriture
+            {t('actions.newEntry')}
           </button>
         </div>
       </div>
 
-      <Tabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="mt-4">
         {activeTab === 'plan' && <PlanComptable />}
         {activeTab === 'journal' && (
           <div className="card p-6 text-center text-neutral-500">
-            <p className="text-sm">Sélectionnez un journal pour afficher les écritures.</p>
+            <p className="text-sm">{t('journalPlaceholder')}</p>
           </div>
         )}
         {activeTab === 'ecritures' && <TableauEcritures />}

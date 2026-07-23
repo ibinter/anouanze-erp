@@ -11,61 +11,67 @@ import {
   MessageSquare, Upload, CreditCard, GraduationCap,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
+/**
+ * Structure de navigation. `section` et `key` sont des clés de traduction
+ * (`shell.sidebar.sections.*` / `shell.sidebar.items.*`) : les libellés
+ * affichés proviennent de messages/<locale>/shell.json.
+ */
 const navSections = [
   {
-    title: 'Principal',
+    section: 'principal',
     items: [
-      { label: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, tourId: 'dashboard' },
-      { label: 'Gouvernance', href: '/gouvernance', icon: Landmark },
+      { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard, tourId: 'dashboard' },
+      { key: 'gouvernance', href: '/gouvernance', icon: Landmark },
     ],
   },
   {
-    title: 'Relations',
+    section: 'relations',
     items: [
-      { label: 'Membres', href: '/membres', icon: Users, tourId: 'membres' },
-      { label: 'Donateurs', href: '/donateurs', icon: Heart },
-      { label: 'Bailleurs', href: '/bailleurs', icon: Building2 },
-      { label: 'Bénéficiaires', href: '/beneficiaires', icon: UserSquare2 },
+      { key: 'membres', href: '/membres', icon: Users, tourId: 'membres' },
+      { key: 'donateurs', href: '/donateurs', icon: Heart },
+      { key: 'bailleurs', href: '/bailleurs', icon: Building2 },
+      { key: 'beneficiaires', href: '/beneficiaires', icon: UserSquare2 },
     ],
   },
   {
-    title: 'Activités',
+    section: 'activites',
     items: [
-      { label: 'Projets', href: '/projets', icon: FolderKanban, tourId: 'projets' },
-      { label: 'Ressources humaines', href: '/rh', icon: Briefcase },
-      { label: 'Événements', href: '/evenements', icon: Calendar },
+      { key: 'projets', href: '/projets', icon: FolderKanban, tourId: 'projets' },
+      { key: 'rh', href: '/rh', icon: Briefcase },
+      { key: 'evenements', href: '/evenements', icon: Calendar },
     ],
   },
   {
-    title: 'Finance',
+    section: 'finance',
     items: [
-      { label: 'Comptabilité', href: '/comptabilite', icon: BookOpen, tourId: 'comptabilite' },
-      { label: 'Budget', href: '/budget', icon: PiggyBank },
-      { label: 'Trésorerie', href: '/tresorerie', icon: Wallet },
-      { label: 'Paiements Mobile', href: '/paiements', icon: CreditCard },
-      { label: 'Achats', href: '/achats', icon: ShoppingCart },
-      { label: 'Stocks', href: '/stocks', icon: PackageSearch },
+      { key: 'comptabilite', href: '/comptabilite', icon: BookOpen, tourId: 'comptabilite' },
+      { key: 'budget', href: '/budget', icon: PiggyBank },
+      { key: 'tresorerie', href: '/tresorerie', icon: Wallet },
+      { key: 'paiements', href: '/paiements', icon: CreditCard },
+      { key: 'achats', href: '/achats', icon: ShoppingCart },
+      { key: 'stocks', href: '/stocks', icon: PackageSearch },
     ],
   },
   {
-    title: 'Outils',
+    section: 'outils',
     items: [
-      { label: 'Documents', href: '/documents', icon: FileText },
-      { label: 'Rapports & BI', href: '/reporting', icon: BarChart3 },
-      { label: 'Assistant IA', href: '/ia', icon: Bot, tourId: 'ia' },
-      { label: 'Import de données', href: '/import', icon: Upload },
-      { label: 'Audit', href: '/audit', icon: Shield },
-      { label: 'Académie', href: '/academie', icon: GraduationCap },
-      { label: 'Support', href: '/tickets', icon: MessageSquare },
+      { key: 'documents', href: '/documents', icon: FileText },
+      { key: 'reporting', href: '/reporting', icon: BarChart3 },
+      { key: 'ia', href: '/ia', icon: Bot, tourId: 'ia' },
+      { key: 'import', href: '/import', icon: Upload },
+      { key: 'audit', href: '/audit', icon: Shield },
+      { key: 'academie', href: '/academie', icon: GraduationCap },
+      { key: 'tickets', href: '/tickets', icon: MessageSquare },
     ],
   },
 ];
 
 const bottomNav = [
-  { label: 'Paramètres', href: '/parametres', icon: Settings },
-  { label: 'Aide', href: '/aide', icon: HelpCircle },
+  { key: 'parametres', href: '/parametres', icon: Settings },
+  { key: 'aide', href: '/aide', icon: HelpCircle },
 ];
 
 interface SidebarProps {
@@ -74,6 +80,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+  const t = useTranslations('shell.sidebar');
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -92,7 +99,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
-              <img src="/logo.svg" alt="ANOUANZÊ ERP" className="w-6 h-6" />
+              <img src="/logo.svg" alt={t('logoAlt')} className="w-6 h-6" />
             </div>
             <div className="leading-none min-w-0">
               <span className="text-sm font-bold text-white tracking-tight">ANOUANZÊ</span>
@@ -108,6 +115,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {/* Desktop collapse button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? t('etendre') : t('reduire')}
           className="hidden lg:flex p-1 rounded-md hover:bg-white/10 text-primary-100/60 hover:text-white ml-auto transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -115,6 +123,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {/* Mobile close button */}
         <button
           onClick={onMobileClose}
+          aria-label={t('fermer')}
           className="lg:hidden p-1 rounded-md hover:bg-white/10 text-primary-100/60 hover:text-white ml-auto transition-colors"
         >
           <X className="w-4 h-4" />
@@ -124,25 +133,26 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       {/* Navigation principale */}
       <nav className="flex-1 overflow-y-auto py-4 px-2.5 space-y-4 sidebar-scroll">
         {navSections.map((section) => (
-          <div key={section.title} className="space-y-0.5">
+          <div key={section.section} className="space-y-0.5">
             {!collapsed && (
               <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-primary-100/40">
-                {section.title}
+                {t(`sections.${section.section}`)}
               </p>
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
               const isActive = isItemActive(item.href);
+              const label = t(`items.${item.key}`);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(isActive ? 'sidebar-item-active' : 'sidebar-item', collapsed && 'justify-center')}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? label : undefined}
                   {...((item as any).tourId ? { 'data-tour': (item as any).tourId } : {})}
                 >
                   <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!collapsed && <span className="truncate">{label}</span>}
                 </Link>
               );
             })}
@@ -155,15 +165,16 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         {bottomNav.map((item) => {
           const Icon = item.icon;
           const isActive = isItemActive(item.href);
+          const label = t(`items.${item.key}`);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(isActive ? 'sidebar-item-active' : 'sidebar-item', collapsed && 'justify-center')}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? label : undefined}
             >
               <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              {!collapsed && <span className="truncate">{label}</span>}
             </Link>
           );
         })}

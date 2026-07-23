@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, PieChart as PieChartIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import { toNum } from '@/lib/utils';
 
@@ -80,6 +81,7 @@ function EmptyChart({ icone, message }: { icone: React.ReactNode; message: strin
 }
 
 export function DashboardCharts() {
+  const t = useTranslations('shell.dashboard.charts');
   const { data: evolution, isLoading: loadingEvolution } = useQuery<EvolutionDepense[]>({
     queryKey: ['reporting', 'evolution-depenses', NB_MOIS],
     queryFn: async () => {
@@ -117,10 +119,10 @@ export function DashboardCharts() {
       <div className="card p-5 lg:col-span-2 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-neutral-800">
-            Dépenses des {NB_MOIS} derniers mois
+            {t('depensesTitre', { nb: NB_MOIS })}
           </h2>
           <span className="text-xs font-medium text-neutral-400 bg-neutral-50 px-2.5 py-1 rounded-lg">
-            {NB_MOIS} mois
+            {t('depensesBadge', { nb: NB_MOIS })}
           </span>
         </div>
 
@@ -129,7 +131,7 @@ export function DashboardCharts() {
         ) : totalDepenses <= 0 ? (
           <EmptyChart
             icone={<BarChart3 className="w-10 h-10 stroke-1" />}
-            message="Aucune dépense comptabilisée sur la période"
+            message={t('depensesVide')}
           />
         ) : (
           <ResponsiveContainer width="100%" height={240}>
@@ -159,7 +161,7 @@ export function DashboardCharts() {
       </div>
 
       <div className="card p-5 space-y-4">
-        <h2 className="font-semibold text-neutral-800">Répartition par secteur</h2>
+        <h2 className="font-semibold text-neutral-800">{t('secteursTitre')}</h2>
 
         {loadingSecteurs ? (
           <div className="h-[240px] flex items-center justify-center">
@@ -168,7 +170,7 @@ export function DashboardCharts() {
         ) : repartition.length === 0 ? (
           <EmptyChart
             icone={<PieChartIcon className="w-10 h-10 stroke-1" />}
-            message="Aucune dépense rattachée à un secteur d'intervention"
+            message={t('secteursVide')}
           />
         ) : (
           <ResponsiveContainer width="100%" height={240}>
@@ -189,7 +191,7 @@ export function DashboardCharts() {
               <Tooltip
                 formatter={(value: number, _name: string, entry: { payload?: { montant?: number } }) => [
                   `${toNum(value)}% — ${formatXOF(toNum(entry?.payload?.montant))}`,
-                  'Part',
+                  t('part'),
                 ]}
                 contentStyle={TOOLTIP_STYLE}
               />

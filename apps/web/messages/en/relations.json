@@ -1,1 +1,461 @@
-{}
+{
+  "relations": {
+    "commun": {
+      "annuler": "Cancel",
+      "enregistrer": "Save",
+      "enregistrementEnCours": "Saving…",
+      "modifier": "Edit",
+      "exporter": "Export",
+      "exportEnCours": "Exporting…",
+      "fermer": "Close",
+      "retour": "Back",
+      "retourListe": "Back to list",
+      "chargement": "Loading…",
+      "ficheComplete": "Full profile",
+      "tableauDeBord": "Dashboard",
+      "voirLaFiche": "View profile",
+      "erreurCreation": "Could not create the record",
+      "erreurModification": "Could not save the changes",
+      "erreurEnregistrement": "Could not save the entry",
+      "erreurGenerique": "Something went wrong"
+    },
+
+    "membres": {
+      "titre": "Members",
+      "sousTitre": "Manage your organisation’s membership",
+      "nouveau": "New member",
+      "boutonExcel": "Excel",
+      "boutonPdf": "PDF",
+      "stats": {
+        "total": "Total members",
+        "actifs": "Active",
+        "inactifs": "Inactive / Suspended"
+      },
+      "recherchePlaceholder": "Search by name or email…",
+      "filtreStatutAria": "Filter by status",
+      "statuts": {
+        "tous": "All statuses",
+        "actif": "Active",
+        "inactif": "Inactive",
+        "suspendu": "Suspended"
+      },
+      "colonnes": {
+        "numero": "No.",
+        "nomComplet": "Full name",
+        "email": "Email",
+        "telephone": "Phone",
+        "statut": "Status",
+        "adhesion": "Joined",
+        "actions": "Actions"
+      },
+      "export": {
+        "resume": "Total: {count, plural, one {# member} other {# members}}",
+        "resumeAvecActifs": "Total: {count, plural, one {# member} other {# members}} — Active: {actifs}"
+      },
+      "modal": {
+        "titre": "New member",
+        "nom": "Last name *",
+        "prenom": "First name",
+        "email": "Email",
+        "telephone": "Phone",
+        "statut": "Status",
+        "dateAdhesion": "Membership date",
+        "fonctions": "Roles (comma-separated)",
+        "placeholderNom": "Koné",
+        "placeholderPrenom": "Aminata",
+        "placeholderEmail": "email@example.com",
+        "placeholderTelephone": "+225 07 00 00 00",
+        "placeholderFonctions": "Chair, Treasurer…",
+        "nomObligatoire": "Last name is required",
+        "creer": "Create member"
+      }
+    },
+
+    "membreDetail": {
+      "introuvableTitre": "Member not found",
+      "introuvableMessage": "This record does not exist or does not belong to your organisation.",
+      "filAriane": "Members",
+      "statuts": {
+        "actif": "Active",
+        "inactif": "Inactive",
+        "suspendu": "Suspended"
+      },
+      "statutsCotisation": {
+        "paye": "Paid",
+        "enAttente": "Pending",
+        "partiel": "Partial",
+        "annule": "Cancelled",
+        "retard": "Overdue"
+      },
+      "kpi": {
+        "totalCotise": "Total contributed",
+        "resteDu": "Outstanding balance",
+        "cotisationsReglees": "Dues settled",
+        "tauxRecouvrement": "Collection rate"
+      },
+      "infos": {
+        "titre": "Personal details",
+        "email": "Email",
+        "telephone": "Phone",
+        "genre": "Gender",
+        "nationalite": "Nationality",
+        "dateNaissance": "Date of birth",
+        "adresse": "Address",
+        "dateAdhesion": "Membership date",
+        "dateExpiration": "Expiry date",
+        "fonctions": "Roles",
+        "competences": "Skills",
+        "groupes": "Groups",
+        "notes": "Notes"
+      },
+      "cotisations": {
+        "titre": "Membership dues",
+        "vide": "No dues recorded for this member.",
+        "colPeriode": "Period",
+        "colType": "Type",
+        "colMontant": "Amount",
+        "colEcheance": "Due date",
+        "colStatut": "Status"
+      },
+      "export": {
+        "titre": "Member profile — {nom}",
+        "sousTitreNumero": "No. {numero}",
+        "sousTitreDefaut": "Membership register",
+        "resume": "Status: {statut} — Dues: {count} — Total settled: {total}",
+        "colPeriode": "Period",
+        "colType": "Type",
+        "colMontant": "Amount",
+        "colStatut": "Status",
+        "colEcheance": "Due date",
+        "colDatePaiement": "Paid on",
+        "colMode": "Method"
+      },
+      "modal": {
+        "titre": "Edit member",
+        "nom": "Last name *",
+        "prenom": "First name",
+        "email": "Email",
+        "telephone": "Phone",
+        "statut": "Status",
+        "dateAdhesion": "Membership date"
+      }
+    },
+
+    "donateurs": {
+      "titre": "Donors",
+      "sousTitre": "Track donors and contributions",
+      "nouveau": "New donor",
+      "stats": {
+        "totalDonateurs": "Total donors",
+        "nombreDons": "Number of gifts",
+        "totalCollecte": "Total raised",
+        "collecteCeMois": "Raised this month"
+      },
+      "recherchePlaceholder": "Search by name or email…",
+      "filtreTypeAria": "Filter by type",
+      "types": {
+        "tous": "All types",
+        "physique": "Individual",
+        "moral": "Organisation",
+        "moralLong": "Organisation / Legal entity",
+        "physiqueCourt": "Individual",
+        "moralCourt": "Organisation"
+      },
+      "typesDon": {
+        "numeraire": "Cash",
+        "enNature": "In kind",
+        "competences": "Skills",
+        "competencesLong": "Skills / Volunteering",
+        "foncier": "Land"
+      },
+      "colonnes": {
+        "nom": "Name / Legal name",
+        "type": "Type",
+        "email": "Email",
+        "telephone": "Phone",
+        "dons": "Gifts",
+        "montantTotal": "Total amount",
+        "actions": "Actions"
+      },
+      "actions": {
+        "historique": "History",
+        "don": "Gift"
+      },
+      "historique": {
+        "titre": "Gifts — {nom}",
+        "nombreDons": "{count, plural, one {# gift} other {# gifts}}",
+        "totalLabel": "Total:",
+        "nouveauDon": "New gift",
+        "vide": "No gifts recorded.",
+        "recu": "Received",
+        "enAttente": "Pending"
+      },
+      "modalDonateur": {
+        "titre": "New donor",
+        "type": "Type",
+        "nom": "Last name *",
+        "raisonSociale": "Legal name *",
+        "prenom": "First name",
+        "email": "Email",
+        "telephone": "Phone",
+        "pays": "Country",
+        "placeholderNom": "Koné",
+        "placeholderRaisonSociale": "Partner NGO",
+        "placeholderPrenom": "Aminata",
+        "placeholderEmail": "email@example.com",
+        "placeholderTelephone": "+225 07 00 00 00",
+        "placeholderPays": "CI",
+        "nomObligatoire": "Name is required",
+        "creer": "Create donor"
+      },
+      "modalDon": {
+        "titre": "Record a gift",
+        "donateurLabel": "Donor:",
+        "typeDon": "Gift type",
+        "montant": "Amount (XOF) *",
+        "description": "Description",
+        "dateDon": "Gift date",
+        "placeholderMontant": "100000",
+        "placeholderDescription": "e.g. 50 bags of cement, 50 kg",
+        "montantObligatoire": "Amount is required",
+        "enregistrerDon": "Save gift"
+      }
+    },
+
+    "donateurDetail": {
+      "introuvableTitre": "Donor not found",
+      "introuvableMessage": "This donor does not exist or does not belong to your organisation.",
+      "filAriane": "Donors",
+      "typePhysique": "Individual",
+      "typeMoral": "Organisation",
+      "typeMoralLong": "Organisation / Legal entity",
+      "anonyme": "Anonymous",
+      "nouveauDon": "New gift",
+      "typesDon": {
+        "numeraire": "Cash",
+        "enNature": "In kind",
+        "competences": "Skills",
+        "competencesLong": "Skills / Volunteering",
+        "foncier": "Land"
+      },
+      "statutsDon": {
+        "paye": "Received",
+        "enAttente": "Pending",
+        "partiel": "Partial",
+        "annule": "Cancelled"
+      },
+      "kpi": {
+        "totalDons": "Total gifts",
+        "nombreDons": "Number of gifts",
+        "donMoyen": "Average gift",
+        "dernierDon": "Latest gift"
+      },
+      "infos": {
+        "titre": "Contact details",
+        "email": "Email",
+        "telephone": "Phone",
+        "pays": "Country",
+        "adresse": "Address",
+        "valeurNature": "Value of in-kind gifts",
+        "enregistreLe": "Registered on",
+        "notes": "Notes"
+      },
+      "dons": {
+        "titre": "Giving history",
+        "vide": "No gifts recorded for this donor.",
+        "colDate": "Date",
+        "colType": "Type",
+        "colMontant": "Amount",
+        "colNumeroRecu": "Receipt no.",
+        "colStatut": "Status"
+      },
+      "export": {
+        "titre": "Giving history — {nom}",
+        "resume": "Gifts: {count} — Total raised: {total}",
+        "colDate": "Date",
+        "colType": "Type",
+        "colMontant": "Amount",
+        "colValeurEstimee": "Estimated value",
+        "colStatut": "Status",
+        "colNumeroRecu": "Receipt no.",
+        "colDescription": "Description"
+      },
+      "modalDonateur": {
+        "titre": "Edit donor",
+        "type": "Type",
+        "nom": "Last name *",
+        "raisonSociale": "Legal name *",
+        "prenom": "First name",
+        "email": "Email",
+        "telephone": "Phone",
+        "pays": "Country"
+      },
+      "modalDon": {
+        "titre": "Record a gift",
+        "typeDon": "Gift type",
+        "montant": "Amount (XOF) *",
+        "description": "Description",
+        "dateDon": "Gift date",
+        "enregistrerDon": "Save gift"
+      }
+    },
+
+    "bailleurs": {
+      "titre": "Funders",
+      "sousTitre": "Institutional funders and funding agreements",
+      "nouveau": "New funder",
+      "stats": {
+        "totalBailleurs": "Total funders",
+        "conventions": "Agreements",
+        "paysRepresentes": "Countries represented"
+      },
+      "recherchePlaceholder": "Search for a funder…",
+      "colonnes": {
+        "bailleur": "Funder",
+        "type": "Type",
+        "pays": "Country / Region",
+        "conventions": "Agreements",
+        "actions": ""
+      },
+      "types": {
+        "MULTILATERAL": "Multilateral",
+        "BILATERAL": "Bilateral",
+        "FONDATION": "Foundation",
+        "PRIVE": "Private"
+      },
+      "actions": {
+        "masquer": "Hide",
+        "conventions": "Agreements"
+      },
+      "conventions": {
+        "titre": "Agreements — {nom}",
+        "chargement": "Loading agreements…",
+        "vide": "No agreements recorded.",
+        "montant": "Amount",
+        "decaisse": "Disbursed"
+      },
+      "modal": {
+        "titre": "New funder",
+        "nom": "Name *",
+        "sigle": "Acronym",
+        "type": "Type",
+        "pays": "Country / Region",
+        "contactNom": "Contact (name)",
+        "contactEmail": "Contact email",
+        "placeholderNom": "Funder name",
+        "placeholderSigle": "e.g. EU, WB…",
+        "placeholderPays": "France, EU…",
+        "placeholderContactNom": "First name Last name",
+        "placeholderContactEmail": "contact@funder.org"
+      }
+    },
+
+    "bailleurDetail": {
+      "introuvableTitre": "Funder not found",
+      "introuvableMessage": "This funder does not exist or does not belong to your organisation.",
+      "filAriane": "Funders",
+      "types": {
+        "MULTILATERAL": "Multilateral",
+        "BILATERAL": "Bilateral",
+        "FONDATION": "Foundation",
+        "PRIVE": "Private"
+      },
+      "kpi": {
+        "montantEngage": "Committed amount",
+        "conventions": "Agreements",
+        "conventionsActives": "Active agreements",
+        "nonEchues": "Not yet expired"
+      },
+      "infos": {
+        "titre": "Details",
+        "type": "Type",
+        "pays": "Country / Region",
+        "siteWeb": "Website",
+        "contact": "Contact",
+        "contactEmail": "Contact email",
+        "contactTel": "Contact phone",
+        "enregistreLe": "Registered on",
+        "notes": "Notes"
+      },
+      "conventions": {
+        "titre": "Funding agreements",
+        "vide": "No agreements recorded for this funder.",
+        "voirDecaissements": "View disbursements",
+        "masquerDecaissements": "Hide disbursements",
+        "chargementDecaissements": "Loading disbursements…",
+        "aucunDecaissement": "No disbursements recorded.",
+        "tauxDecaissement": "Disbursement rate"
+      },
+      "export": {
+        "titre": "Funder profile — {nom}",
+        "sousTitreDefaut": "Funding agreements",
+        "resume": "Agreements: {count} — Committed amount: {montant}",
+        "colReference": "Reference",
+        "colTitre": "Title",
+        "colMontant": "Amount",
+        "colStatut": "Status",
+        "colSignature": "Signed",
+        "colDebut": "Start",
+        "colFin": "End"
+      },
+      "modal": {
+        "titre": "Edit funder",
+        "nom": "Name *",
+        "sigle": "Acronym",
+        "type": "Type",
+        "pays": "Country / Region",
+        "siteWeb": "Website",
+        "contactNom": "Contact (name)",
+        "contactTel": "Contact phone",
+        "contactEmail": "Contact email"
+      }
+    },
+
+    "beneficiaires": {
+      "titre": "Beneficiaries",
+      "sousTitre": "Register of the organisation’s beneficiaries",
+      "nouveau": "New beneficiary",
+      "stats": {
+        "total": "Total beneficiaries",
+        "femmes": "Women (this page)",
+        "hommes": "Men (this page)",
+        "accompagnements": "Support cases (this page)"
+      },
+      "recherchePlaceholder": "Search for a beneficiary…",
+      "genres": {
+        "femme": "Female",
+        "homme": "Male"
+      },
+      "colonnes": {
+        "code": "Code",
+        "nomComplet": "Full name",
+        "genre": "Gender",
+        "telephone": "Phone",
+        "projets": "Projects",
+        "enregistrement": "Registered",
+        "actions": "Actions"
+      },
+      "nbProjets": "{count, plural, one {# project} other {# projects}}",
+      "details": "Details",
+      "fiche": {
+        "titreDefaut": "Beneficiary",
+        "code": "Code",
+        "projets": "Projects",
+        "telephone": "Phone",
+        "enregistrement": "Registered",
+        "vulnerabilites": "Vulnerabilities",
+        "notes": "Notes"
+      },
+      "modal": {
+        "titre": "New beneficiary",
+        "prenom": "First name",
+        "nom": "Last name",
+        "genre": "Gender",
+        "telephone": "Phone",
+        "placeholderPrenom": "First name",
+        "placeholderNom": "Family name",
+        "placeholderTelephone": "+225 07 …"
+      }
+    }
+  }
+}

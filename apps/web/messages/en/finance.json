@@ -1,1 +1,406 @@
-{}
+{
+  "finance": {
+    "common": {
+      "loading": "Loading…",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "exporting": "Exporting…",
+      "error": "Error"
+    },
+    "comptabilite": {
+      "title": "SYCEBNL Accounting",
+      "subtitle": "Chart of accounts, journals and trial balance",
+      "tabs": {
+        "plan": "Chart of accounts",
+        "journal": "Journal",
+        "ecritures": "Journal entries",
+        "balance": "Trial balance"
+      },
+      "actions": {
+        "newEntry": "New journal entry",
+        "exportBalancePdf": "Trial balance PDF",
+        "exportEcrituresExcel": "Journal entries Excel"
+      },
+      "journalPlaceholder": "Select a journal to display its entries.",
+      "plan": {
+        "empty": "Chart of accounts is empty. Initialise the SYCEBNL chart.",
+        "classe": "Class {classe}"
+      },
+      "ecritures": {
+        "date": "Date",
+        "journal": "Journal",
+        "libelle": "Description",
+        "debit": "Debit",
+        "credit": "Credit",
+        "statut": "Status",
+        "empty": "No journal entry.",
+        "valide": "Posted",
+        "brouillon": "Draft"
+      },
+      "balance": {
+        "compte": "Account",
+        "libelle": "Description",
+        "debitCumule": "Cumulative debit",
+        "creditCumule": "Cumulative credit",
+        "solde": "Balance",
+        "empty": "No data for fiscal year {exercice}."
+      },
+      "modal": {
+        "title": "New journal entry",
+        "journal": "Journal",
+        "chooseJournal": "— Select —",
+        "date": "Date",
+        "libelleGeneral": "Entry description",
+        "libellePlaceholder": "Description…",
+        "lignes": "Entry lines",
+        "addLigne": "Add a line",
+        "colCompte": "Account",
+        "colLibelle": "Description",
+        "colDebit": "Debit",
+        "colCredit": "Credit",
+        "comptePlaceholder": "E.g. 52",
+        "ligneLibellePlaceholder": "Description",
+        "montantPlaceholder": "0",
+        "totaux": "TOTALS",
+        "equilibre": "✓ Entry is balanced",
+        "desequilibre": "⚠ Out of balance: {montant}"
+      },
+      "errors": {
+        "libelleRequis": "A description is required.",
+        "journalRequis": "Select a journal.",
+        "nonEquilibre": "The entry is not balanced (debit ≠ credit).",
+        "compteIntrouvable": "Account not found: {compte}"
+      }
+    },
+    "budget": {
+      "title": "Budgets",
+      "subtitle": "Budget planning and monitoring by fiscal year",
+      "actions": {
+        "exportPdf": "Report PDF",
+        "new": "New budget"
+      },
+      "kpi": {
+        "totalPrevu": "Total budgeted amount",
+        "approuves": "Approved budgets",
+        "aSurveiller": "Budgets to watch"
+      },
+      "filtre": {
+        "exercice": "Fiscal year:",
+        "tous": "All"
+      },
+      "loading": "Loading budgets…",
+      "empty": {
+        "title": "No budget for this fiscal year",
+        "subtitle": "Create your first budget to start planning",
+        "cta": "Create a budget"
+      },
+      "statut": {
+        "approuve": "Approved",
+        "brouillon": "Draft"
+      },
+      "card": {
+        "exercice": "Fiscal year {exercice}",
+        "projet": "Project: {code} — {nom}",
+        "budgetTotal": "Total budget",
+        "execution": "Budget execution",
+        "realise": "Actual: {montant}",
+        "ecart": "Variance: {montant}",
+        "masquerLignes": "Hide lines",
+        "voirLignes": "{count, plural, one {View # line} other {View # lines}}",
+        "approuver": "Approve",
+        "approuveLe": "Approved on {date}"
+      },
+      "table": {
+        "categorie": "Category",
+        "description": "Description",
+        "prevu": "Budgeted",
+        "realise": "Actual",
+        "ecart": "Variance",
+        "total": "TOTAL"
+      },
+      "modal": {
+        "title": "New budget",
+        "nom": "Budget name *",
+        "exercice": "Fiscal year *",
+        "lignes": "Budget lines *",
+        "addLigne": "Add a line",
+        "categoriePlaceholder": "Category *",
+        "descriptionPlaceholder": "Description",
+        "montantPlaceholder": "Amount (XOF)",
+        "submit": "Create budget",
+        "defaultNom": "Budget {annee}"
+      },
+      "errors": {
+        "creation": "Error while creating the budget",
+        "nomRequis": "The name is required",
+        "ligneRequise": "Add at least one budget line"
+      }
+    },
+    "tresorerie": {
+      "title": "Treasury",
+      "subtitle": "Account positions and cash flows",
+      "actions": {
+        "exportReleve": "Statement Excel",
+        "newMouvement": "New transaction"
+      },
+      "kpi": {
+        "total": "Total cash position",
+        "comptes": "{count, plural, one {# bank account} other {# bank accounts}}"
+      },
+      "mouvements": {
+        "title": "Transactions — {compte}",
+        "date": "Date",
+        "libelle": "Description",
+        "debit": "Debit",
+        "credit": "Credit",
+        "rapproche": "Reconciled",
+        "empty": "No transaction",
+        "statutRapproche": "Reconciled",
+        "statutEnAttente": "Pending"
+      },
+      "modal": {
+        "title": "New transaction",
+        "compte": "Account",
+        "date": "Date",
+        "libelle": "Description",
+        "libellePlaceholder": "Transaction description",
+        "type": "Type",
+        "typeDebit": "Debit (outflow)",
+        "typeCredit": "Credit (inflow)",
+        "montant": "Amount (XOF)",
+        "montantPlaceholder": "0"
+      }
+    },
+    "achats": {
+      "title": "Purchasing",
+      "subtitle": "Purchase orders and suppliers",
+      "actions": {
+        "new": "New purchase order",
+        "valider": "Approve",
+        "receptionner": "Receive",
+        "commande": "Order"
+      },
+      "kpi": {
+        "totalCommandes": "Total orders",
+        "totalCommandesDesc": "All purchase orders",
+        "enAttente": "Pending",
+        "enAttenteDesc": "Draft or approved",
+        "montantTotal": "Total amount",
+        "montantTotalDesc": "Cumulative purchases"
+      },
+      "tabs": {
+        "commandes": "Purchase orders",
+        "fournisseurs": "Suppliers"
+      },
+      "statuts": {
+        "BROUILLON": "Draft",
+        "VALIDEE": "Approved",
+        "RECUE": "Received"
+      },
+      "filtre": {
+        "tousStatuts": "All statuses"
+      },
+      "colonnes": {
+        "numero": "Number",
+        "fournisseur": "Supplier",
+        "date": "Date",
+        "montant": "Amount",
+        "statut": "Status",
+        "nom": "Name",
+        "email": "Email",
+        "telephone": "Phone",
+        "pays": "Country",
+        "commandes": "Orders"
+      },
+      "modal": {
+        "title": "New purchase order",
+        "fournisseur": "Supplier *",
+        "choisirFournisseur": "Select a supplier",
+        "dateCommande": "Order date",
+        "articles": "Items",
+        "addLigne": "+ Add line",
+        "designationPlaceholder": "Item name",
+        "quantitePlaceholder": "Qty",
+        "prixPlaceholder": "Unit price",
+        "total": "Total: {montant}"
+      },
+      "detail": {
+        "title": "Order {numero}",
+        "statut": "Status",
+        "date": "Date",
+        "fournisseur": "Supplier",
+        "numero": "Number",
+        "montantTotal": "Total amount"
+      }
+    },
+    "stocks": {
+      "title": "Stock & Inventory",
+      "subtitle": "Item and stock movement management",
+      "kpi": {
+        "totalArticles": "Total items",
+        "totalArticlesDesc": "Catalogue references",
+        "enAlerte": "Low stock",
+        "enAlerteDesc": "Stock below minimum",
+        "valeurTotale": "Total stock value",
+        "valeurTotaleDesc": "Current stock × unit price"
+      },
+      "searchPlaceholder": "Search...",
+      "alertesSeulement": "Low stock only",
+      "colonnes": {
+        "reference": "Reference",
+        "designation": "Item name",
+        "categorie": "Category",
+        "stockActuel": "Current stock",
+        "stockMin": "Min. stock",
+        "unite": "Unit",
+        "prixUnit": "Unit price",
+        "valeur": "Value",
+        "alerte": "Alert"
+      },
+      "badgeBas": "Low",
+      "actions": {
+        "entree": "Stock in",
+        "sortie": "Stock out"
+      },
+      "detail": {
+        "categorie": "Category",
+        "stockActuel": "Current stock",
+        "stockMinimum": "Minimum stock",
+        "prixUnitaire": "Unit price",
+        "valeurStock": "Stock value"
+      },
+      "modal": {
+        "entreeTitle": "Stock in",
+        "sortieTitle": "Stock out",
+        "quantite": "Quantity",
+        "motif": "Reason",
+        "motifEntreePlaceholder": "E.g. Order receipt",
+        "motifSortiePlaceholder": "E.g. Project distribution",
+        "stockActuel": "Current stock:",
+        "confirmer": "Confirm"
+      }
+    },
+    "immobilisations": {
+      "title": "Fixed assets",
+      "subtitle": "Assets and depreciation",
+      "actions": {
+        "new": "New fixed asset"
+      },
+      "kpi": {
+        "total": "Total fixed assets",
+        "totalDesc": "{count} in service",
+        "valeurAcquisition": "Acquisition cost",
+        "valeurAcquisitionDesc": "Gross, all statuses",
+        "valeurNette": "Net book value",
+        "valeurNetteDesc": "After depreciation",
+        "amortissementsMois": "Depreciation this month",
+        "amortissementsMoisDesc": "Monthly charge"
+      },
+      "statuts": {
+        "EN_SERVICE": "In service",
+        "CEDE": "Disposed of",
+        "REBUTE": "Written off"
+      },
+      "categories": {
+        "INFORMATIQUE": "IT equipment",
+        "MOBILIER": "Furniture",
+        "VEHICULE": "Vehicle",
+        "MATERIEL": "Equipment",
+        "BATIMENT": "Building",
+        "TERRAIN": "Land"
+      },
+      "colonnes": {
+        "reference": "Reference",
+        "designation": "Description",
+        "categorie": "Category",
+        "acquisition": "Acquisition",
+        "valeurAcq": "Acq. cost",
+        "valeurNette": "Net book value",
+        "taux": "Rate",
+        "amorti": "Depreciated",
+        "statut": "Status"
+      },
+      "modal": {
+        "title": "New fixed asset",
+        "reference": "Reference",
+        "referencePlaceholder": "IMM-XXX",
+        "categorie": "Category",
+        "designation": "Description",
+        "designationPlaceholder": "Fixed asset description",
+        "dateAcquisition": "Acquisition date",
+        "valeurAcquisition": "Acquisition cost (FCFA)",
+        "taux": "Depreciation rate (%)",
+        "tauxOption": "{taux}% — {annees, plural, one {# year} other {# years}}"
+      },
+      "detail": {
+        "dateAcquisition": "Acquisition date",
+        "taux": "Depreciation rate",
+        "valeurAcquisition": "Acquisition cost",
+        "amortissement": "Depreciation",
+        "localisation": "Location",
+        "valeurNette": "Net book value"
+      }
+    },
+    "paiements": {
+      "title": "Mobile Payments",
+      "subtitle": "Orange Money, MTN MoMo, CinetPay, Wave",
+      "actions": {
+        "refresh": "Refresh",
+        "initier": "Initiate a payment"
+      },
+      "kpi": {
+        "totalCollecte": "Total collected",
+        "transactions": "Transactions",
+        "tauxSucces": "Success rate",
+        "enAttente": "Pending"
+      },
+      "integration": {
+        "DISPONIBLE": "Available",
+        "INTEGRATION": "Integration in progress",
+        "BIENTOT": "Coming soon"
+      },
+      "operateurs": {
+        "detailWebhook": "Confirmation webhook active — initiation still to be completed",
+        "detailNonDemarre": "Integration not started"
+      },
+      "avertissement": "No gateway performs end-to-end automatic collection yet: a payment initiated here is recorded with the status <b>Pending</b> and is only confirmed once the operator’s webhook is received.",
+      "filtre": {
+        "tousStatuts": "All statuses",
+        "tousTypes": "All types"
+      },
+      "statuts": {
+        "EN_ATTENTE": "Pending",
+        "SUCCES": "Successful",
+        "ECHEC": "Failed",
+        "ANNULE": "Cancelled"
+      },
+      "types": {
+        "DON": "Donation",
+        "COTISATION": "Membership fee",
+        "PRESTATION": "Service fee",
+        "REMBOURSEMENT": "Reimbursement"
+      },
+      "table": {
+        "reference": "Reference",
+        "description": "Description",
+        "type": "Type",
+        "montant": "Amount",
+        "statut": "Status",
+        "date": "Date",
+        "empty": "No transaction"
+      },
+      "modal": {
+        "title": "Initiate a payment",
+        "montantPlaceholder": "Amount *",
+        "deviseXof": "FCFA (XOF)",
+        "descriptionPlaceholder": "Description",
+        "emailPlaceholder": "Payer email *",
+        "telPlaceholder": "Payer phone number *",
+        "canalNote": "Indicative channel: only operators whose confirmation webhook is active are offered. Automatic routing to the gateway is not active yet.",
+        "submit": "Initiate",
+        "sending": "Sending..."
+      }
+    }
+  }
+}

@@ -1,1 +1,478 @@
-{}
+{
+  "activites": {
+    "projets": {
+      "titre": "Projects & Programmes",
+      "sousTitre": "Tracking your organisation's projects",
+      "nouveau": "New project",
+      "stats": {
+        "enCours": "Ongoing",
+        "termines": "Completed",
+        "budgetTotal": "Total planned budget"
+      },
+      "recherche": "Search for a project…",
+      "filtres": {
+        "tousStatuts": "All statuses",
+        "tousSecteurs": "All sectors"
+      },
+      "statuts": {
+        "BROUILLON": "Draft",
+        "SOUMIS": "Submitted",
+        "APPROUVE": "Approved",
+        "EN_COURS": "Ongoing",
+        "SUSPENDU": "Suspended",
+        "CLOTURE": "Closed",
+        "ANNULE": "Cancelled"
+      },
+      "secteurs": {
+        "education": "Education",
+        "sante": "Health",
+        "agriculture": "Agriculture",
+        "eau": "Water & Sanitation",
+        "environnement": "Environment"
+      },
+      "carte": {
+        "budgetRealise": "Budget spent",
+        "voirFiche": "View project",
+        "apercuRapide": "Quick preview"
+      },
+      "apercu": {
+        "titreParDefaut": "Project details",
+        "budgetPrevisionnel": "Planned budget",
+        "budgetRealise": "Budget spent",
+        "resteDisponible": "Remaining available",
+        "tauxExecution": "Budget execution rate",
+        "secteurs": "Sectors",
+        "ouvrirFiche": "Open full project page"
+      },
+      "vide": "No project found",
+      "modal": {
+        "titre": "New project",
+        "nom": "Project name *",
+        "nomPlaceholder": "Project title",
+        "description": "Description",
+        "descriptionPlaceholder": "Objectives and description…",
+        "statut": "Status",
+        "budget": "Planned budget (XOF)",
+        "dateDebut": "Start date",
+        "dateFin": "End date",
+        "annuler": "Cancel",
+        "creer": "Create project",
+        "creation": "Creating…"
+      },
+      "erreur": "Error"
+    },
+    "projetDetail": {
+      "introuvable": {
+        "titre": "Project not found",
+        "message": "This project does not exist or does not belong to your organisation.",
+        "retour": "Back to the list"
+      },
+      "filAriane": {
+        "tableauDeBord": "Dashboard",
+        "projets": "Projects"
+      },
+      "retour": "Back",
+      "exporter": "Export",
+      "export": "Exporting…",
+      "modifier": "Edit",
+      "statuts": {
+        "BROUILLON": "Draft",
+        "SOUMIS": "Submitted",
+        "APPROUVE": "Approved",
+        "EN_COURS": "Ongoing",
+        "SUSPENDU": "Suspended",
+        "CLOTURE": "Closed",
+        "ANNULE": "Cancelled"
+      },
+      "stats": {
+        "budgetTotal": "Total budget",
+        "budgetAlloue": "Budget allocated to activities",
+        "activites": "Activities",
+        "beneficiaires": "Beneficiaries"
+      },
+      "tauxAllocation": "Budget allocation rate",
+      "alloues": "{montant} allocated",
+      "reste": "Remaining: {montant}",
+      "informations": {
+        "titre": "Information",
+        "type": "Type",
+        "devise": "Currency",
+        "dateDebut": "Start date",
+        "dateFin": "End date",
+        "description": "Description",
+        "objectifs": "Objectives",
+        "secteurs": "Sectors",
+        "zones": "Intervention areas"
+      },
+      "activitesSection": {
+        "titre": "Activities",
+        "vide": "No activity recorded."
+      },
+      "budgets": {
+        "titre": "Linked budgets",
+        "vide": "No budget linked to this project.",
+        "exercice": "Fiscal year {annee}"
+      },
+      "beneficiaires": {
+        "titre": "Beneficiaries",
+        "vide": "No beneficiary linked.",
+        "colBeneficiaire": "Beneficiary",
+        "colEntree": "Enrolled",
+        "colStatut": "Status"
+      },
+      "edition": {
+        "titre": "Edit project",
+        "nom": "Project name *",
+        "description": "Description",
+        "statut": "Status",
+        "budget": "Total budget (XOF)",
+        "dateDebut": "Start date",
+        "dateFin": "End date",
+        "annuler": "Cancel",
+        "enregistrer": "Save",
+        "enregistrement": "Saving…",
+        "erreur": "Error while saving changes"
+      }
+    },
+    "rh": {
+      "titre": "Human Resources",
+      "sousTitre": "Staff, payroll and leave management",
+      "stats": {
+        "totalEmployes": "Total employees",
+        "enConge": "On leave",
+        "volontairesActifs": "Active volunteers",
+        "masseSalariale": "Payroll cost"
+      },
+      "onglets": {
+        "employes": "Employees",
+        "paie": "Payroll",
+        "conges": "Leave",
+        "volontaires": "Volunteers"
+      },
+      "erreur": "Error",
+      "employes": {
+        "nouveau": "New employee",
+        "colMatricule": "Employee ID",
+        "colNomComplet": "Full name",
+        "colPoste": "Position",
+        "colDepartement": "Department",
+        "colContrat": "Contract",
+        "colEmbauche": "Hired",
+        "colActions": "Actions",
+        "voir": "View",
+        "modifier": "Edit",
+        "fiche": {
+          "titre": "Employee record",
+          "matricule": "Employee ID",
+          "departement": "Department",
+          "dateEmbauche": "Hire date",
+          "salaireBase": "Base salary"
+        },
+        "modal": {
+          "titre": "New employee",
+          "prenom": "First name *",
+          "nom": "Last name *",
+          "poste": "Position",
+          "postePlaceholder": "Coordinator…",
+          "departement": "Department",
+          "departementPlaceholder": "Programmes…",
+          "typeContrat": "Contract type",
+          "salaireBase": "Base salary (XOF)",
+          "dateEmbauche": "Hire date",
+          "annuler": "Cancel",
+          "enregistrer": "Save",
+          "enregistrement": "Saving…"
+        }
+      },
+      "paie": {
+        "employe": "Employee",
+        "colPeriode": "Period",
+        "colBrut": "Gross salary",
+        "colNet": "Net pay",
+        "colStatut": "Status",
+        "paye": "Paid",
+        "enAttente": "Pending"
+      },
+      "conges": {
+        "employe": "Employee",
+        "colType": "Type",
+        "colDebut": "Start",
+        "colFin": "End",
+        "colStatut": "Status",
+        "colActions": "Actions",
+        "chargement": "Loading…",
+        "vide": "No leave recorded.",
+        "approuve": "Approved",
+        "rejete": "Rejected",
+        "enAttente": "Pending",
+        "approuver": "Approve",
+        "rejeter": "Reject"
+      },
+      "volontaires": {
+        "nouveau": "New volunteer",
+        "colNomComplet": "Full name",
+        "colCompetences": "Skills",
+        "colProjet": "Linked project",
+        "colDepuis": "Since",
+        "colActions": "Actions",
+        "voir": "View",
+        "modal": {
+          "titre": "New volunteer",
+          "prenom": "First name *",
+          "nom": "Last name *",
+          "competences": "Skills",
+          "competencesPlaceholder": "E.g. Training, IT…",
+          "dateDebut": "Start date",
+          "annuler": "Cancel",
+          "enregistrer": "Save",
+          "enregistrement": "Saving…"
+        }
+      }
+    },
+    "volontaires": {
+      "titre": "Volunteers",
+      "actifs": "{count, plural, =0 {No active volunteer} one {# active volunteer} other {# active volunteers}}",
+      "nouveau": "New volunteer",
+      "recherche": "Name, email, skill…",
+      "colNom": "Name",
+      "colEmail": "Email",
+      "colCompetences": "Skills",
+      "colDisponibilites": "Availability",
+      "colStatut": "Status",
+      "actif": "Active",
+      "inactif": "Inactive",
+      "desactiver": "Deactivate",
+      "activer": "Activate",
+      "modal": {
+        "titre": "New volunteer",
+        "nom": "Full name",
+        "nomPlaceholder": "First name Last name",
+        "email": "Email",
+        "emailPlaceholder": "email@domain.com",
+        "competences": "Skills (comma-separated)",
+        "competencesPlaceholder": "Training, Health, IT…",
+        "disponibilites": "Availability",
+        "disponibilitesPlaceholder": "E.g. weekends, Mondays and Fridays…",
+        "actifDesInscription": "Active upon registration",
+        "annuler": "Cancel",
+        "enregistrer": "Save"
+      }
+    },
+    "gouvernance": {
+      "titre": "Governance",
+      "sousTitre": "Governing bodies, meetings and resolutions",
+      "nouvelOrgane": "New body",
+      "planifierReunion": "Schedule meeting",
+      "nouvelleResolution": "New resolution",
+      "kpi": {
+        "organesActifs": "Active bodies",
+        "membresTotaux": "Total members",
+        "resolutionsEnCours": "Resolutions in progress",
+        "prochaineReunion": "Next meeting"
+      },
+      "onglets": {
+        "organes": "Bodies",
+        "reunions": "Meetings",
+        "resolutions": "Resolutions"
+      },
+      "statuts": {
+        "EN_ATTENTE": "Pending",
+        "APPROUVEE": "Approved",
+        "EN_COURS": "In progress",
+        "APPLIQUEE": "Implemented",
+        "REJETEE": "Rejected"
+      },
+      "organes": {
+        "vide": "No governing body created",
+        "actif": "Active",
+        "membres": "{count, plural, one {# member} other {# members}}",
+        "reunions": "{count, plural, one {# meeting} other {# meetings}}",
+        "prochaineReunion": "Next meeting: {date}"
+      },
+      "reunions": {
+        "tous": "All",
+        "vide": "No meeting scheduled",
+        "videAstuce": "Select a governing body to schedule a meeting",
+        "tenue": "Held",
+        "planifiee": "Scheduled"
+      },
+      "resolutions": {
+        "vide": "No resolution recorded",
+        "responsable": "Owner: {nom}",
+        "approuver": "Approve"
+      },
+      "modalOrgane": {
+        "titre": "New body",
+        "nomPlaceholder": "Body name *",
+        "types": {
+          "ASSEMBLEE_GENERALE": "General Assembly",
+          "CONSEIL_ADMINISTRATION": "Board of Directors",
+          "BUREAU_EXECUTIF": "Executive Office",
+          "COMITE_CONTROLE": "Audit Committee",
+          "COMMISSION": "Committee",
+          "AUTRE": "Other"
+        },
+        "nombreMembres": "Number of members",
+        "description": "Description",
+        "annuler": "Cancel",
+        "creer": "Create",
+        "creation": "Creating…"
+      },
+      "modalResolution": {
+        "titre": "New resolution",
+        "titrePlaceholder": "Title *",
+        "description": "Description",
+        "responsable": "Implementation owner",
+        "annuler": "Cancel",
+        "creer": "Create",
+        "creation": "Creating…"
+      },
+      "modalReunion": {
+        "titre": "Schedule a meeting",
+        "selectionnerOrgane": "Select a governing body *",
+        "titrePlaceholder": "Title *",
+        "lieu": "Location",
+        "ordreJour": "Agenda (one item per line)",
+        "annuler": "Cancel",
+        "planifier": "Schedule",
+        "creation": "Creating…"
+      },
+      "detailOrgane": {
+        "typeOrgane": "Body type",
+        "membres": "Members",
+        "reunions": "Meetings",
+        "prochaineReunion": "Next meeting"
+      },
+      "detailReunion": {
+        "date": "Date",
+        "lieu": "Location",
+        "ordreJour": "Agenda"
+      },
+      "detailResolution": {
+        "responsable": "Owner",
+        "dateAdoption": "Adoption date",
+        "approuver": "Approve resolution"
+      }
+    },
+    "evenements": {
+      "titre": "Events & Training",
+      "sousTitre": "{count, plural, =0 {No event scheduled} one {# event scheduled} other {# events scheduled}}",
+      "nouveau": "New event",
+      "kpi": {
+        "evenements": "Events",
+        "totalInscrits": "Total registrations",
+        "placesDisponibles": "Seats available",
+        "tauxRemplissage": "Fill rate"
+      },
+      "inscrits": "{nb} registered",
+      "inscritsSurCapacite": "{nb} / {capacite} registered",
+      "pctCapacite": "{pct}% of capacity",
+      "complet": "Full",
+      "sInscrire": "Register",
+      "gerer": "Manage",
+      "vide": "No event scheduled.",
+      "detail": {
+        "titre": "Event details",
+        "date": "Date",
+        "lieu": "Location",
+        "inscrits": "Registered",
+        "remplissage": "Fill rate"
+      },
+      "modal": {
+        "titre": "New event",
+        "champTitre": "Title",
+        "titrePlaceholder": "Event title",
+        "type": "Type",
+        "types": {
+          "AG": "General assembly",
+          "REUNION": "Meeting",
+          "FORMATION": "Training",
+          "ATELIER": "Workshop"
+        },
+        "date": "Date",
+        "lieu": "Location",
+        "lieuPlaceholder": "Event location",
+        "capacite": "Capacity",
+        "description": "Description",
+        "descriptionPlaceholder": "Event description",
+        "annuler": "Cancel",
+        "creer": "Create",
+        "creation": "Creating…"
+      },
+      "erreurCreation": "Error while creating the event"
+    },
+    "meal": {
+      "titre": "MEAL",
+      "sousTitre": "Monitoring, Evaluation, Accountability and Learning",
+      "projet": "Project:",
+      "aucunProjet": "No project",
+      "onglets": {
+        "cadre": "Logical framework",
+        "indicateurs": "Indicators",
+        "collecte": "Data collection",
+        "rapport": "Report"
+      },
+      "cadre": {
+        "chargement": "Loading the logical framework…",
+        "intrants": "Inputs",
+        "activites": "Activities",
+        "extrants": "Outputs",
+        "effets": "Outcomes / Impact",
+        "nonRenseigne": "Not provided"
+      },
+      "indicateurs": {
+        "chargement": "Loading indicators…",
+        "vide": "No MEAL indicator defined for this project.",
+        "colIndicateur": "Indicator",
+        "colUnite": "Unit",
+        "colCible": "Target",
+        "colRealise": "Achieved",
+        "colTaux": "Rate",
+        "colAction": "Action",
+        "mettreAJour": "Update"
+      },
+      "collecte": {
+        "nouvelleSaisie": "New field entry",
+        "indicateur": "Indicator",
+        "selectionner": "Select…",
+        "valeur": "Collected value",
+        "valeurPlaceholder": "E.g. 18",
+        "date": "Collection date",
+        "agent": "Data collector",
+        "agentPlaceholder": "Collector name",
+        "enregistrer": "Save entry",
+        "enregistrement": "Saving…",
+        "historique": "Collection history",
+        "vide": "No entry recorded",
+        "colIndicateur": "Indicator",
+        "colValeur": "Value",
+        "colDate": "Date",
+        "colAgent": "Collector"
+      },
+      "rapport": {
+        "titre": "MEAL report — {projet}",
+        "projetParDefaut": "Project",
+        "tauxAtteinte": "Achievement rate by indicator",
+        "taux": "Rate"
+      },
+      "modal": {
+        "titre": "Update: {indicateur}",
+        "valeur": "New achieved value",
+        "ciblePlaceholder": "Target: {cible}",
+        "date": "Collection date",
+        "commentaire": "Comment (optional)",
+        "commentairePlaceholder": "Field observations…",
+        "annuler": "Cancel",
+        "enregistrer": "Save",
+        "enregistrement": "Saving…"
+      },
+      "toasts": {
+        "indicateurMaj": "Indicator updated",
+        "erreurMaj": "Error while updating",
+        "collecteOk": "Entry saved",
+        "erreurCollecte": "Error while saving",
+        "champsRequis": "Select an indicator and enter a value"
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatMontant, formatDate } from '@/lib/utils';
@@ -31,20 +32,22 @@ interface Budget {
 }
 
 function StatutBadge({ statut }: { statut: Budget['statut'] }) {
+  const t = useTranslations('finance.budget');
   if (statut === 'APPROUVE')
     return (
       <span className="badge bg-primary-50 text-primary-700 flex items-center gap-1">
-        <CheckCircle className="w-3 h-3" /> Approuvé
+        <CheckCircle className="w-3 h-3" /> {t('statut.approuve')}
       </span>
     );
   return (
     <span className="badge bg-neutral-100 text-neutral-600 flex items-center gap-1">
-      <Clock className="w-3 h-3" /> Brouillon
+      <Clock className="w-3 h-3" /> {t('statut.brouillon')}
     </span>
   );
 }
 
 function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id: string) => void }) {
+  const t = useTranslations('finance.budget');
   const [open, setOpen] = useState(false);
   const montantTotal = budget.lignes.reduce((s, l) => s + Number(l.montantPrevu), 0);
   const realise = budget.lignes.reduce((s, l) => s + Number(l.montantRealise ?? 0), 0);
@@ -60,20 +63,20 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
               <StatutBadge statut={budget.statut} />
             </div>
             <p className="text-sm text-neutral-500">
-              Exercice {budget.exercice}
-              {budget.projet && ` · Projet : ${budget.projet.code} — ${budget.projet.nom}`}
+              {t('card.exercice', { exercice: String(budget.exercice) })}
+              {budget.projet && ` · ${t('card.projet', { code: budget.projet.code, nom: budget.projet.nom })}`}
             </p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-lg font-bold text-primary-600">{formatMontant(montantTotal)}</p>
-            <p className="text-xs text-neutral-400">Budget total</p>
+            <p className="text-xs text-neutral-400">{t('card.budgetTotal')}</p>
           </div>
         </div>
 
         {/* Barre de progression */}
         <div className="mt-4">
           <div className="flex justify-between text-xs text-neutral-500 mb-1">
-            <span>Exécution budgétaire</span>
+            <span>{t('card.execution')}</span>
             <span className="font-medium text-neutral-700">{taux}%</span>
           </div>
           <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
@@ -83,8 +86,8 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
             />
           </div>
           <div className="flex justify-between text-xs text-neutral-400 mt-1">
-            <span>Réalisé : {formatMontant(realise)}</span>
-            <span>Écart : {formatMontant(montantTotal - realise)}</span>
+            <span>{t('card.realise', { montant: formatMontant(realise) })}</span>
+            <span>{t('card.ecart', { montant: formatMontant(montantTotal - realise) })}</span>
           </div>
         </div>
 
@@ -94,7 +97,7 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
             className="flex items-center gap-1 text-sm text-primary-600 hover:underline font-medium"
           >
             {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            {open ? 'Masquer les lignes' : `Voir les ${budget.lignes.length} ligne(s)`}
+            {open ? t('card.masquerLignes') : t('card.voirLignes', { count: budget.lignes.length })}
           </button>
           {budget.statut === 'BROUILLON' && (
             <button
@@ -102,12 +105,12 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
               className="btn-primary text-xs py-1.5 px-3"
             >
               <CheckCircle className="w-3.5 h-3.5" />
-              Approuver
+              {t('card.approuver')}
             </button>
           )}
           {budget.statut === 'APPROUVE' && budget.dateApprobation && (
             <span className="text-xs text-neutral-400">
-              Approuvé le {formatDate(budget.dateApprobation)}
+              {t('card.approuveLe', { date: formatDate(budget.dateApprobation) })}
             </span>
           )}
         </div>
@@ -119,11 +122,11 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
           <table className="w-full text-sm">
             <thead className="bg-neutral-50">
               <tr>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Catégorie</th>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Description</th>
-                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Prévu</th>
-                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Réalisé</th>
-                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Écart</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('table.categorie')}</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('table.description')}</th>
+                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('table.prevu')}</th>
+                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('table.realise')}</th>
+                <th className="text-right px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('table.ecart')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -144,7 +147,7 @@ function BudgetCard({ budget, onApprouver }: { budget: Budget; onApprouver: (id:
             </tbody>
             <tfoot className="bg-neutral-50 border-t border-neutral-200">
               <tr>
-                <td colSpan={2} className="px-4 py-2.5 font-semibold text-neutral-700 text-sm">TOTAL</td>
+                <td colSpan={2} className="px-4 py-2.5 font-semibold text-neutral-700 text-sm">{t('table.total')}</td>
                 <td className="px-4 py-2.5 text-right font-bold text-neutral-800">{formatMontant(montantTotal)}</td>
                 <td className="px-4 py-2.5 text-right font-bold text-neutral-800">
                   {formatMontant(budget.lignes.reduce((s, l) => s + Number(l.montantRealise ?? 0), 0))}
@@ -168,10 +171,12 @@ interface BudgetFormData {
 }
 
 function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
+  const t = useTranslations('finance.budget');
+  const tc = useTranslations('finance.common');
   const queryClient = useQueryClient();
   const annee = new Date().getFullYear();
   const [form, setForm] = useState<BudgetFormData>({
-    nom: `Budget ${annee}`,
+    nom: t('modal.defaultNom', { annee: String(annee) }),
     exercice: String(annee),
     lignes: [{ categorie: '', description: '', montantPrevu: '' }],
   });
@@ -183,7 +188,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       onClose();
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur lors de la création'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? t('errors.creation')),
   });
 
   const addLigne = () =>
@@ -200,9 +205,9 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nom.trim()) { setError('Le nom est obligatoire'); return; }
+    if (!form.nom.trim()) { setError(t('errors.nomRequis')); return; }
     const lignes = form.lignes.filter((l) => l.categorie.trim() && l.montantPrevu);
-    if (!lignes.length) { setError('Ajoutez au moins une ligne budgétaire'); return; }
+    if (!lignes.length) { setError(t('errors.ligneRequise')); return; }
     setError('');
     mutation.mutate({
       nom: form.nom.trim(),
@@ -220,7 +225,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-neutral-100 sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-neutral-800">Nouveau budget</h2>
+          <h2 className="text-lg font-semibold text-neutral-800">{t('modal.title')}</h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-neutral-100 text-neutral-500">
             <X className="w-5 h-5" />
           </button>
@@ -233,7 +238,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-neutral-600 mb-1">Nom du budget *</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('modal.nom')}</label>
               <input
                 className="input w-full"
                 value={form.nom}
@@ -242,7 +247,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-neutral-600 mb-1">Exercice *</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">{t('modal.exercice')}</label>
               <input
                 className="input w-full"
                 type="number"
@@ -258,9 +263,9 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
           {/* Lignes budgétaires */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-medium text-neutral-600">Lignes budgétaires *</label>
+              <label className="text-xs font-medium text-neutral-600">{t('modal.lignes')}</label>
               <button type="button" onClick={addLigne} className="text-xs text-primary-600 hover:underline font-medium flex items-center gap-1">
-                <Plus className="w-3 h-3" /> Ajouter une ligne
+                <Plus className="w-3 h-3" /> {t('modal.addLigne')}
               </button>
             </div>
             <div className="space-y-2">
@@ -269,7 +274,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
                   <div className="col-span-4">
                     <input
                       className="input w-full text-xs"
-                      placeholder="Catégorie *"
+                      placeholder={t('modal.categoriePlaceholder')}
                       value={ligne.categorie}
                       onChange={(e) => updateLigne(i, 'categorie', e.target.value)}
                     />
@@ -277,7 +282,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
                   <div className="col-span-4">
                     <input
                       className="input w-full text-xs"
-                      placeholder="Description"
+                      placeholder={t('modal.descriptionPlaceholder')}
                       value={ligne.description}
                       onChange={(e) => updateLigne(i, 'description', e.target.value)}
                     />
@@ -286,7 +291,7 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
                     <input
                       className="input w-full text-xs"
                       type="number"
-                      placeholder="Montant (XOF)"
+                      placeholder={t('modal.montantPlaceholder')}
                       value={ligne.montantPrevu}
                       onChange={(e) => updateLigne(i, 'montantPrevu', e.target.value)}
                     />
@@ -304,12 +309,12 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-neutral-100">
-            <button type="button" onClick={onClose} className="btn-secondary">Annuler</button>
+            <button type="button" onClick={onClose} className="btn-secondary">{tc('cancel')}</button>
             <button type="submit" className="btn-primary" disabled={mutation.isPending}>
               {mutation.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {tc('saving')}</>
               ) : (
-                <><Plus className="w-4 h-4" /> Créer le budget</>
+                <><Plus className="w-4 h-4" /> {t('modal.submit')}</>
               )}
             </button>
           </div>
@@ -320,6 +325,8 @@ function NouveauBudgetModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function BudgetPage() {
+  const t = useTranslations('finance.budget');
+  const tc = useTranslations('finance.common');
   const [showModal, setShowModal] = useState(false);
   const [exercice, setExercice] = useState<string>(String(new Date().getFullYear()));
   const [exporting, setExporting] = useState(false);
@@ -378,17 +385,17 @@ export default function BudgetPage() {
       {/* En-tête */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Budgets</h1>
-          <p className="text-sm text-neutral-500 mt-1">Planification et suivi budgétaire par exercice</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('title')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportPDF} disabled={exporting || budgets.length === 0} className="btn-secondary flex items-center gap-2 text-sm">
             <FilePdf className="w-4 h-4" />
-            {exporting ? 'Export…' : 'PDF Rapport'}
+            {exporting ? tc('exporting') : t('actions.exportPdf')}
           </button>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Nouveau budget
+            {t('actions.new')}
           </button>
         </div>
       </div>
@@ -400,7 +407,7 @@ export default function BudgetPage() {
             <Wallet className="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budget total prévu</p>
+            <p className="text-xs text-neutral-500">{t('kpi.totalPrevu')}</p>
             <p className="text-xl font-bold text-primary-600">{formatMontant(totalPrevu)}</p>
           </div>
         </div>
@@ -409,7 +416,7 @@ export default function BudgetPage() {
             <CheckCircle className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budgets approuvés</p>
+            <p className="text-xs text-neutral-500">{t('kpi.approuves')}</p>
             <p className="text-xl font-bold text-green-600">{budgetsApprouves} / {budgets.length}</p>
           </div>
         </div>
@@ -418,7 +425,7 @@ export default function BudgetPage() {
             <AlertTriangle className={`w-5 h-5 ${alertes > 0 ? 'text-amber-500' : 'text-neutral-400'}`} />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budgets à surveiller</p>
+            <p className="text-xs text-neutral-500">{t('kpi.aSurveiller')}</p>
             <p className={`text-xl font-bold ${alertes > 0 ? 'text-amber-600' : 'text-neutral-600'}`}>{alertes}</p>
           </div>
         </div>
@@ -427,13 +434,13 @@ export default function BudgetPage() {
       {/* Filtre exercice */}
       <div className="flex items-center gap-3">
         <TrendingUp className="w-4 h-4 text-neutral-400" />
-        <label className="text-sm text-neutral-600 font-medium">Exercice :</label>
+        <label className="text-sm text-neutral-600 font-medium">{t('filtre.exercice')}</label>
         <select
           className="input w-32 text-sm"
           value={exercice}
           onChange={(e) => setExercice(e.target.value)}
         >
-          <option value="">Tous</option>
+          <option value="">{t('filtre.tous')}</option>
           {[2024, 2025, 2026, 2027].map((y) => (
             <option key={y} value={String(y)}>{y}</option>
           ))}
@@ -444,15 +451,15 @@ export default function BudgetPage() {
       {isLoading ? (
         <div className="flex items-center justify-center py-20 text-neutral-400">
           <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          Chargement des budgets…
+          {t('loading')}
         </div>
       ) : budgets.length === 0 ? (
         <div className="card p-12 text-center">
           <Wallet className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-500 font-medium">Aucun budget pour cet exercice</p>
-          <p className="text-sm text-neutral-400 mt-1">Créez votre premier budget pour commencer la planification</p>
+          <p className="text-neutral-500 font-medium">{t('empty.title')}</p>
+          <p className="text-sm text-neutral-400 mt-1">{t('empty.subtitle')}</p>
           <button onClick={() => setShowModal(true)} className="btn-primary mt-4">
-            <Plus className="w-4 h-4" /> Créer un budget
+            <Plus className="w-4 h-4" /> {t('empty.cta')}
           </button>
         </div>
       ) : (

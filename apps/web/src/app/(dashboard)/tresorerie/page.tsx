@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, TrendingUp, Landmark, FileSpreadsheet } from 'lucide-react';
@@ -29,6 +30,8 @@ interface Mouvement {
 }
 
 export default function TresoreriePage() {
+  const t = useTranslations('finance.tresorerie');
+  const tc = useTranslations('finance.common');
   const [selectedCompteId, setSelectedCompteId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '', compteId: '' });
@@ -54,7 +57,7 @@ export default function TresoreriePage() {
       setForm({ libelle: '', date: new Date().toISOString().slice(0, 10), type: 'debit', montant: '', compteId: '' });
       setError('');
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? tc('error')),
   });
 
   const { data: comptesData, isLoading: comptesLoading } = useQuery({
@@ -108,30 +111,30 @@ export default function TresoreriePage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Trésorerie</h1>
-          <p className="text-sm text-neutral-500 mt-1">Situation des comptes et flux de trésorerie</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('title')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           {selectedCompte && (
             <button onClick={handleExportMouvements} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
               <FileSpreadsheet className="w-4 h-4" />
-              {exporting ? 'Export…' : 'Relevé Excel'}
+              {exporting ? tc('exporting') : t('actions.exportReleve')}
             </button>
           )}
           <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4" />
-            Nouveau mouvement
+            {t('actions.newMouvement')}
           </button>
         </div>
       </div>
 
       <div className="stat-card flex items-center justify-between">
         <div>
-          <p className="text-sm text-neutral-500">Trésorerie totale</p>
+          <p className="text-sm text-neutral-500">{t('kpi.total')}</p>
           <p className="text-3xl font-bold text-neutral-800 mt-1">{comptesLoading ? '—' : formatMontant(totalTresorerie)}</p>
           {!comptesLoading && (
             <p className="text-xs text-neutral-400 mt-1">
-              {comptes.length} compte{comptes.length > 1 ? 's' : ''} bancaire{comptes.length > 1 ? 's' : ''}
+              {t('kpi.comptes', { count: comptes.length })}
             </p>
           )}
         </div>
@@ -180,26 +183,26 @@ export default function TresoreriePage() {
       {selectedCompte && (
         <div>
           <h2 className="text-base font-semibold text-neutral-700 mb-3">
-            Mouvements — {selectedCompte.nom}
+            {t('mouvements.title', { compte: selectedCompte.nom })}
           </h2>
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="bg-neutral-50 border-b border-neutral-100">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Libellé</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Débit</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Crédit</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">Rapproché</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('mouvements.date')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('mouvements.libelle')}</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('mouvements.debit')}</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('mouvements.credit')}</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">{t('mouvements.rapproche')}</th>
                 </tr>
               </thead>
               <tbody>
                 {mouvLoading && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Chargement…</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">{tc('loading')}</td></tr>
                 )}
                 {!mouvLoading && mouvements.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">Aucun mouvement</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-400 text-sm">{t('mouvements.empty')}</td></tr>
                 )}
                 {mouvements.map((m) => {
                   const isDebit = m.type === 'DEBIT' || toNum(m.debit) > 0;
@@ -216,8 +219,8 @@ export default function TresoreriePage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {m.rapproche
-                          ? <span className="badge badge-success">Rapproché</span>
-                          : <span className="badge badge-neutral">En attente</span>}
+                          ? <span className="badge badge-success">{t('mouvements.statutRapproche')}</span>
+                          : <span className="badge badge-neutral">{t('mouvements.statutEnAttente')}</span>}
                       </td>
                     </tr>
                   );
@@ -232,16 +235,16 @@ export default function TresoreriePage() {
       <Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title="Nouveau mouvement"
+        title={t('modal.title')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>{tc('cancel')}</button>
             <button
               className="btn-primary"
               disabled={createMouvement.isPending || !form.libelle || !form.montant}
               onClick={() => createMouvement.mutate(form)}
             >
-              {createMouvement.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {createMouvement.isPending ? tc('saving') : tc('save')}
             </button>
           </>
         }
@@ -249,30 +252,30 @@ export default function TresoreriePage() {
         <div className="space-y-4">
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div>
-            <label className="label">Compte</label>
+            <label className="label">{t('modal.compte')}</label>
             <select className="input w-full" value={form.compteId || selectedCompte?.id || ''} onChange={(e) => setForm((p) => ({ ...p, compteId: e.target.value }))}>
               {comptes.map((c) => <option key={c.id} value={c.id}>{c.nom} ({c.banque})</option>)}
             </select>
           </div>
           <div>
-            <label className="label">Date</label>
+            <label className="label">{t('modal.date')}</label>
             <input type="date" className="input w-full" value={form.date} onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))} />
           </div>
           <div>
-            <label className="label">Libellé</label>
-            <input type="text" className="input w-full" placeholder="Description du mouvement" value={form.libelle} onChange={(e) => setForm((p) => ({ ...p, libelle: e.target.value }))} />
+            <label className="label">{t('modal.libelle')}</label>
+            <input type="text" className="input w-full" placeholder={t('modal.libellePlaceholder')} value={form.libelle} onChange={(e) => setForm((p) => ({ ...p, libelle: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Type</label>
+              <label className="label">{t('modal.type')}</label>
               <select className="input w-full" value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
-                <option value="debit">Débit (sortie)</option>
-                <option value="credit">Crédit (entrée)</option>
+                <option value="debit">{t('modal.typeDebit')}</option>
+                <option value="credit">{t('modal.typeCredit')}</option>
               </select>
             </div>
             <div>
-              <label className="label">Montant (XOF)</label>
-              <input type="number" className="input w-full" placeholder="0" value={form.montant} onChange={(e) => setForm((p) => ({ ...p, montant: e.target.value }))} />
+              <label className="label">{t('modal.montant')}</label>
+              <input type="number" className="input w-full" placeholder={t('modal.montantPlaceholder')} value={form.montant} onChange={(e) => setForm((p) => ({ ...p, montant: e.target.value }))} />
             </div>
           </div>
         </div>

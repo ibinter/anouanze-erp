@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Plus, Search, Users, UserCheck, User, FolderOpen, Eye, Phone, Hash } from 'lucide-react';
@@ -25,6 +26,8 @@ interface Beneficiaire {
 }
 
 export default function BeneficiairesPage() {
+  const t = useTranslations('relations.beneficiaires');
+  const tc = useTranslations('relations.commun');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
@@ -48,7 +51,7 @@ export default function BeneficiairesPage() {
       setForm({ nom: '', prenom: '', genre: 'F', telephone: '' });
       setError('');
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? tc('erreurGenerique')),
   });
 
   const { data, isLoading } = useQuery({
@@ -80,42 +83,42 @@ export default function BeneficiairesPage() {
 
   const columns: Column<Beneficiaire>[] = [
     {
-      key: 'code', header: 'Code', width: '100px',
+      key: 'code', header: t('colonnes.code'), width: '100px',
       render: (r) => <span className="font-mono text-xs text-neutral-500">{(r as any).code ?? '—'}</span>,
     },
     {
-      key: 'nom', header: 'Nom complet',
+      key: 'nom', header: t('colonnes.nomComplet'),
       render: (r) => <span className="font-medium text-neutral-800">{r.prenom} {r.nom}</span>,
     },
     {
-      key: 'genre', header: 'Genre', width: '80px',
+      key: 'genre', header: t('colonnes.genre'), width: '80px',
       render: (r) => (
-        <span className={`badge ${r.genre === 'F' ? 'badge-warning' : 'badge-neutral'}`}>{r.genre === 'F' ? 'Femme' : 'Homme'}</span>
+        <span className={`badge ${r.genre === 'F' ? 'badge-warning' : 'badge-neutral'}`}>{r.genre === 'F' ? t('genres.femme') : t('genres.homme')}</span>
       ),
     },
     {
-      key: 'telephone', header: 'Téléphone',
+      key: 'telephone', header: t('colonnes.telephone'),
       render: (r) => <span>{(r as any).telephone ?? '—'}</span>,
     },
     {
-      key: '_count', header: 'Projets', width: '90px',
+      key: '_count', header: t('colonnes.projets'), width: '90px',
       render: (r) => {
         const nb = (r as any)._count?.projets ?? 0;
-        return <span className="badge badge-success">{nb} projet{nb > 1 ? 's' : ''}</span>;
+        return <span className="badge badge-success">{t('nbProjets', { count: nb })}</span>;
       },
     },
     {
-      key: 'dateEnregistrement', header: 'Enregistrement', width: '130px',
+      key: 'dateEnregistrement', header: t('colonnes.enregistrement'), width: '130px',
       render: (r) => formatDate((r as any).dateEnregistrement ?? (r as any).createdAt),
     },
     {
-      key: 'actions', header: 'Actions', width: '100px',
+      key: 'actions', header: t('colonnes.actions'), width: '100px',
       render: (r) => (
         <button
           onClick={(e) => { e.stopPropagation(); setSelected(r); }}
           className="flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium"
         >
-          <Eye className="w-3 h-3" /> Détails
+          <Eye className="w-3 h-3" /> {t('details')}
         </button>
       ),
     },
@@ -125,12 +128,12 @@ export default function BeneficiairesPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Bénéficiaires</h1>
-          <p className="text-sm text-neutral-500 mt-1">Registre des bénéficiaires de l&apos;organisation</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('sousTitre')}</p>
         </div>
         <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
           <Plus className="w-4 h-4" />
-          Nouveau bénéficiaire
+          {t('nouveau')}
         </button>
       </div>
 
@@ -140,7 +143,7 @@ export default function BeneficiairesPage() {
             <Users className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Total bénéficiaires</p>
+            <p className="text-xs text-neutral-500">{t('stats.total')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : total}</p>
           </div>
         </div>
@@ -149,7 +152,7 @@ export default function BeneficiairesPage() {
             <UserCheck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Femmes (page)</p>
+            <p className="text-xs text-neutral-500">{t('stats.femmes')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalFemmes}</p>
           </div>
         </div>
@@ -158,7 +161,7 @@ export default function BeneficiairesPage() {
             <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Hommes (page)</p>
+            <p className="text-xs text-neutral-500">{t('stats.hommes')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalHommes}</p>
           </div>
         </div>
@@ -167,7 +170,7 @@ export default function BeneficiairesPage() {
             <FolderOpen className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Accompagnements (page)</p>
+            <p className="text-xs text-neutral-500">{t('stats.accompagnements')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalProjets}</p>
           </div>
         </div>
@@ -177,7 +180,7 @@ export default function BeneficiairesPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
           type="text"
-          placeholder="Rechercher un bénéficiaire…"
+          placeholder={t('recherchePlaceholder')}
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="input pl-9 w-full"
@@ -198,7 +201,7 @@ export default function BeneficiairesPage() {
       <SlideOver
         open={!!selected}
         onClose={() => setSelected(null)}
-        title={fiche ? `${fiche.prenom ?? ''} ${fiche.nom}`.trim() : 'Bénéficiaire'}
+        title={fiche ? `${fiche.prenom ?? ''} ${fiche.nom}`.trim() : t('fiche.titreDefaut')}
       >
         {fiche && (
           <div className="space-y-5">
@@ -208,32 +211,32 @@ export default function BeneficiairesPage() {
               </div>
               <div>
                 <p className="font-semibold text-neutral-800">{fiche.prenom} {fiche.nom}</p>
-                <span className={`badge ${fiche.genre === 'F' ? 'badge-warning' : 'badge-neutral'}`}>{fiche.genre === 'F' ? 'Femme' : 'Homme'}</span>
+                <span className={`badge ${fiche.genre === 'F' ? 'badge-warning' : 'badge-neutral'}`}>{fiche.genre === 'F' ? t('genres.femme') : t('genres.homme')}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-neutral-100 p-3">
-                <p className="flex items-center gap-1 text-xs text-neutral-500"><Hash className="w-3 h-3" /> Code</p>
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><Hash className="w-3 h-3" /> {t('fiche.code')}</p>
                 <p className="font-mono text-sm text-neutral-800 mt-1">{fiche.code ?? '—'}</p>
               </div>
               <div className="rounded-xl border border-neutral-100 p-3">
-                <p className="flex items-center gap-1 text-xs text-neutral-500"><FolderOpen className="w-3 h-3" /> Projets</p>
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><FolderOpen className="w-3 h-3" /> {t('fiche.projets')}</p>
                 <p className="text-sm font-semibold text-neutral-800 mt-1">{toNum(fiche._count?.projets)}</p>
               </div>
               <div className="rounded-xl border border-neutral-100 p-3">
-                <p className="flex items-center gap-1 text-xs text-neutral-500"><Phone className="w-3 h-3" /> Téléphone</p>
+                <p className="flex items-center gap-1 text-xs text-neutral-500"><Phone className="w-3 h-3" /> {t('fiche.telephone')}</p>
                 <p className="text-sm text-neutral-800 mt-1">{fiche.telephone ?? '—'}</p>
               </div>
               <div className="rounded-xl border border-neutral-100 p-3">
-                <p className="text-xs text-neutral-500">Enregistrement</p>
+                <p className="text-xs text-neutral-500">{t('fiche.enregistrement')}</p>
                 <p className="text-sm text-neutral-800 mt-1">{fiche.dateEnregistrement || fiche.createdAt ? formatDate((fiche.dateEnregistrement ?? fiche.createdAt) as string) : '—'}</p>
               </div>
             </div>
 
             {fiche.vulnerabilites && fiche.vulnerabilites.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-neutral-600 mb-2">Vulnérabilités</p>
+                <p className="text-xs font-medium text-neutral-600 mb-2">{t('fiche.vulnerabilites')}</p>
                 <div className="flex flex-wrap gap-2">
                   {fiche.vulnerabilites.map((v) => (
                     <span key={v} className="badge badge-warning text-xs">{v}</span>
@@ -244,12 +247,12 @@ export default function BeneficiairesPage() {
 
             {fiche.notes && (
               <div>
-                <p className="text-xs font-medium text-neutral-600 mb-1">Notes</p>
+                <p className="text-xs font-medium text-neutral-600 mb-1">{t('fiche.notes')}</p>
                 <p className="text-sm text-neutral-600">{fiche.notes}</p>
               </div>
             )}
 
-            {detailLoading && <p className="text-sm text-neutral-400 text-center py-2">Chargement…</p>}
+            {detailLoading && <p className="text-sm text-neutral-400 text-center py-2">{tc('chargement')}</p>}
           </div>
         )}
       </SlideOver>
@@ -257,16 +260,16 @@ export default function BeneficiairesPage() {
       <Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title="Nouveau bénéficiaire"
+        title={t('modal.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>{tc('annuler')}</button>
             <button
               className="btn-primary"
               disabled={createBeneficiaire.isPending || !form.nom || !form.prenom}
               onClick={() => createBeneficiaire.mutate(form)}
             >
-              {createBeneficiaire.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {createBeneficiaire.isPending ? tc('enregistrementEnCours') : tc('enregistrer')}
             </button>
           </>
         }
@@ -275,24 +278,24 @@ export default function BeneficiairesPage() {
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Prénom</label>
-              <input type="text" className="input w-full" placeholder="Prénom" value={form.prenom} onChange={(e) => setForm((p) => ({ ...p, prenom: e.target.value }))} />
+              <label className="label">{t('modal.prenom')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderPrenom')} value={form.prenom} onChange={(e) => setForm((p) => ({ ...p, prenom: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Nom</label>
-              <input type="text" className="input w-full" placeholder="Nom de famille" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+              <label className="label">{t('modal.nom')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderNom')} value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
             </div>
           </div>
           <div>
-            <label className="label">Genre</label>
+            <label className="label">{t('modal.genre')}</label>
             <select className="input w-full" value={form.genre} onChange={(e) => setForm((p) => ({ ...p, genre: e.target.value }))}>
-              <option value="F">Femme</option>
-              <option value="M">Homme</option>
+              <option value="F">{t('genres.femme')}</option>
+              <option value="M">{t('genres.homme')}</option>
             </select>
           </div>
           <div>
-            <label className="label">Téléphone</label>
-            <input type="tel" className="input w-full" placeholder="+225 07 …" value={form.telephone} onChange={(e) => setForm((p) => ({ ...p, telephone: e.target.value }))} />
+            <label className="label">{t('modal.telephone')}</label>
+            <input type="tel" className="input w-full" placeholder={t('modal.placeholderTelephone')} value={form.telephone} onChange={(e) => setForm((p) => ({ ...p, telephone: e.target.value }))} />
           </div>
         </div>
       </Modal>

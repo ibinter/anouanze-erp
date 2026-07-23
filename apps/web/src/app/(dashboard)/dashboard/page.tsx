@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { DashboardCharts } from './DashboardCharts';
 import { Users, FolderOpen, Wallet, HandHeart, AlertTriangle, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { formatMontant } from '@/lib/utils';
 import { api } from '@/lib/api';
 
@@ -57,6 +58,7 @@ function KpiCard({
 }
 
 export default function DashboardPage() {
+  const t = useTranslations('shell.dashboard');
   const { data, isLoading } = useQuery<TableauBord>({
     queryKey: ['tableau-bord'],
     queryFn: async () => {
@@ -68,28 +70,28 @@ export default function DashboardPage() {
 
   const kpis = [
     {
-      titre: 'Membres actifs',
+      titre: t('kpi.membresActifs'),
       valeur: data?.membresActifs ?? 0,
-      unite: 'membres',
+      unite: t('kpi.membresActifsUnite'),
       icon: Users,
       gradient: 'from-primary-500 to-primary-700',
     },
     {
-      titre: 'Projets en cours',
+      titre: t('kpi.projetsEnCours'),
       valeur: data?.projetsEnCours ?? 0,
-      unite: 'projets',
+      unite: t('kpi.projetsEnCoursUnite'),
       icon: FolderOpen,
       gradient: 'from-accent-400 to-accent-600',
     },
     {
-      titre: 'Trésorerie',
+      titre: t('kpi.tresorerie'),
       valeur: data?.soldeTresorerie ?? 0,
       format: 'montant',
       icon: Wallet,
       gradient: 'from-emerald-500 to-teal-700',
     },
     {
-      titre: 'Dons ce mois',
+      titre: t('kpi.donsMois'),
       valeur: data?.totalDonsMois ?? 0,
       format: 'montant',
       icon: HandHeart,
@@ -99,11 +101,16 @@ export default function DashboardPage() {
 
   const alertes = [
     ...(data?.alertesBudgets ?? []).map((b) => ({
-      message: `Budget "${b.nom}" dépassé à ${b.taux}%`,
+      message: t('alertes.budgetDepasse', { nom: b.nom, taux: b.taux }),
       niveau: b.taux >= 100 ? 'error' : 'warning',
     })),
     ...(data?.cotisationsEnRetard?.length
-      ? [{ message: `${data.cotisationsEnRetard.length} cotisation(s) en retard`, niveau: 'warning' }]
+      ? [
+          {
+            message: t('alertes.cotisationsEnRetard', { count: data.cotisationsEnRetard.length }),
+            niveau: 'warning',
+          },
+        ]
       : []),
   ] as { message: string; niveau: 'error' | 'warning' }[];
 
@@ -114,8 +121,8 @@ export default function DashboardPage() {
         <div className="absolute -right-8 -top-8 w-48 h-48 rounded-full bg-white/10" />
         <div className="absolute right-16 -bottom-12 w-40 h-40 rounded-full bg-accent-400/20" />
         <div className="relative">
-          <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
-          <p className="text-sm text-primary-100 mt-1">Vue d&apos;ensemble de votre organisation en temps réel</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('titre')}</h1>
+          <p className="text-sm text-primary-100 mt-1">{t('sousTitre')}</p>
         </div>
       </div>
 
@@ -133,11 +140,13 @@ export default function DashboardPage() {
           <div className="card p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-primary-600" />
-              <h2 className="font-semibold text-neutral-800">Budget {new Date().getFullYear()}</h2>
+              <h2 className="font-semibold text-neutral-800">
+                {t('budget.titre', { annee: String(new Date().getFullYear()) })}
+              </h2>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-neutral-500">Réalisé</span>
+                <span className="text-neutral-500">{t('budget.realise')}</span>
                 <span className="font-medium">
                   {formatMontant(data.budgetRealise)} / {formatMontant(data.budgetPrevu)}
                 </span>
@@ -156,8 +165,10 @@ export default function DashboardPage() {
               </div>
               <p className="text-xs text-neutral-400 mt-1">
                 {data.budgetPrevu > 0
-                  ? `${Math.round((data.budgetRealise / data.budgetPrevu) * 100)}% exécuté`
-                  : 'Aucun budget défini'}
+                  ? t('budget.execute', {
+                      pourcentage: Math.round((data.budgetRealise / data.budgetPrevu) * 100),
+                    })
+                  : t('budget.aucun')}
               </p>
             </div>
           </div>
@@ -167,15 +178,15 @@ export default function DashboardPage() {
         <div className="card p-5 space-y-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <h2 className="font-semibold text-neutral-800">Alertes critiques</h2>
+            <h2 className="font-semibold text-neutral-800">{t('alertes.titre')}</h2>
           </div>
           {isLoading ? (
             <div className="flex items-center gap-2 text-sm text-neutral-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Chargement...
+              {t('alertes.chargement')}
             </div>
           ) : alertes.length === 0 ? (
-            <p className="text-sm text-green-600 font-medium">✓ Aucune alerte critique</p>
+            <p className="text-sm text-green-600 font-medium">{t('alertes.aucune')}</p>
           ) : (
             <ul className="space-y-3">
               {alertes.map((a, i) => (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Package, AlertTriangle, Search, ArrowDownCircle, ArrowUpCircle, Bell, Boxes, Wallet } from 'lucide-react';
@@ -28,6 +29,8 @@ function estEnAlerte(a: Article) {
 }
 
 export default function StocksPage() {
+  const t = useTranslations('finance.stocks');
+  const tc = useTranslations('finance.common');
   const [search, setSearch] = useState('');
   const [alertesOnly, setAlertesOnly] = useState(false);
   const [page, setPage] = useState(1);

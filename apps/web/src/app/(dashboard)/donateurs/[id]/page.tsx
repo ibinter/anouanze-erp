@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatDate, formatMontant, toNum, initiales } from '@/lib/utils';
@@ -51,18 +52,26 @@ interface Donateur {
   dons?: Don[];
 }
 
-const TYPE_DON_LABEL: Record<string, string> = {
-  NUMERAIRE: 'Numéraire',
-  EN_NATURE: 'En nature',
-  COMPETENCES: 'Compétences',
-  FONCIER: 'Foncier',
+/** Enum API → clé de libellé (les valeurs envoyées à l'API restent inchangées). */
+const TYPE_DON_KEY: Record<string, string> = {
+  NUMERAIRE: 'numeraire',
+  EN_NATURE: 'enNature',
+  COMPETENCES: 'competences',
+  FONCIER: 'foncier',
 };
 
-const STATUT_PAIEMENT: Record<string, { label: string; cls: string }> = {
-  PAYE: { label: 'Reçu', cls: 'badge badge-success' },
-  EN_ATTENTE: { label: 'En attente', cls: 'badge badge-warning' },
-  PARTIEL: { label: 'Partiel', cls: 'badge badge-warning' },
-  ANNULE: { label: 'Annulé', cls: 'badge badge-error' },
+const STATUT_PAIEMENT_KEY: Record<string, string> = {
+  PAYE: 'paye',
+  EN_ATTENTE: 'enAttente',
+  PARTIEL: 'partiel',
+  ANNULE: 'annule',
+};
+
+const STATUT_PAIEMENT_CLS: Record<string, string> = {
+  PAYE: 'badge badge-success',
+  EN_ATTENTE: 'badge badge-warning',
+  PARTIEL: 'badge badge-warning',
+  ANNULE: 'badge badge-error',
 };
 
 function adresseToText(adresse: unknown): string | null {
@@ -106,16 +115,18 @@ function DetailSkeleton() {
 }
 
 function IntrouvableCard({ message }: { message: string }) {
+  const t = useTranslations('relations.donateurDetail');
+  const tc = useTranslations('relations.commun');
   return (
     <div className="p-4 sm:p-6">
       <div className="card max-w-lg mx-auto text-center py-14 space-y-4">
         <UserX className="w-12 h-12 mx-auto text-neutral-300 stroke-1" />
         <div>
-          <h2 className="text-lg font-semibold text-neutral-800">Donateur introuvable</h2>
+          <h2 className="text-lg font-semibold text-neutral-800">{t('introuvableTitre')}</h2>
           <p className="text-sm text-neutral-500 mt-1">{message}</p>
         </div>
         <Link href="/donateurs" className="btn-primary inline-flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Retour à la liste
+          <ArrowLeft className="w-4 h-4" /> {tc('retourListe')}
         </Link>
       </div>
     </div>
@@ -126,6 +137,9 @@ const EDIT_INIT = { nom: '', prenom: '', type: 'PHYSIQUE', email: '', telephone:
 const DON_INIT = { type: 'NUMERAIRE', montant: '', dateDon: '', descriptionNature: '' };
 
 export default function DonateurDetailPage() {
+  const t = useTranslations('relations.donateurDetail');
+  const tc = useTranslations('relations.commun');
+  const locale = useLocale() as 'fr' | 'en';
   const params = useParams<{ id: string }>();
   const id = String(params?.id ?? '');
   const router = useRouter();
@@ -156,7 +170,7 @@ export default function DonateurDetailPage() {
       setEditOpen(false);
       setEditError('');
     },
-    onError: (err: unknown) => setEditError(err instanceof Error ? err.message : 'Erreur lors de la modification'),
+    onError: (err: unknown) => setEditError(err instanceof Error ? err.message : tc('erreurModification')),
   });
 
   const createDon = useMutation({
@@ -169,13 +183,18 @@ export default function DonateurDetailPage() {
       setDonOpen(false);
       setDonError('');
     },
-    onError: (err: unknown) => setDonError(err instanceof Error ? err.message : 'Erreur lors de l’enregistrement'),
+    onError: (err: unknown) => setDonError(err instanceof Error ? err.message : tc('erreurEnregistrement')),
   });
+
+  const typeDonLabel = (type: string) => {
+    const key = TYPE_DON_KEY[type];
+    return key ? t(`typesDon.${key}`) : type;
+  };
 
   if (isLoading) return <DetailSkeleton />;
 
   if (isError || !donateur) {
-    const message = error instanceof Error ? error.message : 'Ce donateur n’existe pas ou ne fait pas partie de votre organisation.';
+    const message = error instanceof Error ? error.message : t('introuvableMessage');
     return <IntrouvableCard message={message} />;
   }
 
@@ -213,20 +232,20 @@ export default function DonateurDetailPage() {
     setExporting(true);
     try {
       const def: DocumentExportDefinition = {
-        title: `Historique des dons — ${nomComplet}`,
-        subtitle: donateur.type === 'PHYSIQUE' ? 'Personne physique' : 'Personne morale',
+        title: t('export.titre', { nom: nomComplet }),
+        subtitle: donateur.type === 'PHYSIQUE' ? t('typePhysique') : t('typeMoral'),
         documentType: 'record',
         branding: ANOUANZE_BRANDING,
-        lang: 'fr',
-        filtersSummary: `Dons : ${dons.length} — Total collecté : ${formatMontant(totalDons)}`,
+        lang: locale,
+        filtersSummary: t('export.resume', { count: dons.length, total: formatMontant(totalDons) }),
         columns: [
-          { key: 'dateDon', label: 'Date', type: 'date', priority: 'essential', nowrap: true, format: formatDateFR },
-          { key: 'type', label: 'Type', type: 'code', priority: 'essential' },
-          { key: 'montant', label: 'Montant', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
-          { key: 'valeurEstimee', label: 'Valeur estimée', type: 'amount', priority: 'secondary', nowrap: true, format: formatFCFA },
-          { key: 'statut', label: 'Statut', type: 'status', priority: 'important', nowrap: true },
-          { key: 'numeroRecu', label: 'N° reçu', type: 'reference', priority: 'important', nowrap: true },
-          { key: 'descriptionNature', label: 'Description', type: 'short-description', priority: 'secondary' },
+          { key: 'dateDon', label: t('export.colDate'), type: 'date', priority: 'essential', nowrap: true, format: formatDateFR },
+          { key: 'type', label: t('export.colType'), type: 'code', priority: 'essential' },
+          { key: 'montant', label: t('export.colMontant'), type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
+          { key: 'valeurEstimee', label: t('export.colValeurEstimee'), type: 'amount', priority: 'secondary', nowrap: true, format: formatFCFA },
+          { key: 'statut', label: t('export.colStatut'), type: 'status', priority: 'important', nowrap: true },
+          { key: 'numeroRecu', label: t('export.colNumeroRecu'), type: 'reference', priority: 'important', nowrap: true },
+          { key: 'descriptionNature', label: t('export.colDescription'), type: 'short-description', priority: 'secondary' },
         ],
       };
       await exportDocument(def, dons as unknown as Record<string, unknown>[], 'pdf');
@@ -238,9 +257,9 @@ export default function DonateurDetailPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <nav className="flex items-center gap-1.5 text-xs text-neutral-500">
-        <Link href="/dashboard" className="hover:text-primary-600">Tableau de bord</Link>
+        <Link href="/dashboard" className="hover:text-primary-600">{tc('tableauDeBord')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/donateurs" className="hover:text-primary-600">Donateurs</Link>
+        <Link href="/donateurs" className="hover:text-primary-600">{t('filAriane')}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-neutral-700 font-medium truncate">{nomComplet}</span>
       </nav>
@@ -251,7 +270,7 @@ export default function DonateurDetailPage() {
             type="button"
             onClick={() => router.back()}
             className="p-2 rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-50"
-            aria-label="Retour"
+            aria-label={tc('retour')}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -262,22 +281,22 @@ export default function DonateurDetailPage() {
             <h1 className="text-2xl font-bold text-neutral-800 leading-tight">{nomComplet}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className={`badge ${donateur.type === 'PHYSIQUE' ? 'badge-neutral' : ''}`}>
-                {donateur.type === 'PHYSIQUE' ? 'Personne physique' : 'Personne morale'}
+                {donateur.type === 'PHYSIQUE' ? t('typePhysique') : t('typeMoral')}
               </span>
-              {donateur.anonymous && <span className="badge badge-warning text-xs">Anonyme</span>}
+              {donateur.anonymous && <span className="badge badge-warning text-xs">{t('anonyme')}</span>}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExport} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
             <FileText className="w-4 h-4" />
-            {exporting ? 'Export…' : 'Exporter'}
+            {exporting ? tc('exportEnCours') : tc('exporter')}
           </button>
           <button onClick={openDon} className="btn-secondary flex items-center gap-2 text-sm">
-            <Plus className="w-4 h-4" /> Nouveau don
+            <Plus className="w-4 h-4" /> {t('nouveauDon')}
           </button>
           <button onClick={openEdit} className="btn-primary flex items-center gap-2 text-sm">
-            <Pencil className="w-4 h-4" /> Modifier
+            <Pencil className="w-4 h-4" /> {tc('modifier')}
           </button>
         </div>
       </div>
@@ -288,7 +307,7 @@ export default function DonateurDetailPage() {
             <Coins className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Total des dons</p>
+            <p className="text-xs text-neutral-500">{t('kpi.totalDons')}</p>
             <p className="text-lg font-bold text-neutral-800">{formatMontant(totalDons)}</p>
           </div>
         </div>
@@ -297,7 +316,7 @@ export default function DonateurDetailPage() {
             <Heart className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Nombre de dons</p>
+            <p className="text-xs text-neutral-500">{t('kpi.nombreDons')}</p>
             <p className="text-lg font-bold text-neutral-800">{dons.length}</p>
           </div>
         </div>
@@ -306,7 +325,7 @@ export default function DonateurDetailPage() {
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Don moyen</p>
+            <p className="text-xs text-neutral-500">{t('kpi.donMoyen')}</p>
             <p className="text-lg font-bold text-neutral-800">{formatMontant(donMoyen)}</p>
           </div>
         </div>
@@ -315,7 +334,7 @@ export default function DonateurDetailPage() {
             <Calendar className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Dernier don</p>
+            <p className="text-xs text-neutral-500">{t('kpi.dernierDon')}</p>
             <p className="text-lg font-bold text-neutral-800">{dernierDon ? formatDate(dernierDon.dateDon) : '—'}</p>
           </div>
         </div>
@@ -323,50 +342,52 @@ export default function DonateurDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="card lg:col-span-1">
-          <h2 className="text-sm font-semibold text-neutral-700 mb-2">Coordonnées</h2>
-          <InfoLigne label="Email" value={donateur.email} />
-          <InfoLigne label="Téléphone" value={donateur.telephone} />
-          <InfoLigne label="Pays" value={donateur.pays} />
-          <InfoLigne label="Adresse" value={adresse} />
-          <InfoLigne label="Valeur des dons en nature" value={valeurNature > 0 ? formatMontant(valeurNature) : null} />
-          <InfoLigne label="Enregistré le" value={donateur.createdAt ? formatDate(donateur.createdAt) : null} />
-          <InfoLigne label="Notes" value={donateur.notes} />
+          <h2 className="text-sm font-semibold text-neutral-700 mb-2">{t('infos.titre')}</h2>
+          <InfoLigne label={t('infos.email')} value={donateur.email} />
+          <InfoLigne label={t('infos.telephone')} value={donateur.telephone} />
+          <InfoLigne label={t('infos.pays')} value={donateur.pays} />
+          <InfoLigne label={t('infos.adresse')} value={adresse} />
+          <InfoLigne label={t('infos.valeurNature')} value={valeurNature > 0 ? formatMontant(valeurNature) : null} />
+          <InfoLigne label={t('infos.enregistreLe')} value={donateur.createdAt ? formatDate(donateur.createdAt) : null} />
+          <InfoLigne label={t('infos.notes')} value={donateur.notes} />
         </div>
 
         <div className="card lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-neutral-700">Historique des dons</h2>
+            <h2 className="text-sm font-semibold text-neutral-700">{t('dons.titre')}</h2>
             <span className="badge badge-neutral">{dons.length}</span>
           </div>
           {dons.length === 0 ? (
-            <p className="text-sm text-neutral-400 text-center py-10">Aucun don enregistré pour ce donateur.</p>
+            <p className="text-sm text-neutral-400 text-center py-10">{t('dons.vide')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-neutral-100 bg-neutral-50">
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Date</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Type</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-500 uppercase">Montant</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">N° reçu</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Statut</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('dons.colDate')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('dons.colType')}</th>
+                    <th className="px-3 py-2 text-right text-xs font-semibold text-neutral-500 uppercase">{t('dons.colMontant')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('dons.colNumeroRecu')}</th>
+                    <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('dons.colStatut')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dons.map((d) => {
-                    const sp = STATUT_PAIEMENT[d.statut] ?? { label: d.statut, cls: 'badge badge-neutral' };
+                    const spKey = STATUT_PAIEMENT_KEY[d.statut];
+                    const spLabel = spKey ? t(`statutsDon.${spKey}`) : d.statut;
+                    const spCls = STATUT_PAIEMENT_CLS[d.statut] ?? 'badge badge-neutral';
                     return (
                       <tr key={d.id} className="border-b border-neutral-50">
                         <td className="px-3 py-2.5 text-neutral-700">{formatDate(d.dateDon)}</td>
                         <td className="px-3 py-2.5">
-                          <span className="badge badge-neutral text-xs">{TYPE_DON_LABEL[d.type] ?? d.type}</span>
+                          <span className="badge badge-neutral text-xs">{typeDonLabel(d.type)}</span>
                           {d.descriptionNature && <p className="text-xs text-neutral-400 mt-0.5">{d.descriptionNature}</p>}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono font-semibold text-neutral-800">
                           {formatMontant(toNum(d.montant ?? d.valeurEstimee))}
                         </td>
                         <td className="px-3 py-2.5 font-mono text-xs text-neutral-500">{d.numeroRecu ?? '—'}</td>
-                        <td className="px-3 py-2.5"><span className={sp.cls}>{sp.label}</span></td>
+                        <td className="px-3 py-2.5"><span className={spCls}>{spLabel}</span></td>
                       </tr>
                     );
                   })}
@@ -380,10 +401,10 @@ export default function DonateurDetailPage() {
       <Modal
         open={editOpen}
         onOpenChange={setEditOpen}
-        title="Modifier le donateur"
+        title={t('modalDonateur.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setEditOpen(false)}>Annuler</button>
+            <button className="btn-secondary" onClick={() => setEditOpen(false)}>{tc('annuler')}</button>
             <button
               className="btn-primary"
               disabled={updateDonateur.isPending || !form.nom}
@@ -398,7 +419,7 @@ export default function DonateurDetailPage() {
                 })
               }
             >
-              {updateDonateur.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {updateDonateur.isPending ? tc('enregistrementEnCours') : tc('enregistrer')}
             </button>
           </>
         }
@@ -406,33 +427,33 @@ export default function DonateurDetailPage() {
         <div className="space-y-4">
           {editError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</p>}
           <div>
-            <label className="label">Type</label>
+            <label className="label">{t('modalDonateur.type')}</label>
             <select className="input w-full" value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
-              <option value="PHYSIQUE">Personne physique</option>
-              <option value="MORAL">Personne morale / Organisation</option>
+              <option value="PHYSIQUE">{t('typePhysique')}</option>
+              <option value="MORAL">{t('typeMoralLong')}</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">{form.type === 'PHYSIQUE' ? 'Nom *' : 'Raison sociale *'}</label>
+              <label className="label">{form.type === 'PHYSIQUE' ? t('modalDonateur.nom') : t('modalDonateur.raisonSociale')}</label>
               <input className="input w-full" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
             </div>
             {form.type === 'PHYSIQUE' && (
               <div>
-                <label className="label">Prénom</label>
+                <label className="label">{t('modalDonateur.prenom')}</label>
                 <input className="input w-full" value={form.prenom} onChange={(e) => setForm((p) => ({ ...p, prenom: e.target.value }))} />
               </div>
             )}
             <div>
-              <label className="label">Email</label>
+              <label className="label">{t('modalDonateur.email')}</label>
               <input className="input w-full" type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Téléphone</label>
+              <label className="label">{t('modalDonateur.telephone')}</label>
               <input className="input w-full" value={form.telephone} onChange={(e) => setForm((p) => ({ ...p, telephone: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Pays</label>
+              <label className="label">{t('modalDonateur.pays')}</label>
               <input className="input w-full" value={form.pays} onChange={(e) => setForm((p) => ({ ...p, pays: e.target.value }))} />
             </div>
           </div>
@@ -442,10 +463,10 @@ export default function DonateurDetailPage() {
       <Modal
         open={donOpen}
         onOpenChange={setDonOpen}
-        title="Enregistrer un don"
+        title={t('modalDon.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setDonOpen(false)}>Annuler</button>
+            <button className="btn-secondary" onClick={() => setDonOpen(false)}>{tc('annuler')}</button>
             <button
               className="btn-primary"
               disabled={createDon.isPending || (donForm.type === 'NUMERAIRE' && !donForm.montant)}
@@ -459,7 +480,7 @@ export default function DonateurDetailPage() {
                 })
               }
             >
-              {createDon.isPending ? 'Enregistrement…' : 'Enregistrer le don'}
+              {createDon.isPending ? tc('enregistrementEnCours') : t('modalDon.enregistrerDon')}
             </button>
           </>
         }
@@ -467,27 +488,27 @@ export default function DonateurDetailPage() {
         <div className="space-y-4">
           {donError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{donError}</p>}
           <div>
-            <label className="label">Type de don</label>
+            <label className="label">{t('modalDon.typeDon')}</label>
             <select className="input w-full" value={donForm.type} onChange={(e) => setDonForm((p) => ({ ...p, type: e.target.value }))}>
-              <option value="NUMERAIRE">Numéraire</option>
-              <option value="EN_NATURE">En nature</option>
-              <option value="COMPETENCES">Compétences / Bénévolat</option>
-              <option value="FONCIER">Foncier</option>
+              <option value="NUMERAIRE">{t('typesDon.numeraire')}</option>
+              <option value="EN_NATURE">{t('typesDon.enNature')}</option>
+              <option value="COMPETENCES">{t('typesDon.competencesLong')}</option>
+              <option value="FONCIER">{t('typesDon.foncier')}</option>
             </select>
           </div>
           {donForm.type === 'NUMERAIRE' ? (
             <div>
-              <label className="label">Montant (XOF) *</label>
+              <label className="label">{t('modalDon.montant')}</label>
               <input className="input w-full" type="number" min="0" value={donForm.montant} onChange={(e) => setDonForm((p) => ({ ...p, montant: e.target.value }))} />
             </div>
           ) : (
             <div>
-              <label className="label">Description</label>
+              <label className="label">{t('modalDon.description')}</label>
               <input className="input w-full" value={donForm.descriptionNature} onChange={(e) => setDonForm((p) => ({ ...p, descriptionNature: e.target.value }))} />
             </div>
           )}
           <div>
-            <label className="label">Date du don</label>
+            <label className="label">{t('modalDon.dateDon')}</label>
             <input className="input w-full" type="date" value={donForm.dateDon} onChange={(e) => setDonForm((p) => ({ ...p, dateDon: e.target.value }))} />
           </div>
         </div>

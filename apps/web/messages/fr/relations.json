@@ -1,1 +1,461 @@
-{}
+{
+  "relations": {
+    "commun": {
+      "annuler": "Annuler",
+      "enregistrer": "Enregistrer",
+      "enregistrementEnCours": "Enregistrement…",
+      "modifier": "Modifier",
+      "exporter": "Exporter",
+      "exportEnCours": "Export…",
+      "fermer": "Fermer",
+      "retour": "Retour",
+      "retourListe": "Retour à la liste",
+      "chargement": "Chargement…",
+      "ficheComplete": "Fiche complète",
+      "tableauDeBord": "Tableau de bord",
+      "voirLaFiche": "Voir la fiche",
+      "erreurCreation": "Erreur lors de la création",
+      "erreurModification": "Erreur lors de la modification",
+      "erreurEnregistrement": "Erreur lors de l’enregistrement",
+      "erreurGenerique": "Une erreur est survenue"
+    },
+
+    "membres": {
+      "titre": "Membres",
+      "sousTitre": "Gestion des membres de l’organisation",
+      "nouveau": "Nouveau membre",
+      "boutonExcel": "Excel",
+      "boutonPdf": "PDF",
+      "stats": {
+        "total": "Total membres",
+        "actifs": "Actifs",
+        "inactifs": "Inactifs / Suspendus"
+      },
+      "recherchePlaceholder": "Rechercher par nom, email…",
+      "filtreStatutAria": "Filtrer par statut",
+      "statuts": {
+        "tous": "Tous les statuts",
+        "actif": "Actif",
+        "inactif": "Inactif",
+        "suspendu": "Suspendu"
+      },
+      "colonnes": {
+        "numero": "N°",
+        "nomComplet": "Nom complet",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "statut": "Statut",
+        "adhesion": "Adhésion",
+        "actions": "Actions"
+      },
+      "export": {
+        "resume": "Total : {count, plural, one {# membre} other {# membres}}",
+        "resumeAvecActifs": "Total : {count, plural, one {# membre} other {# membres}} — Actifs : {actifs}"
+      },
+      "modal": {
+        "titre": "Nouveau membre",
+        "nom": "Nom *",
+        "prenom": "Prénom",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "statut": "Statut",
+        "dateAdhesion": "Date d’adhésion",
+        "fonctions": "Fonctions (séparées par virgule)",
+        "placeholderNom": "Koné",
+        "placeholderPrenom": "Aminata",
+        "placeholderEmail": "email@exemple.com",
+        "placeholderTelephone": "+225 07 00 00 00",
+        "placeholderFonctions": "Président, Trésorier…",
+        "nomObligatoire": "Le nom est obligatoire",
+        "creer": "Créer le membre"
+      }
+    },
+
+    "membreDetail": {
+      "introuvableTitre": "Membre introuvable",
+      "introuvableMessage": "Cette fiche n’existe pas ou ne fait pas partie de votre organisation.",
+      "filAriane": "Membres",
+      "statuts": {
+        "actif": "Actif",
+        "inactif": "Inactif",
+        "suspendu": "Suspendu"
+      },
+      "statutsCotisation": {
+        "paye": "Payée",
+        "enAttente": "En attente",
+        "partiel": "Partielle",
+        "annule": "Annulée",
+        "retard": "En retard"
+      },
+      "kpi": {
+        "totalCotise": "Total cotisé",
+        "resteDu": "Reste dû",
+        "cotisationsReglees": "Cotisations réglées",
+        "tauxRecouvrement": "Taux de recouvrement"
+      },
+      "infos": {
+        "titre": "Informations personnelles",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "genre": "Genre",
+        "nationalite": "Nationalité",
+        "dateNaissance": "Date de naissance",
+        "adresse": "Adresse",
+        "dateAdhesion": "Date d’adhésion",
+        "dateExpiration": "Date d’expiration",
+        "fonctions": "Fonctions",
+        "competences": "Compétences",
+        "groupes": "Groupes",
+        "notes": "Notes"
+      },
+      "cotisations": {
+        "titre": "Cotisations",
+        "vide": "Aucune cotisation enregistrée pour ce membre.",
+        "colPeriode": "Période",
+        "colType": "Type",
+        "colMontant": "Montant",
+        "colEcheance": "Échéance",
+        "colStatut": "Statut"
+      },
+      "export": {
+        "titre": "Fiche membre — {nom}",
+        "sousTitreNumero": "N° {numero}",
+        "sousTitreDefaut": "Registre des adhérents",
+        "resume": "Statut : {statut} — Cotisations : {count} — Total réglé : {total}",
+        "colPeriode": "Période",
+        "colType": "Type",
+        "colMontant": "Montant",
+        "colStatut": "Statut",
+        "colEcheance": "Échéance",
+        "colDatePaiement": "Payée le",
+        "colMode": "Mode"
+      },
+      "modal": {
+        "titre": "Modifier le membre",
+        "nom": "Nom *",
+        "prenom": "Prénom",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "statut": "Statut",
+        "dateAdhesion": "Date d’adhésion"
+      }
+    },
+
+    "donateurs": {
+      "titre": "Donateurs",
+      "sousTitre": "Suivi des donateurs et contributions",
+      "nouveau": "Nouveau donateur",
+      "stats": {
+        "totalDonateurs": "Total donateurs",
+        "nombreDons": "Nombre de dons",
+        "totalCollecte": "Total collecté",
+        "collecteCeMois": "Collecté ce mois"
+      },
+      "recherchePlaceholder": "Rechercher par nom, email…",
+      "filtreTypeAria": "Filtrer par type",
+      "types": {
+        "tous": "Tous les types",
+        "physique": "Personne physique",
+        "moral": "Personne morale",
+        "moralLong": "Personne morale / Organisation",
+        "physiqueCourt": "Physique",
+        "moralCourt": "Moral"
+      },
+      "typesDon": {
+        "numeraire": "Numéraire",
+        "enNature": "En nature",
+        "competences": "Compétences",
+        "competencesLong": "Compétences / Bénévolat",
+        "foncier": "Foncier"
+      },
+      "colonnes": {
+        "nom": "Nom / Raison sociale",
+        "type": "Type",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "dons": "Dons",
+        "montantTotal": "Montant total",
+        "actions": "Actions"
+      },
+      "actions": {
+        "historique": "Historique",
+        "don": "Don"
+      },
+      "historique": {
+        "titre": "Dons — {nom}",
+        "nombreDons": "{count, plural, one {# don} other {# dons}}",
+        "totalLabel": "Total :",
+        "nouveauDon": "Nouveau don",
+        "vide": "Aucun don enregistré.",
+        "recu": "Reçu",
+        "enAttente": "En attente"
+      },
+      "modalDonateur": {
+        "titre": "Nouveau donateur",
+        "type": "Type",
+        "nom": "Nom *",
+        "raisonSociale": "Raison sociale *",
+        "prenom": "Prénom",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "pays": "Pays",
+        "placeholderNom": "Koné",
+        "placeholderRaisonSociale": "ONG Partenaire",
+        "placeholderPrenom": "Aminata",
+        "placeholderEmail": "email@exemple.com",
+        "placeholderTelephone": "+225 07 00 00 00",
+        "placeholderPays": "CI",
+        "nomObligatoire": "Le nom est obligatoire",
+        "creer": "Créer le donateur"
+      },
+      "modalDon": {
+        "titre": "Enregistrer un don",
+        "donateurLabel": "Donateur :",
+        "typeDon": "Type de don",
+        "montant": "Montant (XOF) *",
+        "description": "Description",
+        "dateDon": "Date du don",
+        "placeholderMontant": "100000",
+        "placeholderDescription": "Ex : 50 sacs de ciment 50 kg",
+        "montantObligatoire": "Le montant est obligatoire",
+        "enregistrerDon": "Enregistrer le don"
+      }
+    },
+
+    "donateurDetail": {
+      "introuvableTitre": "Donateur introuvable",
+      "introuvableMessage": "Ce donateur n’existe pas ou ne fait pas partie de votre organisation.",
+      "filAriane": "Donateurs",
+      "typePhysique": "Personne physique",
+      "typeMoral": "Personne morale",
+      "typeMoralLong": "Personne morale / Organisation",
+      "anonyme": "Anonyme",
+      "nouveauDon": "Nouveau don",
+      "typesDon": {
+        "numeraire": "Numéraire",
+        "enNature": "En nature",
+        "competences": "Compétences",
+        "competencesLong": "Compétences / Bénévolat",
+        "foncier": "Foncier"
+      },
+      "statutsDon": {
+        "paye": "Reçu",
+        "enAttente": "En attente",
+        "partiel": "Partiel",
+        "annule": "Annulé"
+      },
+      "kpi": {
+        "totalDons": "Total des dons",
+        "nombreDons": "Nombre de dons",
+        "donMoyen": "Don moyen",
+        "dernierDon": "Dernier don"
+      },
+      "infos": {
+        "titre": "Coordonnées",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "pays": "Pays",
+        "adresse": "Adresse",
+        "valeurNature": "Valeur des dons en nature",
+        "enregistreLe": "Enregistré le",
+        "notes": "Notes"
+      },
+      "dons": {
+        "titre": "Historique des dons",
+        "vide": "Aucun don enregistré pour ce donateur.",
+        "colDate": "Date",
+        "colType": "Type",
+        "colMontant": "Montant",
+        "colNumeroRecu": "N° reçu",
+        "colStatut": "Statut"
+      },
+      "export": {
+        "titre": "Historique des dons — {nom}",
+        "resume": "Dons : {count} — Total collecté : {total}",
+        "colDate": "Date",
+        "colType": "Type",
+        "colMontant": "Montant",
+        "colValeurEstimee": "Valeur estimée",
+        "colStatut": "Statut",
+        "colNumeroRecu": "N° reçu",
+        "colDescription": "Description"
+      },
+      "modalDonateur": {
+        "titre": "Modifier le donateur",
+        "type": "Type",
+        "nom": "Nom *",
+        "raisonSociale": "Raison sociale *",
+        "prenom": "Prénom",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "pays": "Pays"
+      },
+      "modalDon": {
+        "titre": "Enregistrer un don",
+        "typeDon": "Type de don",
+        "montant": "Montant (XOF) *",
+        "description": "Description",
+        "dateDon": "Date du don",
+        "enregistrerDon": "Enregistrer le don"
+      }
+    },
+
+    "bailleurs": {
+      "titre": "Bailleurs de fonds",
+      "sousTitre": "Partenaires financiers et conventions de financement",
+      "nouveau": "Nouveau bailleur",
+      "stats": {
+        "totalBailleurs": "Total bailleurs",
+        "conventions": "Conventions",
+        "paysRepresentes": "Pays représentés"
+      },
+      "recherchePlaceholder": "Rechercher un bailleur…",
+      "colonnes": {
+        "bailleur": "Bailleur",
+        "type": "Type",
+        "pays": "Pays / Région",
+        "conventions": "Conventions",
+        "actions": ""
+      },
+      "types": {
+        "MULTILATERAL": "Multilatéral",
+        "BILATERAL": "Bilatéral",
+        "FONDATION": "Fondation",
+        "PRIVE": "Privé"
+      },
+      "actions": {
+        "masquer": "Masquer",
+        "conventions": "Conventions"
+      },
+      "conventions": {
+        "titre": "Conventions — {nom}",
+        "chargement": "Chargement des conventions…",
+        "vide": "Aucune convention enregistrée.",
+        "montant": "Montant",
+        "decaisse": "Décaissé"
+      },
+      "modal": {
+        "titre": "Nouveau bailleur",
+        "nom": "Nom *",
+        "sigle": "Sigle",
+        "type": "Type",
+        "pays": "Pays / Région",
+        "contactNom": "Contact (nom)",
+        "contactEmail": "Email contact",
+        "placeholderNom": "Nom du bailleur",
+        "placeholderSigle": "Ex : UE, BM…",
+        "placeholderPays": "France, UE…",
+        "placeholderContactNom": "Prénom Nom",
+        "placeholderContactEmail": "contact@bailleur.org"
+      }
+    },
+
+    "bailleurDetail": {
+      "introuvableTitre": "Bailleur introuvable",
+      "introuvableMessage": "Ce bailleur n’existe pas ou ne fait pas partie de votre organisation.",
+      "filAriane": "Bailleurs",
+      "types": {
+        "MULTILATERAL": "Multilatéral",
+        "BILATERAL": "Bilatéral",
+        "FONDATION": "Fondation",
+        "PRIVE": "Privé"
+      },
+      "kpi": {
+        "montantEngage": "Montant engagé",
+        "conventions": "Conventions",
+        "conventionsActives": "Conventions actives",
+        "nonEchues": "Non échues"
+      },
+      "infos": {
+        "titre": "Informations",
+        "type": "Type",
+        "pays": "Pays / Région",
+        "siteWeb": "Site web",
+        "contact": "Contact",
+        "contactEmail": "Email du contact",
+        "contactTel": "Téléphone du contact",
+        "enregistreLe": "Enregistré le",
+        "notes": "Notes"
+      },
+      "conventions": {
+        "titre": "Conventions de financement",
+        "vide": "Aucune convention enregistrée pour ce bailleur.",
+        "voirDecaissements": "Voir les décaissements",
+        "masquerDecaissements": "Masquer les décaissements",
+        "chargementDecaissements": "Chargement des décaissements…",
+        "aucunDecaissement": "Aucun décaissement enregistré.",
+        "tauxDecaissement": "Taux de décaissement"
+      },
+      "export": {
+        "titre": "Fiche bailleur — {nom}",
+        "sousTitreDefaut": "Conventions de financement",
+        "resume": "Conventions : {count} — Montant engagé : {montant}",
+        "colReference": "Référence",
+        "colTitre": "Titre",
+        "colMontant": "Montant",
+        "colStatut": "Statut",
+        "colSignature": "Signature",
+        "colDebut": "Début",
+        "colFin": "Fin"
+      },
+      "modal": {
+        "titre": "Modifier le bailleur",
+        "nom": "Nom *",
+        "sigle": "Sigle",
+        "type": "Type",
+        "pays": "Pays / Région",
+        "siteWeb": "Site web",
+        "contactNom": "Contact (nom)",
+        "contactTel": "Téléphone contact",
+        "contactEmail": "Email contact"
+      }
+    },
+
+    "beneficiaires": {
+      "titre": "Bénéficiaires",
+      "sousTitre": "Registre des bénéficiaires de l’organisation",
+      "nouveau": "Nouveau bénéficiaire",
+      "stats": {
+        "total": "Total bénéficiaires",
+        "femmes": "Femmes (page)",
+        "hommes": "Hommes (page)",
+        "accompagnements": "Accompagnements (page)"
+      },
+      "recherchePlaceholder": "Rechercher un bénéficiaire…",
+      "genres": {
+        "femme": "Femme",
+        "homme": "Homme"
+      },
+      "colonnes": {
+        "code": "Code",
+        "nomComplet": "Nom complet",
+        "genre": "Genre",
+        "telephone": "Téléphone",
+        "projets": "Projets",
+        "enregistrement": "Enregistrement",
+        "actions": "Actions"
+      },
+      "nbProjets": "{count, plural, one {# projet} other {# projets}}",
+      "details": "Détails",
+      "fiche": {
+        "titreDefaut": "Bénéficiaire",
+        "code": "Code",
+        "projets": "Projets",
+        "telephone": "Téléphone",
+        "enregistrement": "Enregistrement",
+        "vulnerabilites": "Vulnérabilités",
+        "notes": "Notes"
+      },
+      "modal": {
+        "titre": "Nouveau bénéficiaire",
+        "prenom": "Prénom",
+        "nom": "Nom",
+        "genre": "Genre",
+        "telephone": "Téléphone",
+        "placeholderPrenom": "Prénom",
+        "placeholderNom": "Nom de famille",
+        "placeholderTelephone": "+225 07 …"
+      }
+    }
+  }
+}

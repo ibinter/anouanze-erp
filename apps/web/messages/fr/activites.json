@@ -1,1 +1,478 @@
-{}
+{
+  "activites": {
+    "projets": {
+      "titre": "Projets & Programmes",
+      "sousTitre": "Suivi des projets de l'organisation",
+      "nouveau": "Nouveau projet",
+      "stats": {
+        "enCours": "En cours",
+        "termines": "Terminés",
+        "budgetTotal": "Budget total prévisionnel"
+      },
+      "recherche": "Rechercher un projet…",
+      "filtres": {
+        "tousStatuts": "Tous les statuts",
+        "tousSecteurs": "Tous les secteurs"
+      },
+      "statuts": {
+        "BROUILLON": "Brouillon",
+        "SOUMIS": "Soumis",
+        "APPROUVE": "Approuvé",
+        "EN_COURS": "En cours",
+        "SUSPENDU": "Suspendu",
+        "CLOTURE": "Clôturé",
+        "ANNULE": "Annulé"
+      },
+      "secteurs": {
+        "education": "Éducation",
+        "sante": "Santé",
+        "agriculture": "Agriculture",
+        "eau": "Eau & Assainissement",
+        "environnement": "Environnement"
+      },
+      "carte": {
+        "budgetRealise": "Budget réalisé",
+        "voirFiche": "Voir la fiche",
+        "apercuRapide": "Aperçu rapide"
+      },
+      "apercu": {
+        "titreParDefaut": "Détail du projet",
+        "budgetPrevisionnel": "Budget prévisionnel",
+        "budgetRealise": "Budget réalisé",
+        "resteDisponible": "Reste disponible",
+        "tauxExecution": "Taux d'exécution budgétaire",
+        "secteurs": "Secteurs",
+        "ouvrirFiche": "Ouvrir la fiche complète"
+      },
+      "vide": "Aucun projet trouvé",
+      "modal": {
+        "titre": "Nouveau projet",
+        "nom": "Nom du projet *",
+        "nomPlaceholder": "Titre du projet",
+        "description": "Description",
+        "descriptionPlaceholder": "Objectifs et description…",
+        "statut": "Statut",
+        "budget": "Budget prévisionnel (XOF)",
+        "dateDebut": "Date de début",
+        "dateFin": "Date de fin",
+        "annuler": "Annuler",
+        "creer": "Créer le projet",
+        "creation": "Création…"
+      },
+      "erreur": "Erreur"
+    },
+    "projetDetail": {
+      "introuvable": {
+        "titre": "Projet introuvable",
+        "message": "Ce projet n'existe pas ou ne fait pas partie de votre organisation.",
+        "retour": "Retour à la liste"
+      },
+      "filAriane": {
+        "tableauDeBord": "Tableau de bord",
+        "projets": "Projets"
+      },
+      "retour": "Retour",
+      "exporter": "Exporter",
+      "export": "Export…",
+      "modifier": "Modifier",
+      "statuts": {
+        "BROUILLON": "Brouillon",
+        "SOUMIS": "Soumis",
+        "APPROUVE": "Approuvé",
+        "EN_COURS": "En cours",
+        "SUSPENDU": "Suspendu",
+        "CLOTURE": "Clôturé",
+        "ANNULE": "Annulé"
+      },
+      "stats": {
+        "budgetTotal": "Budget total",
+        "budgetAlloue": "Budget alloué aux activités",
+        "activites": "Activités",
+        "beneficiaires": "Bénéficiaires"
+      },
+      "tauxAllocation": "Taux d'allocation budgétaire",
+      "alloues": "{montant} alloués",
+      "reste": "Reste : {montant}",
+      "informations": {
+        "titre": "Informations",
+        "type": "Type",
+        "devise": "Devise",
+        "dateDebut": "Date de début",
+        "dateFin": "Date de fin",
+        "description": "Description",
+        "objectifs": "Objectifs",
+        "secteurs": "Secteurs",
+        "zones": "Zones d'intervention"
+      },
+      "activitesSection": {
+        "titre": "Activités",
+        "vide": "Aucune activité enregistrée."
+      },
+      "budgets": {
+        "titre": "Budgets rattachés",
+        "vide": "Aucun budget rattaché à ce projet.",
+        "exercice": "Exercice {annee}"
+      },
+      "beneficiaires": {
+        "titre": "Bénéficiaires",
+        "vide": "Aucun bénéficiaire rattaché.",
+        "colBeneficiaire": "Bénéficiaire",
+        "colEntree": "Entrée",
+        "colStatut": "Statut"
+      },
+      "edition": {
+        "titre": "Modifier le projet",
+        "nom": "Nom du projet *",
+        "description": "Description",
+        "statut": "Statut",
+        "budget": "Budget total (XOF)",
+        "dateDebut": "Date de début",
+        "dateFin": "Date de fin",
+        "annuler": "Annuler",
+        "enregistrer": "Enregistrer",
+        "enregistrement": "Enregistrement…",
+        "erreur": "Erreur lors de la modification"
+      }
+    },
+    "rh": {
+      "titre": "Ressources Humaines",
+      "sousTitre": "Gestion du personnel, paie et congés",
+      "stats": {
+        "totalEmployes": "Total employés",
+        "enConge": "En congé",
+        "volontairesActifs": "Volontaires actifs",
+        "masseSalariale": "Masse salariale"
+      },
+      "onglets": {
+        "employes": "Employés",
+        "paie": "Paie",
+        "conges": "Congés",
+        "volontaires": "Volontaires"
+      },
+      "erreur": "Erreur",
+      "employes": {
+        "nouveau": "Nouvel employé",
+        "colMatricule": "Matricule",
+        "colNomComplet": "Nom complet",
+        "colPoste": "Poste",
+        "colDepartement": "Département",
+        "colContrat": "Contrat",
+        "colEmbauche": "Embauche",
+        "colActions": "Actions",
+        "voir": "Voir",
+        "modifier": "Modifier",
+        "fiche": {
+          "titre": "Fiche employé",
+          "matricule": "Matricule",
+          "departement": "Département",
+          "dateEmbauche": "Date d'embauche",
+          "salaireBase": "Salaire de base"
+        },
+        "modal": {
+          "titre": "Nouvel employé",
+          "prenom": "Prénom *",
+          "nom": "Nom *",
+          "poste": "Poste",
+          "postePlaceholder": "Coordinateur…",
+          "departement": "Département",
+          "departementPlaceholder": "Programmes…",
+          "typeContrat": "Type de contrat",
+          "salaireBase": "Salaire de base (XOF)",
+          "dateEmbauche": "Date d'embauche",
+          "annuler": "Annuler",
+          "enregistrer": "Enregistrer",
+          "enregistrement": "Enregistrement…"
+        }
+      },
+      "paie": {
+        "employe": "Employé",
+        "colPeriode": "Période",
+        "colBrut": "Salaire brut",
+        "colNet": "Net à payer",
+        "colStatut": "Statut",
+        "paye": "Payé",
+        "enAttente": "En attente"
+      },
+      "conges": {
+        "employe": "Employé",
+        "colType": "Type",
+        "colDebut": "Début",
+        "colFin": "Fin",
+        "colStatut": "Statut",
+        "colActions": "Actions",
+        "chargement": "Chargement…",
+        "vide": "Aucun congé enregistré.",
+        "approuve": "Approuvé",
+        "rejete": "Rejeté",
+        "enAttente": "En attente",
+        "approuver": "Approuver",
+        "rejeter": "Rejeter"
+      },
+      "volontaires": {
+        "nouveau": "Nouveau volontaire",
+        "colNomComplet": "Nom complet",
+        "colCompetences": "Compétences",
+        "colProjet": "Projet associé",
+        "colDepuis": "Depuis",
+        "colActions": "Actions",
+        "voir": "Voir",
+        "modal": {
+          "titre": "Nouveau volontaire",
+          "prenom": "Prénom *",
+          "nom": "Nom *",
+          "competences": "Compétences",
+          "competencesPlaceholder": "Ex : Formation, Informatique…",
+          "dateDebut": "Date de début",
+          "annuler": "Annuler",
+          "enregistrer": "Enregistrer",
+          "enregistrement": "Enregistrement…"
+        }
+      }
+    },
+    "volontaires": {
+      "titre": "Volontaires",
+      "actifs": "{count, plural, =0 {Aucun volontaire actif} one {# volontaire actif} other {# volontaires actifs}}",
+      "nouveau": "Nouveau volontaire",
+      "recherche": "Nom, email, compétence…",
+      "colNom": "Nom",
+      "colEmail": "Email",
+      "colCompetences": "Compétences",
+      "colDisponibilites": "Disponibilités",
+      "colStatut": "Statut",
+      "actif": "Actif",
+      "inactif": "Inactif",
+      "desactiver": "Désactiver",
+      "activer": "Activer",
+      "modal": {
+        "titre": "Nouveau volontaire",
+        "nom": "Nom complet",
+        "nomPlaceholder": "Prénom Nom",
+        "email": "Email",
+        "emailPlaceholder": "email@domaine.com",
+        "competences": "Compétences (séparées par des virgules)",
+        "competencesPlaceholder": "Formation, Santé, Informatique…",
+        "disponibilites": "Disponibilités",
+        "disponibilitesPlaceholder": "Ex : week-ends, lundis et vendredis…",
+        "actifDesInscription": "Actif dès l'inscription",
+        "annuler": "Annuler",
+        "enregistrer": "Enregistrer"
+      }
+    },
+    "gouvernance": {
+      "titre": "Gouvernance",
+      "sousTitre": "Organes statutaires, réunions et résolutions",
+      "nouvelOrgane": "Nouvel organe",
+      "planifierReunion": "Planifier réunion",
+      "nouvelleResolution": "Nouvelle résolution",
+      "kpi": {
+        "organesActifs": "Organes actifs",
+        "membresTotaux": "Membres totaux",
+        "resolutionsEnCours": "Résolutions en cours",
+        "prochaineReunion": "Prochaine réunion"
+      },
+      "onglets": {
+        "organes": "Organes",
+        "reunions": "Réunions",
+        "resolutions": "Résolutions"
+      },
+      "statuts": {
+        "EN_ATTENTE": "En attente",
+        "APPROUVEE": "Approuvée",
+        "EN_COURS": "En cours",
+        "APPLIQUEE": "Appliquée",
+        "REJETEE": "Rejetée"
+      },
+      "organes": {
+        "vide": "Aucun organe créé",
+        "actif": "Actif",
+        "membres": "{count, plural, one {# membre} other {# membres}}",
+        "reunions": "{count, plural, one {# réunion} other {# réunions}}",
+        "prochaineReunion": "Prochaine réunion : {date}"
+      },
+      "reunions": {
+        "tous": "Tous",
+        "vide": "Aucune réunion planifiée",
+        "videAstuce": "Sélectionnez un organe pour planifier une réunion",
+        "tenue": "Tenue",
+        "planifiee": "Planifiée"
+      },
+      "resolutions": {
+        "vide": "Aucune résolution enregistrée",
+        "responsable": "Responsable : {nom}",
+        "approuver": "Approuver"
+      },
+      "modalOrgane": {
+        "titre": "Nouvel organe",
+        "nomPlaceholder": "Nom de l'organe *",
+        "types": {
+          "ASSEMBLEE_GENERALE": "Assemblée générale",
+          "CONSEIL_ADMINISTRATION": "Conseil d'administration",
+          "BUREAU_EXECUTIF": "Bureau exécutif",
+          "COMITE_CONTROLE": "Comité de contrôle",
+          "COMMISSION": "Commission",
+          "AUTRE": "Autre"
+        },
+        "nombreMembres": "Nombre de membres",
+        "description": "Description",
+        "annuler": "Annuler",
+        "creer": "Créer",
+        "creation": "Création…"
+      },
+      "modalResolution": {
+        "titre": "Nouvelle résolution",
+        "titrePlaceholder": "Titre *",
+        "description": "Description",
+        "responsable": "Responsable de mise en œuvre",
+        "annuler": "Annuler",
+        "creer": "Créer",
+        "creation": "Création…"
+      },
+      "modalReunion": {
+        "titre": "Planifier une réunion",
+        "selectionnerOrgane": "Sélectionner un organe *",
+        "titrePlaceholder": "Titre *",
+        "lieu": "Lieu",
+        "ordreJour": "Ordre du jour (un point par ligne)",
+        "annuler": "Annuler",
+        "planifier": "Planifier",
+        "creation": "Création…"
+      },
+      "detailOrgane": {
+        "typeOrgane": "Type d'organe",
+        "membres": "Membres",
+        "reunions": "Réunions",
+        "prochaineReunion": "Prochaine réunion"
+      },
+      "detailReunion": {
+        "date": "Date",
+        "lieu": "Lieu",
+        "ordreJour": "Ordre du jour"
+      },
+      "detailResolution": {
+        "responsable": "Responsable",
+        "dateAdoption": "Date d'adoption",
+        "approuver": "Approuver la résolution"
+      }
+    },
+    "evenements": {
+      "titre": "Événements & Formations",
+      "sousTitre": "{count, plural, =0 {Aucun événement planifié} one {# événement planifié} other {# événements planifiés}}",
+      "nouveau": "Nouvel événement",
+      "kpi": {
+        "evenements": "Événements",
+        "totalInscrits": "Total inscrits",
+        "placesDisponibles": "Places disponibles",
+        "tauxRemplissage": "Taux de remplissage"
+      },
+      "inscrits": "{nb} inscrits",
+      "inscritsSurCapacite": "{nb} / {capacite} inscrits",
+      "pctCapacite": "{pct}% de la capacité",
+      "complet": "Complet",
+      "sInscrire": "S'inscrire",
+      "gerer": "Gérer",
+      "vide": "Aucun événement planifié.",
+      "detail": {
+        "titre": "Détail de l'événement",
+        "date": "Date",
+        "lieu": "Lieu",
+        "inscrits": "Inscrits",
+        "remplissage": "Remplissage"
+      },
+      "modal": {
+        "titre": "Nouvel événement",
+        "champTitre": "Titre",
+        "titrePlaceholder": "Titre de l'événement",
+        "type": "Type",
+        "types": {
+          "AG": "Assemblée générale",
+          "REUNION": "Réunion",
+          "FORMATION": "Formation",
+          "ATELIER": "Atelier"
+        },
+        "date": "Date",
+        "lieu": "Lieu",
+        "lieuPlaceholder": "Lieu de l'événement",
+        "capacite": "Capacité",
+        "description": "Description",
+        "descriptionPlaceholder": "Description de l'événement",
+        "annuler": "Annuler",
+        "creer": "Créer",
+        "creation": "Création…"
+      },
+      "erreurCreation": "Erreur lors de la création"
+    },
+    "meal": {
+      "titre": "SERA / MEAL",
+      "sousTitre": "Suivi-Évaluation, Redevabilité et Apprentissage",
+      "projet": "Projet :",
+      "aucunProjet": "Aucun projet",
+      "onglets": {
+        "cadre": "Cadre logique",
+        "indicateurs": "Indicateurs",
+        "collecte": "Collecte",
+        "rapport": "Rapport"
+      },
+      "cadre": {
+        "chargement": "Chargement du cadre logique…",
+        "intrants": "Intrants",
+        "activites": "Activités",
+        "extrants": "Extrants",
+        "effets": "Effets / Impact",
+        "nonRenseigne": "Non renseigné"
+      },
+      "indicateurs": {
+        "chargement": "Chargement des indicateurs…",
+        "vide": "Aucun indicateur MEAL défini pour ce projet.",
+        "colIndicateur": "Indicateur",
+        "colUnite": "Unité",
+        "colCible": "Cible",
+        "colRealise": "Réalisé",
+        "colTaux": "Taux",
+        "colAction": "Action",
+        "mettreAJour": "Mettre à jour"
+      },
+      "collecte": {
+        "nouvelleSaisie": "Nouvelle saisie terrain",
+        "indicateur": "Indicateur",
+        "selectionner": "Sélectionner…",
+        "valeur": "Valeur collectée",
+        "valeurPlaceholder": "Ex : 18",
+        "date": "Date de collecte",
+        "agent": "Agent collecteur",
+        "agentPlaceholder": "Nom de l'agent",
+        "enregistrer": "Enregistrer la collecte",
+        "enregistrement": "Enregistrement…",
+        "historique": "Historique des collectes",
+        "vide": "Aucune collecte enregistrée",
+        "colIndicateur": "Indicateur",
+        "colValeur": "Valeur",
+        "colDate": "Date",
+        "colAgent": "Agent"
+      },
+      "rapport": {
+        "titre": "Rapport MEAL — {projet}",
+        "projetParDefaut": "Projet",
+        "tauxAtteinte": "Taux d'atteinte par indicateur",
+        "taux": "Taux"
+      },
+      "modal": {
+        "titre": "Mettre à jour : {indicateur}",
+        "valeur": "Nouvelle valeur réalisée",
+        "ciblePlaceholder": "Cible : {cible}",
+        "date": "Date de collecte",
+        "commentaire": "Commentaire (optionnel)",
+        "commentairePlaceholder": "Observations terrain…",
+        "annuler": "Annuler",
+        "enregistrer": "Enregistrer",
+        "enregistrement": "Enregistrement…"
+      },
+      "toasts": {
+        "indicateurMaj": "Indicateur mis à jour",
+        "erreurMaj": "Erreur lors de la mise à jour",
+        "collecteOk": "Collecte enregistrée",
+        "erreurCollecte": "Erreur lors de l'enregistrement",
+        "champsRequis": "Sélectionnez un indicateur et saisissez une valeur"
+      }
+    }
+  }
+}

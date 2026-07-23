@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, LayoutDashboard, MoreHorizontal, Users, Wallet } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 /** §9.3 — 4 accès rapides + « Plus » (jamais plus de 5 entrées) */
 const items = [
-  { label: 'Accueil', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Membres', href: '/membres', icon: Users },
-  { label: 'Trésorerie', href: '/tresorerie', icon: Wallet },
-  { label: 'Alertes', href: '/notifications', icon: Bell },
+  { key: 'accueil', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'membres', href: '/membres', icon: Users },
+  { key: 'tresorerie', href: '/tresorerie', icon: Wallet },
+  { key: 'alertes', href: '/notifications', icon: Bell },
 ] as const;
 
 interface BottomNavProps {
@@ -21,6 +22,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ onMoreClick, moreOpen = false }: BottomNavProps) {
+  const t = useTranslations('shell.bottomNav');
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -28,7 +30,7 @@ export function BottomNav({ onMoreClick, moreOpen = false }: BottomNavProps) {
 
   return (
     <nav
-      aria-label="Navigation principale mobile"
+      aria-label={t('aria')}
       className="bottom-nav lg:hidden"
     >
       <ul className="flex items-stretch justify-around">
@@ -43,7 +45,7 @@ export function BottomNav({ onMoreClick, moreOpen = false }: BottomNavProps) {
                 className={cn('bottom-nav-item', active && 'bottom-nav-item-active')}
               >
                 <Icon className="w-[22px] h-[22px]" />
-                <span className="bottom-nav-label">{item.label}</span>
+                <span className="bottom-nav-label">{t(item.key)}</span>
               </Link>
             </li>
           );
@@ -57,7 +59,7 @@ export function BottomNav({ onMoreClick, moreOpen = false }: BottomNavProps) {
             className={cn('bottom-nav-item w-full', moreOpen && 'bottom-nav-item-active')}
           >
             <MoreHorizontal className="w-[22px] h-[22px]" />
-            <span className="bottom-nav-label">Plus</span>
+            <span className="bottom-nav-label">{t('plus')}</span>
           </button>
         </li>
       </ul>

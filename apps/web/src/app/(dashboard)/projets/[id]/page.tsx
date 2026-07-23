@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { formatDate, formatMontant, toNum, cn } from '@/lib/utils';
@@ -77,17 +78,18 @@ interface Projet {
   budgets?: BudgetProjet[];
 }
 
-const STATUT_MAP: Record<string, { label: string; cls: string }> = {
-  BROUILLON: { label: 'Brouillon', cls: 'badge badge-neutral' },
-  SOUMIS: { label: 'Soumis', cls: 'badge' },
-  APPROUVE: { label: 'Approuvé', cls: 'badge badge-neutral' },
-  EN_COURS: { label: 'En cours', cls: 'badge badge-success' },
-  SUSPENDU: { label: 'Suspendu', cls: 'badge badge-warning' },
-  CLOTURE: { label: 'Clôturé', cls: 'badge badge-neutral' },
-  ANNULE: { label: 'Annulé', cls: 'badge badge-error' },
+/** Classes de badge par valeur d'énumération API (les valeurs ne sont jamais traduites). */
+const STATUT_CLS: Record<string, string> = {
+  BROUILLON: 'badge badge-neutral',
+  SOUMIS: 'badge',
+  APPROUVE: 'badge badge-neutral',
+  EN_COURS: 'badge badge-success',
+  SUSPENDU: 'badge badge-warning',
+  CLOTURE: 'badge badge-neutral',
+  ANNULE: 'badge badge-error',
 };
 
-const STATUTS_EDIT = ['BROUILLON', 'SOUMIS', 'APPROUVE', 'EN_COURS', 'SUSPENDU', 'CLOTURE', 'ANNULE'];
+const STATUTS_EDIT = ['BROUILLON', 'SOUMIS', 'APPROUVE', 'EN_COURS', 'SUSPENDU', 'CLOTURE', 'ANNULE'] as const;
 
 function InfoLigne({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -117,16 +119,17 @@ function DetailSkeleton() {
 }
 
 function IntrouvableCard({ message }: { message: string }) {
+  const t = useTranslations('activites.projetDetail');
   return (
     <div className="p-4 sm:p-6">
       <div className="card max-w-lg mx-auto text-center py-14 space-y-4">
         <FolderX className="w-12 h-12 mx-auto text-neutral-300 stroke-1" />
         <div>
-          <h2 className="text-lg font-semibold text-neutral-800">Projet introuvable</h2>
+          <h2 className="text-lg font-semibold text-neutral-800">{t('introuvable.titre')}</h2>
           <p className="text-sm text-neutral-500 mt-1">{message}</p>
         </div>
         <Link href="/projets" className="btn-primary inline-flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Retour à la liste
+          <ArrowLeft className="w-4 h-4" /> {t('introuvable.retour')}
         </Link>
       </div>
     </div>
@@ -136,6 +139,7 @@ function IntrouvableCard({ message }: { message: string }) {
 const EDIT_INIT = { nom: '', description: '', statut: 'EN_COURS', dateDebut: '', dateFin: '', budgetTotal: '' };
 
 export default function ProjetDetailPage() {
+  const t = useTranslations('activites.projetDetail');
   const params = useParams<{ id: string }>();
   const id = String(params?.id ?? '');
   const router = useRouter();
@@ -163,13 +167,13 @@ export default function ProjetDetailPage() {
       setEditOpen(false);
       setEditError('');
     },
-    onError: (err: unknown) => setEditError(err instanceof Error ? err.message : 'Erreur lors de la modification'),
+    onError: (err: unknown) => setEditError(err instanceof Error ? err.message : t('edition.erreur')),
   });
 
   if (isLoading) return <DetailSkeleton />;
 
   if (isError || !projet) {
-    const message = error instanceof Error ? error.message : 'Ce projet n’existe pas ou ne fait pas partie de votre organisation.';
+    const message = error instanceof Error ? error.message : t('introuvable.message');
     return <IntrouvableCard message={message} />;
   }
 
@@ -183,7 +187,12 @@ export default function ProjetDetailPage() {
   const pct = budgetPrev > 0 ? Math.min(100, Math.round((budgetActivites / budgetPrev) * 100)) : 0;
   const activitesTerminees = activites.filter((a) => a.statut === 'TERMINEE' || a.statut === 'CLOTUREE').length;
 
-  const statut = STATUT_MAP[projet.statut] ?? { label: projet.statut, cls: 'badge badge-neutral' };
+  const statut = {
+    label: (STATUTS_EDIT as readonly string[]).includes(projet.statut)
+      ? t(`statuts.${projet.statut}` as never)
+      : projet.statut,
+    cls: STATUT_CLS[projet.statut] ?? 'badge badge-neutral',
+  };
 
   const openEdit = () => {
     setForm({
@@ -226,9 +235,9 @@ export default function ProjetDetailPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <nav className="flex items-center gap-1.5 text-xs text-neutral-500">
-        <Link href="/dashboard" className="hover:text-primary-600">Tableau de bord</Link>
+        <Link href="/dashboard" className="hover:text-primary-600">{t('filAriane.tableauDeBord')}</Link>
         <ChevronRight className="w-3 h-3" />
-        <Link href="/projets" className="hover:text-primary-600">Projets</Link>
+        <Link href="/projets" className="hover:text-primary-600">{t('filAriane.projets')}</Link>
         <ChevronRight className="w-3 h-3" />
         <span className="text-neutral-700 font-medium truncate">{projet.nom}</span>
       </nav>
@@ -239,7 +248,7 @@ export default function ProjetDetailPage() {
             type="button"
             onClick={() => router.back()}
             className="p-2 rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-50 mt-1"
-            aria-label="Retour"
+            aria-label={t('retour')}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -259,10 +268,10 @@ export default function ProjetDetailPage() {
         <div className="flex items-center gap-2">
           <button onClick={handleExport} disabled={exporting} className="btn-secondary flex items-center gap-2 text-sm">
             <FileText className="w-4 h-4" />
-            {exporting ? 'Export…' : 'Exporter'}
+            {exporting ? t('export') : t('exporter')}
           </button>
           <button onClick={openEdit} className="btn-primary flex items-center gap-2 text-sm">
-            <Pencil className="w-4 h-4" /> Modifier
+            <Pencil className="w-4 h-4" /> {t('modifier')}
           </button>
         </div>
       </div>
@@ -273,7 +282,7 @@ export default function ProjetDetailPage() {
             <Wallet className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budget total</p>
+            <p className="text-xs text-neutral-500">{t('stats.budgetTotal')}</p>
             <p className="text-lg font-bold text-neutral-800">{formatMontant(budgetPrev)}</p>
           </div>
         </div>
@@ -282,7 +291,7 @@ export default function ProjetDetailPage() {
             <Percent className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Budget alloué aux activités</p>
+            <p className="text-xs text-neutral-500">{t('stats.budgetAlloue')}</p>
             <p className="text-lg font-bold text-accent-500">{formatMontant(budgetActivites)}</p>
           </div>
         </div>
@@ -291,7 +300,7 @@ export default function ProjetDetailPage() {
             <ListChecks className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Activités</p>
+            <p className="text-xs text-neutral-500">{t('stats.activites')}</p>
             <p className="text-lg font-bold text-neutral-800">{activitesTerminees} / {activites.length}</p>
           </div>
         </div>
@@ -300,7 +309,7 @@ export default function ProjetDetailPage() {
             <Users className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Bénéficiaires</p>
+            <p className="text-xs text-neutral-500">{t('stats.beneficiaires')}</p>
             <p className="text-lg font-bold text-neutral-800">{beneficiaires.length}</p>
           </div>
         </div>
@@ -309,7 +318,7 @@ export default function ProjetDetailPage() {
       {/* Exécution budgétaire */}
       <div className="card space-y-2">
         <div className="flex justify-between text-xs text-neutral-500">
-          <span>Taux d&apos;allocation budgétaire</span>
+          <span>{t('tauxAllocation')}</span>
           <span className="font-medium text-neutral-700">{pct}%</span>
         </div>
         <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
@@ -319,24 +328,24 @@ export default function ProjetDetailPage() {
           />
         </div>
         <div className="flex justify-between text-xs text-neutral-400">
-          <span>{formatMontant(budgetActivites)} alloués</span>
+          <span>{t('alloues', { montant: formatMontant(budgetActivites) })}</span>
           <span className={cn(resteDisponible >= 0 ? 'text-primary-600' : 'text-red-600', 'font-medium')}>
-            Reste : {formatMontant(resteDisponible)}
+            {t('reste', { montant: formatMontant(resteDisponible) })}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="card lg:col-span-1">
-          <h2 className="text-sm font-semibold text-neutral-700 mb-2">Informations</h2>
-          <InfoLigne label="Type" value={projet.type} />
-          <InfoLigne label="Devise" value={projet.devise} />
-          <InfoLigne label="Date de début" value={projet.dateDebut ? formatDate(projet.dateDebut) : null} />
-          <InfoLigne label="Date de fin" value={projet.dateFin ? formatDate(projet.dateFin) : null} />
-          <InfoLigne label="Description" value={projet.description} />
-          <InfoLigne label="Objectifs" value={projet.objectifs} />
+          <h2 className="text-sm font-semibold text-neutral-700 mb-2">{t('informations.titre')}</h2>
+          <InfoLigne label={t('informations.type')} value={projet.type} />
+          <InfoLigne label={t('informations.devise')} value={projet.devise} />
+          <InfoLigne label={t('informations.dateDebut')} value={projet.dateDebut ? formatDate(projet.dateDebut) : null} />
+          <InfoLigne label={t('informations.dateFin')} value={projet.dateFin ? formatDate(projet.dateFin) : null} />
+          <InfoLigne label={t('informations.description')} value={projet.description} />
+          <InfoLigne label={t('informations.objectifs')} value={projet.objectifs} />
           <InfoLigne
-            label="Secteurs"
+            label={t('informations.secteurs')}
             value={(projet.secteurs ?? []).length > 0 ? (
               <span className="flex flex-wrap gap-1.5">
                 {(projet.secteurs ?? []).map((s) => <span key={s} className="badge badge-neutral text-xs">{s}</span>)}
@@ -344,7 +353,7 @@ export default function ProjetDetailPage() {
             ) : null}
           />
           <InfoLigne
-            label="Zones d'intervention"
+            label={t('informations.zones')}
             value={(projet.zones ?? []).length > 0 ? (
               <span className="flex flex-wrap gap-1.5">
                 {(projet.zones ?? []).map((z) => <span key={z} className="badge badge-neutral text-xs">{z}</span>)}
@@ -357,11 +366,11 @@ export default function ProjetDetailPage() {
           {/* Activités */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-neutral-700">Activités</h2>
+              <h2 className="text-sm font-semibold text-neutral-700">{t('activitesSection.titre')}</h2>
               <span className="badge badge-neutral">{activites.length}</span>
             </div>
             {activites.length === 0 ? (
-              <p className="text-sm text-neutral-400 text-center py-8">Aucune activité enregistrée.</p>
+              <p className="text-sm text-neutral-400 text-center py-8">{t('activitesSection.vide')}</p>
             ) : (
               <div className="space-y-2">
                 {activites.map((a) => (
@@ -389,18 +398,18 @@ export default function ProjetDetailPage() {
           {/* Budgets rattachés */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-neutral-700">Budgets rattachés</h2>
+              <h2 className="text-sm font-semibold text-neutral-700">{t('budgets.titre')}</h2>
               <span className="badge badge-neutral">{budgets.length}</span>
             </div>
             {budgets.length === 0 ? (
-              <p className="text-sm text-neutral-400 text-center py-6">Aucun budget rattaché à ce projet.</p>
+              <p className="text-sm text-neutral-400 text-center py-6">{t('budgets.vide')}</p>
             ) : (
               <div className="space-y-2">
                 {budgets.map((b) => (
                   <div key={b.id} className="flex items-center justify-between border border-neutral-100 rounded-lg p-3">
                     <div>
                       <p className="font-medium text-neutral-800">{b.nom}</p>
-                      <p className="text-xs text-neutral-400">Exercice {b.exercice}</p>
+                      <p className="text-xs text-neutral-400">{t('budgets.exercice', { annee: String(b.exercice) })}</p>
                     </div>
                     <span className="badge badge-neutral text-xs">{b.statut}</span>
                   </div>
@@ -412,19 +421,19 @@ export default function ProjetDetailPage() {
           {/* Bénéficiaires */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-neutral-700">Bénéficiaires</h2>
+              <h2 className="text-sm font-semibold text-neutral-700">{t('beneficiaires.titre')}</h2>
               <span className="badge badge-neutral">{beneficiaires.length}</span>
             </div>
             {beneficiaires.length === 0 ? (
-              <p className="text-sm text-neutral-400 text-center py-6">Aucun bénéficiaire rattaché.</p>
+              <p className="text-sm text-neutral-400 text-center py-6">{t('beneficiaires.vide')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-neutral-100 bg-neutral-50">
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Bénéficiaire</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Entrée</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">Statut</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('beneficiaires.colBeneficiaire')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('beneficiaires.colEntree')}</th>
+                      <th className="px-3 py-2 text-left text-xs font-semibold text-neutral-500 uppercase">{t('beneficiaires.colStatut')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -450,11 +459,11 @@ export default function ProjetDetailPage() {
       <Modal
         open={editOpen}
         onOpenChange={setEditOpen}
-        title="Modifier le projet"
+        title={t('edition.titre')}
         size="lg"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => setEditOpen(false)}>Annuler</button>
+            <button className="btn-secondary" onClick={() => setEditOpen(false)}>{t('edition.annuler')}</button>
             <button
               className="btn-primary"
               disabled={updateProjet.isPending || !form.nom}
@@ -469,7 +478,7 @@ export default function ProjetDetailPage() {
                 })
               }
             >
-              {updateProjet.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {updateProjet.isPending ? t('edition.enregistrement') : t('edition.enregistrer')}
             </button>
           </>
         }
@@ -477,30 +486,30 @@ export default function ProjetDetailPage() {
         <div className="space-y-4">
           {editError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</p>}
           <div>
-            <label className="label">Nom du projet *</label>
+            <label className="label">{t('edition.nom')}</label>
             <input className="input w-full" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
           </div>
           <div>
-            <label className="label">Description</label>
+            <label className="label">{t('edition.description')}</label>
             <textarea className="input w-full min-h-[80px] resize-none" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Statut</label>
+              <label className="label">{t('edition.statut')}</label>
               <select className="input w-full" value={form.statut} onChange={(e) => setForm((p) => ({ ...p, statut: e.target.value }))}>
-                {STATUTS_EDIT.map((s) => <option key={s} value={s}>{STATUT_MAP[s]?.label ?? s}</option>)}
+                {STATUTS_EDIT.map((s) => <option key={s} value={s}>{t(`statuts.${s}` as never)}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">Budget total (XOF)</label>
+              <label className="label">{t('edition.budget')}</label>
               <input type="number" className="input w-full" value={form.budgetTotal} onChange={(e) => setForm((p) => ({ ...p, budgetTotal: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Date de début</label>
+              <label className="label">{t('edition.dateDebut')}</label>
               <input type="date" className="input w-full" value={form.dateDebut} onChange={(e) => setForm((p) => ({ ...p, dateDebut: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Date de fin</label>
+              <label className="label">{t('edition.dateFin')}</label>
               <input type="date" className="input w-full" value={form.dateFin} onChange={(e) => setForm((p) => ({ ...p, dateFin: e.target.value }))} />
             </div>
           </div>

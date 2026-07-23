@@ -4,6 +4,7 @@ import { Search, ChevronDown, X, Menu } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -16,19 +17,15 @@ interface SearchResult {
   href: string;
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  membre: 'Membre',
-  projet: 'Projet',
-  donateur: 'Donateur',
-  bailleur: 'Bailleur',
-  document: 'Document',
-};
+/** Types de résultats de recherche : clés de `shell.header.types.*`. */
+const TYPES_RESULTAT = ['membre', 'projet', 'donateur', 'bailleur', 'document'] as const;
 
 interface HeaderProps {
   onHamburgerClick?: () => void;
 }
 
 export function Header({ onHamburgerClick }: HeaderProps) {
+  const t = useTranslations('shell.header');
   const { data: session } = useSession();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -123,9 +120,9 @@ export function Header({ onHamburgerClick }: HeaderProps) {
     if (!open) return null;
     return (
       <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-xl border border-neutral-100 z-50 overflow-hidden dark:bg-neutral-800 dark:border-neutral-700">
-        {searching && <div className="px-4 py-3 text-sm text-neutral-400">Recherche…</div>}
+        {searching && <div className="px-4 py-3 text-sm text-neutral-400">{t('rechercheEnCours')}</div>}
         {!searching && results.length === 0 && query.length >= 2 && (
-          <div className="px-4 py-3 text-sm text-neutral-400">Aucun résultat pour « {query} »</div>
+          <div className="px-4 py-3 text-sm text-neutral-400">{t('aucunResultat', { query })}</div>
         )}
         {!searching && results.length > 0 && (
           <ul>
@@ -136,7 +133,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
                   onClick={() => handleSelect(r)}
                 >
                   <span className="text-xs px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-100 font-medium whitespace-nowrap">
-                    {TYPE_LABELS[r.type] ?? r.type}
+                    {(TYPES_RESULTAT as readonly string[]).includes(r.type) ? t(`types.${r.type}`) : r.type}
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 block truncate">{r.label}</span>
@@ -158,14 +155,14 @@ export function Header({ onHamburgerClick }: HeaderProps) {
         <button
           onClick={onHamburgerClick}
           className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700"
-          aria-label="Ouvrir le menu"
+          aria-label={t('ouvrirMenu')}
         >
           <Menu className="w-5 h-5" />
         </button>
         <button
           onClick={openMobileSearch}
           className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 dark:text-neutral-300 dark:hover:bg-neutral-700"
-          aria-label="Rechercher"
+          aria-label={t('rechercher')}
         >
           <Search className="w-5 h-5" />
         </button>
@@ -176,7 +173,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
         <input
           type="search"
-          placeholder="Rechercher membres, projets…"
+          placeholder={t('placeholderRecherche')}
           className="input pl-9 pr-8 py-1.5 text-sm w-full"
           value={query}
           onChange={handleChange}
@@ -184,7 +181,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
           autoComplete="off"
         />
         {query && (
-          <button onClick={handleClear} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+          <button onClick={handleClear} aria-label={t('effacer')} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -199,14 +196,14 @@ export function Header({ onHamburgerClick }: HeaderProps) {
             <input
               ref={mobileInputRef}
               type="search"
-              placeholder="Rechercher membres, projets…"
+              placeholder={t('placeholderRecherche')}
               className="input pl-9 pr-8 py-1.5 text-sm w-full"
               value={query}
               onChange={handleChange}
               autoComplete="off"
             />
             {query && (
-              <button onClick={handleClear} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+              <button onClick={handleClear} aria-label={t('effacer')} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -216,7 +213,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
             onClick={() => { setMobileSearchOpen(false); handleClear(); }}
             className="text-sm font-medium text-primary-600 whitespace-nowrap"
           >
-            Annuler
+            {t('annuler')}
           </button>
         </div>
       )}
@@ -236,6 +233,8 @@ export function Header({ onHamburgerClick }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={t('menuProfil')}
+            aria-expanded={menuOpen}
             className="flex items-center gap-2 p-1.5 pr-2 sm:pr-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center flex-shrink-0">
@@ -245,7 +244,7 @@ export function Header({ onHamburgerClick }: HeaderProps) {
             </div>
             <div className="text-left hidden sm:block">
               <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
-                {session?.user?.name ?? 'Utilisateur'}
+                {session?.user?.name ?? t('utilisateur')}
               </p>
               <p className="text-xs text-neutral-400 mt-0.5">
                 {session?.user?.email ?? ''}
@@ -257,17 +256,17 @@ export function Header({ onHamburgerClick }: HeaderProps) {
           {menuOpen && (
             <div className="absolute right-0 mt-1 w-48 card shadow-lg py-1 z-50">
               <a href="/profil" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-700/60">
-                Mon profil
+                {t('monProfil')}
               </a>
               <a href="/parametres" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-700/60">
-                Paramètres
+                {t('parametres')}
               </a>
               <hr className="my-1 border-neutral-100 dark:border-neutral-700" />
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
               >
-                Se déconnecter
+                {t('deconnexion')}
               </button>
             </div>
           )}

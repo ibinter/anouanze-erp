@@ -3,45 +3,38 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight, Home } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
-const LABELS: Record<string, string> = {
-  dashboard: 'Tableau de bord',
-  membres: 'Membres',
-  projets: 'Projets',
-  comptabilite: 'Comptabilité',
-  tresorerie: 'Trésorerie',
-  rh: 'Ressources humaines',
-  donateurs: 'Donateurs',
-  bailleurs: 'Bailleurs',
-  beneficiaires: 'Bénéficiaires',
-  documents: 'Documents',
-  reporting: 'Rapports & BI',
-  audit: 'Audit & Traçabilité',
-  achats: 'Achats',
-  stocks: 'Stocks & Inventaire',
-  evenements: 'Événements',
-  parametres: 'Paramètres',
-  immobilisations: 'Immobilisations',
-  volontaires: 'Volontaires',
-  ia: 'ANOUANZÊ AI',
-  meal: 'SERA / MEAL',
-  profil: 'Mon profil',
-  notifications: 'Notifications',
-};
+/**
+ * Segments d'URL dont le libellé est traduit (`shell.breadcrumb.labels.*`).
+ * Tout autre segment est simplement capitalisé.
+ */
+const SEGMENTS_CONNUS = [
+  'dashboard', 'membres', 'projets', 'comptabilite', 'tresorerie', 'rh',
+  'donateurs', 'bailleurs', 'beneficiaires', 'documents', 'reporting',
+  'audit', 'achats', 'stocks', 'evenements', 'parametres', 'immobilisations',
+  'volontaires', 'ia', 'meal', 'profil', 'notifications',
+] as const;
 
 export function Breadcrumb() {
+  const t = useTranslations('shell.breadcrumb');
   const pathname = usePathname();
   const segments = pathname.split('/').filter(Boolean);
 
+  const libelle = (seg: string) =>
+    (SEGMENTS_CONNUS as readonly string[]).includes(seg)
+      ? t(`labels.${seg}`)
+      : seg.charAt(0).toUpperCase() + seg.slice(1);
+
   const crumbs = segments.map((seg, i) => ({
-    label: LABELS[seg] ?? seg.charAt(0).toUpperCase() + seg.slice(1),
+    label: libelle(seg),
     href: '/' + segments.slice(0, i + 1).join('/'),
     isLast: i === segments.length - 1,
   }));
 
   return (
-    <nav className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400" aria-label="Fil d'Ariane">
-      <Link href="/dashboard" className="hover:text-primary-600 transition-colors">
+    <nav className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400" aria-label={t('aria')}>
+      <Link href="/dashboard" aria-label={t('accueil')} className="hover:text-primary-600 transition-colors">
         <Home className="w-4 h-4" />
       </Link>
       {crumbs.map((crumb) => (

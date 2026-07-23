@@ -1,1 +1,406 @@
-{}
+{
+  "finance": {
+    "common": {
+      "loading": "Chargement…",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "exporting": "Export…",
+      "error": "Erreur"
+    },
+    "comptabilite": {
+      "title": "Comptabilité SYCEBNL",
+      "subtitle": "Plan comptable, journaux et balance",
+      "tabs": {
+        "plan": "Plan comptable",
+        "journal": "Journal",
+        "ecritures": "Écritures",
+        "balance": "Balance"
+      },
+      "actions": {
+        "newEntry": "Nouvelle écriture",
+        "exportBalancePdf": "PDF Balance",
+        "exportEcrituresExcel": "Excel Écritures"
+      },
+      "journalPlaceholder": "Sélectionnez un journal pour afficher les écritures.",
+      "plan": {
+        "empty": "Plan comptable vide. Initialisez le plan SYCEBNL.",
+        "classe": "Classe {classe}"
+      },
+      "ecritures": {
+        "date": "Date",
+        "journal": "Journal",
+        "libelle": "Libellé",
+        "debit": "Débit",
+        "credit": "Crédit",
+        "statut": "Statut",
+        "empty": "Aucune écriture.",
+        "valide": "Validé",
+        "brouillon": "Brouillon"
+      },
+      "balance": {
+        "compte": "Compte",
+        "libelle": "Libellé",
+        "debitCumule": "Débit cumulé",
+        "creditCumule": "Crédit cumulé",
+        "solde": "Solde",
+        "empty": "Aucune donnée pour l’exercice {exercice}."
+      },
+      "modal": {
+        "title": "Nouvelle écriture comptable",
+        "journal": "Journal",
+        "chooseJournal": "— Choisir —",
+        "date": "Date",
+        "libelleGeneral": "Libellé général",
+        "libellePlaceholder": "Libellé…",
+        "lignes": "Lignes d’écriture",
+        "addLigne": "Ajouter une ligne",
+        "colCompte": "Compte",
+        "colLibelle": "Libellé",
+        "colDebit": "Débit",
+        "colCredit": "Crédit",
+        "comptePlaceholder": "Ex: 52",
+        "ligneLibellePlaceholder": "Libellé",
+        "montantPlaceholder": "0",
+        "totaux": "TOTAUX",
+        "equilibre": "✓ Écriture équilibrée",
+        "desequilibre": "⚠ Déséquilibre : {montant}"
+      },
+      "errors": {
+        "libelleRequis": "Le libellé est requis.",
+        "journalRequis": "Sélectionnez un journal.",
+        "nonEquilibre": "L’écriture n’est pas équilibrée (débit ≠ crédit).",
+        "compteIntrouvable": "Compte introuvable : {compte}"
+      }
+    },
+    "budget": {
+      "title": "Budgets",
+      "subtitle": "Planification et suivi budgétaire par exercice",
+      "actions": {
+        "exportPdf": "PDF Rapport",
+        "new": "Nouveau budget"
+      },
+      "kpi": {
+        "totalPrevu": "Budget total prévu",
+        "approuves": "Budgets approuvés",
+        "aSurveiller": "Budgets à surveiller"
+      },
+      "filtre": {
+        "exercice": "Exercice :",
+        "tous": "Tous"
+      },
+      "loading": "Chargement des budgets…",
+      "empty": {
+        "title": "Aucun budget pour cet exercice",
+        "subtitle": "Créez votre premier budget pour commencer la planification",
+        "cta": "Créer un budget"
+      },
+      "statut": {
+        "approuve": "Approuvé",
+        "brouillon": "Brouillon"
+      },
+      "card": {
+        "exercice": "Exercice {exercice}",
+        "projet": "Projet : {code} — {nom}",
+        "budgetTotal": "Budget total",
+        "execution": "Exécution budgétaire",
+        "realise": "Réalisé : {montant}",
+        "ecart": "Écart : {montant}",
+        "masquerLignes": "Masquer les lignes",
+        "voirLignes": "{count, plural, one {Voir la # ligne} other {Voir les # lignes}}",
+        "approuver": "Approuver",
+        "approuveLe": "Approuvé le {date}"
+      },
+      "table": {
+        "categorie": "Catégorie",
+        "description": "Description",
+        "prevu": "Prévu",
+        "realise": "Réalisé",
+        "ecart": "Écart",
+        "total": "TOTAL"
+      },
+      "modal": {
+        "title": "Nouveau budget",
+        "nom": "Nom du budget *",
+        "exercice": "Exercice *",
+        "lignes": "Lignes budgétaires *",
+        "addLigne": "Ajouter une ligne",
+        "categoriePlaceholder": "Catégorie *",
+        "descriptionPlaceholder": "Description",
+        "montantPlaceholder": "Montant (XOF)",
+        "submit": "Créer le budget",
+        "defaultNom": "Budget {annee}"
+      },
+      "errors": {
+        "creation": "Erreur lors de la création",
+        "nomRequis": "Le nom est obligatoire",
+        "ligneRequise": "Ajoutez au moins une ligne budgétaire"
+      }
+    },
+    "tresorerie": {
+      "title": "Trésorerie",
+      "subtitle": "Situation des comptes et flux de trésorerie",
+      "actions": {
+        "exportReleve": "Relevé Excel",
+        "newMouvement": "Nouveau mouvement"
+      },
+      "kpi": {
+        "total": "Trésorerie totale",
+        "comptes": "{count, plural, one {# compte bancaire} other {# comptes bancaires}}"
+      },
+      "mouvements": {
+        "title": "Mouvements — {compte}",
+        "date": "Date",
+        "libelle": "Libellé",
+        "debit": "Débit",
+        "credit": "Crédit",
+        "rapproche": "Rapproché",
+        "empty": "Aucun mouvement",
+        "statutRapproche": "Rapproché",
+        "statutEnAttente": "En attente"
+      },
+      "modal": {
+        "title": "Nouveau mouvement",
+        "compte": "Compte",
+        "date": "Date",
+        "libelle": "Libellé",
+        "libellePlaceholder": "Description du mouvement",
+        "type": "Type",
+        "typeDebit": "Débit (sortie)",
+        "typeCredit": "Crédit (entrée)",
+        "montant": "Montant (XOF)",
+        "montantPlaceholder": "0"
+      }
+    },
+    "achats": {
+      "title": "Achats",
+      "subtitle": "Commandes et fournisseurs",
+      "actions": {
+        "new": "Nouvelle commande",
+        "valider": "Valider",
+        "receptionner": "Réceptionner",
+        "commande": "Commande"
+      },
+      "kpi": {
+        "totalCommandes": "Total commandes",
+        "totalCommandesDesc": "Toutes commandes",
+        "enAttente": "En attente",
+        "enAttenteDesc": "Brouillon ou validée",
+        "montantTotal": "Montant total",
+        "montantTotalDesc": "Achats cumulés"
+      },
+      "tabs": {
+        "commandes": "Commandes",
+        "fournisseurs": "Fournisseurs"
+      },
+      "statuts": {
+        "BROUILLON": "Brouillon",
+        "VALIDEE": "Validée",
+        "RECUE": "Reçue"
+      },
+      "filtre": {
+        "tousStatuts": "Tous les statuts"
+      },
+      "colonnes": {
+        "numero": "Numéro",
+        "fournisseur": "Fournisseur",
+        "date": "Date",
+        "montant": "Montant",
+        "statut": "Statut",
+        "nom": "Nom",
+        "email": "Email",
+        "telephone": "Téléphone",
+        "pays": "Pays",
+        "commandes": "Commandes"
+      },
+      "modal": {
+        "title": "Nouvelle commande",
+        "fournisseur": "Fournisseur *",
+        "choisirFournisseur": "Sélectionner un fournisseur",
+        "dateCommande": "Date commande",
+        "articles": "Articles",
+        "addLigne": "+ Ajouter ligne",
+        "designationPlaceholder": "Désignation",
+        "quantitePlaceholder": "Qté",
+        "prixPlaceholder": "Prix unit.",
+        "total": "Total : {montant}"
+      },
+      "detail": {
+        "title": "Commande {numero}",
+        "statut": "Statut",
+        "date": "Date",
+        "fournisseur": "Fournisseur",
+        "numero": "Numéro",
+        "montantTotal": "Montant total"
+      }
+    },
+    "stocks": {
+      "title": "Stocks & Inventaire",
+      "subtitle": "Gestion des articles et mouvements",
+      "kpi": {
+        "totalArticles": "Total articles",
+        "totalArticlesDesc": "Références en catalogue",
+        "enAlerte": "En alerte",
+        "enAlerteDesc": "Stock sous le minimum",
+        "valeurTotale": "Valeur totale stock",
+        "valeurTotaleDesc": "Stock actuel × prix unitaire"
+      },
+      "searchPlaceholder": "Rechercher...",
+      "alertesSeulement": "Alertes seulement",
+      "colonnes": {
+        "reference": "Référence",
+        "designation": "Désignation",
+        "categorie": "Catégorie",
+        "stockActuel": "Stock actuel",
+        "stockMin": "Stock min.",
+        "unite": "Unité",
+        "prixUnit": "Prix unit.",
+        "valeur": "Valeur",
+        "alerte": "Alerte"
+      },
+      "badgeBas": "Bas",
+      "actions": {
+        "entree": "Entrée",
+        "sortie": "Sortie"
+      },
+      "detail": {
+        "categorie": "Catégorie",
+        "stockActuel": "Stock actuel",
+        "stockMinimum": "Stock minimum",
+        "prixUnitaire": "Prix unitaire",
+        "valeurStock": "Valeur du stock"
+      },
+      "modal": {
+        "entreeTitle": "Entrée de stock",
+        "sortieTitle": "Sortie de stock",
+        "quantite": "Quantité",
+        "motif": "Motif",
+        "motifEntreePlaceholder": "Ex: Réception commande",
+        "motifSortiePlaceholder": "Ex: Distribution projet",
+        "stockActuel": "Stock actuel :",
+        "confirmer": "Confirmer"
+      }
+    },
+    "immobilisations": {
+      "title": "Immobilisations",
+      "subtitle": "Patrimoine et amortissements",
+      "actions": {
+        "new": "Nouvelle immobilisation"
+      },
+      "kpi": {
+        "total": "Total immobilisations",
+        "totalDesc": "{count} en service",
+        "valeurAcquisition": "Valeur d’acquisition",
+        "valeurAcquisitionDesc": "Brut, tous statuts",
+        "valeurNette": "Valeur nette comptable",
+        "valeurNetteDesc": "Après amortissements",
+        "amortissementsMois": "Amortissements ce mois",
+        "amortissementsMoisDesc": "Dotation mensuelle"
+      },
+      "statuts": {
+        "EN_SERVICE": "En service",
+        "CEDE": "Cédé",
+        "REBUTE": "Rebuté"
+      },
+      "categories": {
+        "INFORMATIQUE": "Matériel informatique",
+        "MOBILIER": "Mobilier",
+        "VEHICULE": "Véhicule",
+        "MATERIEL": "Équipement",
+        "BATIMENT": "Bâtiment",
+        "TERRAIN": "Terrain"
+      },
+      "colonnes": {
+        "reference": "Référence",
+        "designation": "Désignation",
+        "categorie": "Catégorie",
+        "acquisition": "Acquisition",
+        "valeurAcq": "Valeur acq.",
+        "valeurNette": "Valeur nette",
+        "taux": "Taux",
+        "amorti": "Amorti",
+        "statut": "Statut"
+      },
+      "modal": {
+        "title": "Nouvelle immobilisation",
+        "reference": "Référence",
+        "referencePlaceholder": "IMM-XXX",
+        "categorie": "Catégorie",
+        "designation": "Désignation",
+        "designationPlaceholder": "Description de l’immobilisation",
+        "dateAcquisition": "Date d’acquisition",
+        "valeurAcquisition": "Valeur d’acquisition (FCFA)",
+        "taux": "Taux d’amortissement (%)",
+        "tauxOption": "{taux}% — {annees, plural, one {# an} other {# ans}}"
+      },
+      "detail": {
+        "dateAcquisition": "Date d’acquisition",
+        "taux": "Taux d’amortissement",
+        "valeurAcquisition": "Valeur d’acquisition",
+        "amortissement": "Amortissement",
+        "localisation": "Localisation",
+        "valeurNette": "Valeur nette comptable"
+      }
+    },
+    "paiements": {
+      "title": "Paiements Mobile",
+      "subtitle": "Orange Money, MTN MoMo, CinetPay, Wave",
+      "actions": {
+        "refresh": "Actualiser",
+        "initier": "Initier un paiement"
+      },
+      "kpi": {
+        "totalCollecte": "Total collecté",
+        "transactions": "Transactions",
+        "tauxSucces": "Taux de succès",
+        "enAttente": "En attente"
+      },
+      "integration": {
+        "DISPONIBLE": "Disponible",
+        "INTEGRATION": "En intégration",
+        "BIENTOT": "Bientôt disponible"
+      },
+      "operateurs": {
+        "detailWebhook": "Webhook de confirmation actif — initiation à finaliser",
+        "detailNonDemarre": "Intégration non démarrée"
+      },
+      "avertissement": "Aucune passerelle n’est encore en collecte automatique de bout en bout : un paiement initié ici est enregistré au statut <b>En attente</b> et n’est confirmé qu’à réception du webhook de l’opérateur.",
+      "filtre": {
+        "tousStatuts": "Tous les statuts",
+        "tousTypes": "Tous les types"
+      },
+      "statuts": {
+        "EN_ATTENTE": "En attente",
+        "SUCCES": "Succès",
+        "ECHEC": "Échec",
+        "ANNULE": "Annulé"
+      },
+      "types": {
+        "DON": "Don",
+        "COTISATION": "Cotisation",
+        "PRESTATION": "Prestation",
+        "REMBOURSEMENT": "Remboursement"
+      },
+      "table": {
+        "reference": "Référence",
+        "description": "Description",
+        "type": "Type",
+        "montant": "Montant",
+        "statut": "Statut",
+        "date": "Date",
+        "empty": "Aucune transaction"
+      },
+      "modal": {
+        "title": "Initier un paiement",
+        "montantPlaceholder": "Montant *",
+        "deviseXof": "FCFA (XOF)",
+        "descriptionPlaceholder": "Description",
+        "emailPlaceholder": "Email du payeur *",
+        "telPlaceholder": "Téléphone du payeur *",
+        "canalNote": "Canal indicatif : seuls les opérateurs dont le webhook de confirmation est actif sont proposés. Le routage automatique vers la passerelle n’est pas encore actif.",
+        "submit": "Initier",
+        "sending": "Envoi..."
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Search, Globe, Plus, Building2, FileText, MapPin } from 'lucide-react';
@@ -42,6 +43,8 @@ const BAILLEUR_TYPES = ['MULTILATERAL', 'BILATERAL', 'FONDATION', 'PRIVE'];
 const FORM_INIT = { nom: '', sigle: '', type: 'BILATERAL', pays: '', contactNom: '', contactEmail: '' };
 
 export default function BailleursPage() {
+  const t = useTranslations('relations.bailleurs');
+  const tc = useTranslations('relations.commun');
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Bailleur | null>(null);
@@ -49,6 +52,9 @@ export default function BailleursPage() {
   const [form, setForm] = useState(FORM_INIT);
   const [error, setError] = useState('');
   const queryClient = useQueryClient();
+
+  /** Libellé d'affichage d'un type ; la valeur enum reste celle de l'API. */
+  const typeLabel = (type: string) => (BAILLEUR_TYPES.includes(type) ? t(`types.${type}`) : type);
 
   const createBailleur = useMutation({
     mutationFn: (data: typeof FORM_INIT) =>
@@ -66,7 +72,7 @@ export default function BailleursPage() {
       setForm(FORM_INIT);
       setError('');
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? tc('erreurGenerique')),
   });
 
   const { data, isLoading } = useQuery({
@@ -97,7 +103,7 @@ export default function BailleursPage() {
 
   const columns: Column<Bailleur>[] = [
     {
-      key: 'nom', header: 'Bailleur',
+      key: 'nom', header: t('colonnes.bailleur'),
       render: (r) => (
         <div>
           <p className="font-medium text-neutral-800">{r.nom}</p>
@@ -106,11 +112,11 @@ export default function BailleursPage() {
       ),
     },
     {
-      key: 'type', header: 'Type', width: '120px',
-      render: (r) => <span className={`badge ${TYPE_COLORS[r.type] ?? 'badge-neutral'}`}>{r.type}</span>,
+      key: 'type', header: t('colonnes.type'), width: '120px',
+      render: (r) => <span className={`badge ${TYPE_COLORS[r.type] ?? 'badge-neutral'}`}>{typeLabel(r.type)}</span>,
     },
     {
-      key: 'pays', header: 'Pays/Région', width: '130px',
+      key: 'pays', header: t('colonnes.pays'), width: '130px',
       render: (r) => r.pays ? (
         <div className="flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-neutral-400" />
@@ -119,11 +125,11 @@ export default function BailleursPage() {
       ) : <span className="text-neutral-400">—</span>,
     },
     {
-      key: '_count', header: 'Conventions', width: '110px',
+      key: '_count', header: t('colonnes.conventions'), width: '110px',
       render: (r) => <span className="badge badge-neutral">{(r as any)._count?.conventions ?? 0}</span>,
     },
     {
-      key: 'actions', header: '', width: '190px',
+      key: 'actions', header: t('colonnes.actions'), width: '190px',
       render: (r) => (
         <div className="flex items-center gap-2">
           <Link
@@ -131,13 +137,13 @@ export default function BailleursPage() {
             onClick={(e) => e.stopPropagation()}
             className="text-xs font-medium text-primary-600 hover:underline"
           >
-            Voir la fiche
+            {tc('voirLaFiche')}
           </Link>
           <button
             onClick={(e) => { e.stopPropagation(); setSelected(selected?.id === r.id ? null : r); }}
             className={cn('text-xs font-medium', selected?.id === r.id ? 'text-accent-400' : 'text-neutral-500 hover:underline')}
           >
-            {selected?.id === r.id ? 'Masquer' : 'Conventions'}
+            {selected?.id === r.id ? t('actions.masquer') : t('actions.conventions')}
           </button>
         </div>
       ),
@@ -148,11 +154,11 @@ export default function BailleursPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">Bailleurs de fonds</h1>
-          <p className="text-sm text-neutral-500 mt-1">Partenaires financiers et conventions de financement</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('sousTitre')}</p>
         </div>
         <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
-          <Plus className="w-4 h-4" /> Nouveau bailleur
+          <Plus className="w-4 h-4" /> {t('nouveau')}
         </button>
       </div>
 
@@ -162,7 +168,7 @@ export default function BailleursPage() {
             <Building2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Total bailleurs</p>
+            <p className="text-xs text-neutral-500">{t('stats.totalBailleurs')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalBailleurs}</p>
           </div>
         </div>
@@ -171,7 +177,7 @@ export default function BailleursPage() {
             <FileText className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Conventions</p>
+            <p className="text-xs text-neutral-500">{t('stats.conventions')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : totalConventions}</p>
           </div>
         </div>
@@ -180,7 +186,7 @@ export default function BailleursPage() {
             <MapPin className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs text-neutral-500">Pays représentés</p>
+            <p className="text-xs text-neutral-500">{t('stats.paysRepresentes')}</p>
             <p className="text-xl font-bold text-neutral-800">{isLoading ? '—' : paysCount}</p>
           </div>
         </div>
@@ -190,7 +196,7 @@ export default function BailleursPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
           type="text"
-          placeholder="Rechercher un bailleur…"
+          placeholder={t('recherchePlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="input pl-9 w-full"
@@ -208,14 +214,14 @@ export default function BailleursPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-neutral-700">
-              Conventions — {selected.nom}
+              {t('conventions.titre', { nom: selected.nom })}
               <span className="ml-2 badge badge-neutral">{conventions.length}</span>
             </h2>
             <Link href={`/bailleurs/${selected.id}`} className="btn-secondary text-xs py-1.5 px-3">
-              Fiche complète
+              {tc('ficheComplete')}
             </Link>
           </div>
-          {convLoading && <p className="text-sm text-neutral-400">Chargement des conventions…</p>}
+          {convLoading && <p className="text-sm text-neutral-400">{t('conventions.chargement')}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {conventions.map((conv) => {
               const montant = toNum(conv.montantTotal);
@@ -230,7 +236,7 @@ export default function BailleursPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-neutral-500">Montant</span>
+                    <span className="text-neutral-500">{t('conventions.montant')}</span>
                     <span className="font-mono font-semibold text-neutral-800">{formatMontant(montant)}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-neutral-500">
@@ -240,7 +246,7 @@ export default function BailleursPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-neutral-500">Décaissé</span>
+                      <span className="text-neutral-500">{t('conventions.decaisse')}</span>
                       <span className={cn('font-medium', tauxDecaissement >= 80 ? 'text-green-600' : tauxDecaissement >= 40 ? 'text-orange-500' : 'text-neutral-600')}>
                         {tauxDecaissement}%
                       </span>
@@ -257,7 +263,7 @@ export default function BailleursPage() {
               );
             })}
             {!convLoading && conventions.length === 0 && (
-              <p className="text-sm text-neutral-400 col-span-2 text-center py-4">Aucune convention enregistrée.</p>
+              <p className="text-sm text-neutral-400 col-span-2 text-center py-4">{t('conventions.vide')}</p>
             )}
           </div>
         </div>
@@ -266,16 +272,16 @@ export default function BailleursPage() {
       <Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title="Nouveau bailleur"
+        title={t('modal.titre')}
         footer={
           <>
-            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>Annuler</button>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>{tc('annuler')}</button>
             <button
               className="btn-primary"
               disabled={createBailleur.isPending || !form.nom}
               onClick={() => createBailleur.mutate(form)}
             >
-              {createBailleur.isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {createBailleur.isPending ? tc('enregistrementEnCours') : tc('enregistrer')}
             </button>
           </>
         }
@@ -284,30 +290,30 @@ export default function BailleursPage() {
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="label">Nom *</label>
-              <input type="text" className="input w-full" placeholder="Nom du bailleur" value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
+              <label className="label">{t('modal.nom')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderNom')} value={form.nom} onChange={(e) => setForm((p) => ({ ...p, nom: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Sigle</label>
-              <input type="text" className="input w-full" placeholder="Ex: UE, BM…" value={form.sigle} onChange={(e) => setForm((p) => ({ ...p, sigle: e.target.value }))} />
+              <label className="label">{t('modal.sigle')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderSigle')} value={form.sigle} onChange={(e) => setForm((p) => ({ ...p, sigle: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Type</label>
+              <label className="label">{t('modal.type')}</label>
               <select className="input w-full" value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
-                {BAILLEUR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {BAILLEUR_TYPES.map((type) => <option key={type} value={type}>{typeLabel(type)}</option>)}
               </select>
             </div>
             <div>
-              <label className="label">Pays / Région</label>
-              <input type="text" className="input w-full" placeholder="France, UE…" value={form.pays} onChange={(e) => setForm((p) => ({ ...p, pays: e.target.value }))} />
+              <label className="label">{t('modal.pays')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderPays')} value={form.pays} onChange={(e) => setForm((p) => ({ ...p, pays: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Contact (nom)</label>
-              <input type="text" className="input w-full" placeholder="Prénom Nom" value={form.contactNom} onChange={(e) => setForm((p) => ({ ...p, contactNom: e.target.value }))} />
+              <label className="label">{t('modal.contactNom')}</label>
+              <input type="text" className="input w-full" placeholder={t('modal.placeholderContactNom')} value={form.contactNom} onChange={(e) => setForm((p) => ({ ...p, contactNom: e.target.value }))} />
             </div>
             <div className="col-span-2">
-              <label className="label">Email contact</label>
-              <input type="email" className="input w-full" placeholder="contact@bailleur.org" value={form.contactEmail} onChange={(e) => setForm((p) => ({ ...p, contactEmail: e.target.value }))} />
+              <label className="label">{t('modal.contactEmail')}</label>
+              <input type="email" className="input w-full" placeholder={t('modal.placeholderContactEmail')} value={form.contactEmail} onChange={(e) => setForm((p) => ({ ...p, contactEmail: e.target.value }))} />
             </div>
           </div>
         </div>

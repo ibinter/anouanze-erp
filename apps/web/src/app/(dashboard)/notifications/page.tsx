@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Bell, CheckCheck, Trash2, RefreshCw, SlidersHorizontal, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   useNotificationsListe,
   useNotificationsActions,
@@ -14,6 +15,9 @@ import { styleType, tempsRelatif } from '@/components/notifications/types';
 type Filtre = 'all' | 'non-lues';
 
 export default function NotificationsPage() {
+  const t = useTranslations('shell.notifications');
+  const tTemps = useTranslations('shell.notifications.temps');
+  const locale = useLocale();
   const router = useRouter();
   const [filtre, setFiltre] = useState<Filtre>('all');
   const [prefsOuvertes, setPrefsOuvertes] = useState(false);
@@ -32,16 +36,19 @@ export default function NotificationsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Notifications</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">{t('titre')}</h1>
           <p className="text-sm text-neutral-500 mt-1">
-            {nonLues > 0 ? `${nonLues} non lue${nonLues > 1 ? 's' : ''}` : 'Tout est à jour'}
-            <span className="text-neutral-400"> · actualisation automatique toutes les {Math.round(NOTIF_REFETCH_MS / 1000)} s</span>
+            {nonLues > 0 ? t('nonLues', { count: nonLues }) : t('aJour')}
+            <span className="text-neutral-400">
+              {t('actualisationAuto', { secondes: Math.round(NOTIF_REFETCH_MS / 1000) })}
+            </span>
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => refetch()}
-            title="Actualiser"
+            title={t('actualiser')}
+            aria-label={t('actualiser')}
             className="p-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -50,7 +57,7 @@ export default function NotificationsPage() {
             onClick={() => setPrefsOuvertes((o) => !o)}
             className="flex items-center gap-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200 px-3 py-2 rounded-lg text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700"
           >
-            <SlidersHorizontal className="w-4 h-4" /> Préférences
+            <SlidersHorizontal className="w-4 h-4" /> {t('preferences')}
           </button>
           {nonLues > 0 && (
             <button
