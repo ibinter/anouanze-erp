@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Script from 'next/script';
 import type { Metadata } from 'next';
 import HeroSlider from '@/components/sara/HeroSlider';
 import SaraChat from '@/components/sara/SaraChat';
@@ -645,6 +646,16 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ══ ÉCOSYSTÈME IBIG SOFT (script universel — carrousel des solutions) ══ */}
+      <div data-ibig="solutions" />
+      <Script
+        src="/ibigsoft-universal.js"
+        data-solution="anouanze"
+        data-render="solutions"
+        data-accent="#146C43"
+        strategy="afterInteractive"
+      />
 
       {/* ══ FOOTER ══ */}
       <footer className="bg-[#0a0f0d] text-neutral-400">
