@@ -2,12 +2,20 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Request, UseG
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NotificationsRestService } from './notifications-rest.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_OPERATIONNELLE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 import { TypeNotification } from '@prisma/client';
 import { MajPreferencesNotificationDto } from './dto/preferences-notification.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : chaque utilisateur gère ses propres notifications (tous rôles).
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/notifications')
 export class NotificationsRestController {
   constructor(private readonly service: NotificationsRestService) {}
@@ -74,6 +82,7 @@ export class NotificationsRestController {
   }
 
   @Post('diffuser')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Diffuser une notification à toute l\'organisation' })
   diffuser(
     @Request() req,

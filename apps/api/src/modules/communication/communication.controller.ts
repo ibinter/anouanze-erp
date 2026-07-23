@@ -13,21 +13,31 @@ import { CommunicationService } from './communication.service';
 import { EnvoyerNotificationDto } from './dto/envoyer-notification.dto';
 import { EnvoyerEmailMasseDto } from './dto/envoyer-email-masse.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  ROLES_ECRITURE_OPERATIONNELLE,
+  ROLES_LECTURE_LARGE,
+} from '../../common/constants/roles-groupes';
 
 @ApiTags('communication')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Défaut : consultation de ses propres notifications/annonces, tous rôles.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/communication')
 export class CommunicationController {
   constructor(private readonly communicationService: CommunicationService) {}
 
   @Post('notifications')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Envoyer une notification à des utilisateurs' })
   envoyerNotification(@Request() req, @Body() dto: EnvoyerNotificationDto) {
     return this.communicationService.envoyerNotification(req.user.organisationId, dto);
   }
 
   @Post('email-masse')
+  @Roles(...ROLES_ECRITURE_OPERATIONNELLE)
   @ApiOperation({ summary: 'Envoyer un email en masse' })
   envoyerEmailMasse(@Request() req, @Body() dto: EnvoyerEmailMasseDto) {
     return this.communicationService.envoyerEmailMasse(req.user.organisationId, dto);

@@ -2,11 +2,17 @@ import { Controller, Get, Post, Patch, Body, Param, Query, Request, UseGuards } 
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { ROLES_LECTURE_LARGE } from '../../common/constants/roles-groupes';
 import { StatutTicket, PrioriteTicket } from '@prisma/client';
 
 @ApiTags('tickets')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+// Support : chaque utilisateur ouvre et suit ses propres tickets, quel que
+// soit son rôle. Aucune restriction supplémentaire n'aurait de sens ici.
+@Roles(...ROLES_LECTURE_LARGE)
 @Controller('api/v1/tickets')
 export class TicketsController {
   constructor(private readonly service: TicketsService) {}
