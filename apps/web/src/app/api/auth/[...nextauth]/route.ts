@@ -36,18 +36,23 @@ const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Mot de passe', type: 'password' },
+        // Code de double authentification — transmis uniquement si le compte l'exige.
+        code: { label: 'Code 2FA', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
           const apiUrl = (process.env.API_URL ?? 'http://localhost:4000/api/v1').replace(/\/api\/v1$/, '');
+          const code = credentials.code?.trim();
           const res = await fetch(`${apiUrl}/api/v1/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: credentials.email,
               motDePasse: credentials.password,
+              // Champ omis pour les comptes sans 2FA : flux strictement inchangé.
+              ...(code ? { code } : {}),
             }),
           });
 
