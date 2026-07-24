@@ -3,8 +3,8 @@ import { PaiementsService } from './paiements.service';
 import { CinetPayService } from './cinetpay.service';
 import { PaiementsController } from './paiements.controller';
 
-// ConfigModule est déclaré `isGlobal: true` dans AppModule : ConfigService est
-// injectable ici sans import supplémentaire.
+// `ConfigurationModule` est déclaré `@Global()` dans AppModule :
+// `ConfigurationService` est injectable ici sans import supplémentaire.
 @Module({
   controllers: [PaiementsController],
   providers: [PaiementsService, CinetPayService],
