@@ -162,12 +162,34 @@ export function tresorerieExportDef(opts: ExportDefOptions = {}): DocumentExport
   });
 }
 
+// ─── Facture d'abonnement (lignes de la facture) ─────────────────────────────
+export function factureExportDef(
+  opts: ExportDefOptions & { numero?: string } = {},
+): DocumentExportDefinition {
+  const columns: ColumnDef[] = [
+    { key: 'libelle', label: 'Désignation', type: 'long-description', priority: 'essential' },
+    { key: 'quantite', label: 'Qté', type: 'short-code', priority: 'important', nowrap: true },
+    { key: 'prixUnitaire', label: 'P.U.', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
+    { key: 'montant', label: 'Montant', type: 'amount', priority: 'essential', nowrap: true, format: formatFCFA },
+  ];
+  return {
+    ...base(opts, {
+      title: opts.numero ? `Facture ${opts.numero}` : 'Facture',
+      subtitle: 'Abonnement ANOUANZÊ ERP',
+      documentType: 'invoice',
+      columns,
+    }),
+    reference: opts.numero,
+  };
+}
+
 /** Index pratique pour une résolution dynamique par clé de module. */
 export const EXPORT_DEFINITIONS = {
   membres: membresExportDef,
   budget: budgetExportDef,
   comptabilite: comptabiliteExportDef,
   tresorerie: tresorerieExportDef,
+  facture: factureExportDef,
 } as const;
 
 export type ExportModuleKey = keyof typeof EXPORT_DEFINITIONS;

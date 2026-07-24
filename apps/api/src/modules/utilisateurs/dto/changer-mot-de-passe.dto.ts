@@ -6,8 +6,8 @@ export class ChangerMotDePasseDto {
   @IsString()
   ancienMotDePasse: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Doit respecter la politique de mot de passe (12 caractères minimum)' })
   @IsString()
-  @MinLength(8)
+  @MinLength(12)
   nouveauMotDePasse: string;
 }

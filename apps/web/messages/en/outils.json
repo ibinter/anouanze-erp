@@ -264,6 +264,95 @@
         "ouvrir": "Open ticket",
         "envoi": "Sending…"
       }
+    },
+    "aide": {
+      "titre": "Support centre",
+      "sousTitre": "User guide, frequently asked questions and practical cases for ANOUANZÊ ERP",
+      "recherche": {
+        "placeholder": "Search the guide, the FAQ and the practical cases…",
+        "aria": "Search the support centre",
+        "effacer": "Clear the search",
+        "resultats": "{count, plural, =0 {No result} one {# result} other {# results}} for \"{terme}\"",
+        "compteGuide": "{count} guide",
+        "compteFaq": "{count} FAQ",
+        "compteCas": "{count, plural, one {# practical case} other {# practical cases}}",
+        "aucun": "No result. Try another keyword, or put the question to SARA."
+      },
+      "badges": {
+        "guide": "Guide",
+        "faq": "FAQ",
+        "cas": "Case"
+      },
+      "acces": {
+        "sara": "Ask SARA",
+        "ticket": "Raise a ticket",
+        "academie": "ANOUANZÊ Academy",
+        "visite": "Restart the guided tour"
+      },
+      "onglets": {
+        "guide": "User guide",
+        "faq": "FAQ",
+        "cas": "Practical cases"
+      },
+      "toutes": "All",
+      "guide": {
+        "utilisateurs": "Intended users",
+        "prerequis": "Prerequisites",
+        "procedure": "Step-by-step procedure",
+        "erreurs": "Common mistakes",
+        "conseils": "Tips",
+        "permissions": "Permissions required",
+        "ouvrirModule": "Open the module"
+      },
+      "table": {
+        "probleme": "Problem",
+        "cause": "Likely cause",
+        "solution": "Solution"
+      },
+      "faq": {
+        "compte": "{count, plural, one {# question shown} other {# questions shown}}"
+      },
+      "cas": {
+        "avertissement": "The names, amounts and references used in these practical cases are fictitious and serve a purely illustrative purpose.",
+        "objectif": "Objective",
+        "etapes": "Steps",
+        "resultat": "Expected outcome",
+        "erreurs": "Possible mistakes",
+        "duree": "≈ {count} min"
+      },
+      "support": {
+        "titre": "Still not found what you were looking for?",
+        "texte": "Put the question to SARA for an immediate explanation, or raise a ticket with IBIG SOFT support, stating the module, the action performed and the exact error message.",
+        "sara": "Ask SARA",
+        "ticket": "Raise a ticket"
+      }
+    },
+    "academie": {
+      "titre": "ANOUANZÊ Academy",
+      "sousTitre": "{parcours} learning paths · {lecons} lessons · around {heures} h of training",
+      "centreAide": "Support centre",
+      "videoTitre": "Video content coming soon",
+      "videoTexte": "The video modules have not been produced yet. The learning paths below set out the learning objectives and point to the user guide and to the real ERP modules, which remain the reference until the videos are published.",
+      "toutes": "All",
+      "progression": {
+        "titre": "Your progress",
+        "chargement": "Loading…",
+        "detail": "{faites, plural, one {# lesson} other {# lessons}} out of {total} marked as completed",
+        "appareil": "progress saved on this device only",
+        "reinitialiser": "Reset"
+      },
+      "lecon": {
+        "marquerTerminee": "Mark as completed",
+        "marquerNonTerminee": "Mark as not completed",
+        "minutes": "{count} min",
+        "videoDisponible": "Video available",
+        "videoBientot": "Video content coming soon",
+        "voirDansApp": "View in the application"
+      },
+      "ressources": {
+        "titre": "Resource library",
+        "bientot": "Coming soon"
+      }
     }
   }
 }

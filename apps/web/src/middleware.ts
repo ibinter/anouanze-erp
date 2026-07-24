@@ -1,10 +1,22 @@
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { PATHNAME_HEADER } from '@/lib/seo';
 
 const PUBLIC_PATHS = ['/', '/tarifs', '/demo', '/contact', '/mentions-legales', '/confidentialite', '/cgu', '/cgs', '/cookies', '/aide', '/licence', '/conditions-commerciales', '/propriete-intellectuelle', '/conditions-sara'];
 const AUTH_PATHS = ['/login', '/mot-de-passe-oublie', '/reinitialiser-mot-de-passe'];
 const SUPERADMIN_PREFIX = '/superadmin';
+
+/**
+ * Propage le chemin demandé aux composants serveur via un en-tête
+ * ({@link PATHNAME_HEADER}). Utilisé par le layout racine pour n'émettre les
+ * données structurées spécifiques à la landing (FAQPage) que sur « / ».
+ */
+function withPathname(request: NextRequest, pathname: string) {
+  const headers = new Headers(request.headers);
+  headers.set(PATHNAME_HEADER, pathname);
+  return NextResponse.next({ request: { headers } });
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,12 +30,12 @@ export async function middleware(request: NextRequest) {
     if ((token as any).role !== 'SUPER_ADMIN') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    return NextResponse.next();
+    return withPathname(request, pathname);
   }
 
   // Pages publiques marketing — accessibles à tous, connecté ou non
   if (PUBLIC_PATHS.includes(pathname)) {
-    return NextResponse.next();
+    return withPathname(request, pathname);
   }
 
   // Pages auth — redirige les connectés vers /dashboard
@@ -31,7 +43,7 @@ export async function middleware(request: NextRequest) {
     if (token) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    return NextResponse.next();
+    return withPathname(request, pathname);
   }
 
   // Pages dashboard — nécessite authentification
@@ -71,7 +83,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return withPathname(request, pathname);
 }
 
 export const config = {

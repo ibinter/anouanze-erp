@@ -264,6 +264,95 @@
         "ouvrir": "Ouvrir le ticket",
         "envoi": "Envoi…"
       }
+    },
+    "aide": {
+      "titre": "Centre d'aide",
+      "sousTitre": "Guide utilisateur, questions fréquentes et cas pratiques d'ANOUANZÊ ERP",
+      "recherche": {
+        "placeholder": "Rechercher dans le guide, la FAQ et les cas pratiques…",
+        "aria": "Rechercher dans le centre d'aide",
+        "effacer": "Effacer la recherche",
+        "resultats": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}} pour « {terme} »",
+        "compteGuide": "{count} guide",
+        "compteFaq": "{count} FAQ",
+        "compteCas": "{count, plural, one {# cas pratique} other {# cas pratiques}}",
+        "aucun": "Aucun résultat. Essayez un autre mot-clé, ou posez la question à SARA."
+      },
+      "badges": {
+        "guide": "Guide",
+        "faq": "FAQ",
+        "cas": "Cas"
+      },
+      "acces": {
+        "sara": "Poser la question à SARA",
+        "ticket": "Ouvrir un ticket",
+        "academie": "Académie ANOUANZÊ",
+        "visite": "Relancer la visite guidée"
+      },
+      "onglets": {
+        "guide": "Guide utilisateur",
+        "faq": "FAQ",
+        "cas": "Cas pratiques"
+      },
+      "toutes": "Toutes",
+      "guide": {
+        "utilisateurs": "Utilisateurs concernés",
+        "prerequis": "Prérequis",
+        "procedure": "Procédure pas à pas",
+        "erreurs": "Erreurs fréquentes",
+        "conseils": "Conseils",
+        "permissions": "Permissions nécessaires",
+        "ouvrirModule": "Ouvrir le module"
+      },
+      "table": {
+        "probleme": "Problème",
+        "cause": "Cause probable",
+        "solution": "Solution"
+      },
+      "faq": {
+        "compte": "{count, plural, one {# question affichée} other {# questions affichées}}"
+      },
+      "cas": {
+        "avertissement": "Les noms, montants et références utilisés dans ces cas pratiques sont fictifs et servent uniquement d'illustration.",
+        "objectif": "Objectif",
+        "etapes": "Étapes",
+        "resultat": "Résultat attendu",
+        "erreurs": "Erreurs possibles",
+        "duree": "≈ {count} min"
+      },
+      "support": {
+        "titre": "Vous n’avez pas trouvé votre réponse ?",
+        "texte": "Posez la question à SARA pour une explication immédiate, ou ouvrez un ticket auprès du support IBIG SOFT en précisant le module, l'action réalisée et le message d'erreur exact.",
+        "sara": "Poser la question à SARA",
+        "ticket": "Ouvrir un ticket"
+      }
+    },
+    "academie": {
+      "titre": "Académie ANOUANZÊ",
+      "sousTitre": "{parcours} parcours · {lecons} leçons · environ {heures} h de formation",
+      "centreAide": "Centre d'aide",
+      "videoTitre": "Contenu vidéo bientôt disponible",
+      "videoTexte": "Les capsules vidéo ne sont pas encore produites. Les parcours ci-dessous décrivent les objectifs pédagogiques et renvoient vers le guide utilisateur et les modules réels de l'ERP, qui restent la référence en attendant la publication des vidéos.",
+      "toutes": "Toutes",
+      "progression": {
+        "titre": "Votre progression",
+        "chargement": "Chargement…",
+        "detail": "{faites, plural, one {# leçon} other {# leçons}} sur {total} {faites, plural, one {marquée comme terminée} other {marquées comme terminées}}",
+        "appareil": "progression enregistrée sur cet appareil uniquement",
+        "reinitialiser": "Réinitialiser"
+      },
+      "lecon": {
+        "marquerTerminee": "Marquer comme terminée",
+        "marquerNonTerminee": "Marquer comme non terminée",
+        "minutes": "{count} min",
+        "videoDisponible": "Vidéo disponible",
+        "videoBientot": "Contenu vidéo bientôt disponible",
+        "voirDansApp": "Voir dans l'application"
+      },
+      "ressources": {
+        "titre": "Bibliothèque de ressources",
+        "bientot": "Bientôt disponible"
+      }
     }
   }
 }

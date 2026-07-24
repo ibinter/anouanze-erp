@@ -10,8 +10,18 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { EmailService } from '../../common/email/email.service';
 import { RegisterDto } from './dto/register.dto';
+import { DeuxFacteursService } from './deux-facteurs.service';
+import { validerMotDePasse } from './politique-mot-de-passe';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+
+/** Contexte technique de la connexion (jamais fourni par le client). */
+export interface ContexteConnexion {
+  ipAdresse?: string | null;
+  userAgent?: string | null;
+  /** Code TOTP ou code de secours, uniquement si le compte a la 2FA active. */
+  code?: string | null;
+}
 
 @Injectable()
 export class AuthService {
@@ -20,6 +30,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly email: EmailService,
+    private readonly deuxFacteurs: DeuxFacteursService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -31,7 +42,40 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
+  /**
+   * Pré-connexion : vérifie les identifiants et indique si un code 2FA sera
+   * demandé, **sans créer de session ni délivrer de jeton**.
+   * Permet à l'écran de connexion d'afficher l'étape « code » au bon moment.
+   */
+  async preLogin(email: string, motDePasse: string) {
+    const user = await this.validateUser(email, motDePasse);
+    if (!user) {
+      throw new UnauthorizedException('Identifiants invalides');
+    }
+    return { deuxFacteursRequis: user.deuxFacteurs === true };
+  }
+
+  async login(user: any, contexte: ContexteConnexion = {}) {
+    // ─── Double authentification (opt-in) ───
+    // Compte sans 2FA : ce bloc est intégralement ignoré, le flux est inchangé.
+    if (user?.deuxFacteurs === true) {
+      const code = contexte.code?.trim();
+      if (!code) {
+        // Aucun jeton n'est délivré : l'appelant doit rejouer la connexion avec le code.
+        throw new UnauthorizedException({
+          message: 'Code de double authentification requis',
+          deuxFacteursRequis: true,
+        });
+      }
+      const valide = await this.deuxFacteurs.verifierCodeConnexion(user.id, code);
+      if (!valide) {
+        throw new UnauthorizedException({
+          message: 'Code de double authentification invalide',
+          deuxFacteursRequis: true,
+        });
+      }
+    }
+
     const userOrg = await this.prisma.utilisateurOrganisation.findFirst({
       where: { utilisateurId: user.id },
       select: { organisationId: true, role: true },
@@ -66,6 +110,8 @@ export class AuthService {
         token: accessToken,
         refreshToken,
         expiresAt,
+        ipAdresse: contexte.ipAdresse ?? null,
+        userAgent: contexte.userAgent ?? null,
       },
     });
 
@@ -96,6 +142,16 @@ export class AuthService {
     });
     if (existing) {
       throw new ConflictException('Un compte avec cet email existe déjà');
+    }
+
+    // Politique de mot de passe — appliquée côté serveur
+    const controle = validerMotDePasse(dto.motDePasse, {
+      email: dto.email,
+      nom: dto.nom,
+      prenom: dto.prenom,
+    });
+    if (!controle.valide) {
+      throw new BadRequestException(controle.erreurs);
     }
 
     const motDePasseHash = await bcrypt.hash(dto.motDePasse, 12);
@@ -185,6 +241,16 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!user || !(user as any).tokenReinitExpire || (user as any).tokenReinitExpire < new Date()) {
       throw new BadRequestException('Lien de réinitialisation invalide ou expiré');
+    }
+
+    // Politique de mot de passe — appliquée côté serveur
+    const controle = validerMotDePasse(nouveauMotDePasse, {
+      email: user.email,
+      nom: user.nom,
+      prenom: user.prenom,
+    });
+    if (!controle.valide) {
+      throw new BadRequestException(controle.erreurs);
     }
 
     const motDePasseHash = await bcrypt.hash(nouveauMotDePasse, 12);

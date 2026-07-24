@@ -211,6 +211,8 @@ model Organisation {
   tickets           TicketSupport[]
   invitations       Invitation[]
   emailLogs         EmailLog[]
+  abonnements       Abonnement[]
+  factures          Facture[]
 
   @@map("organisations")
 }
@@ -1233,6 +1235,108 @@ enum StatutAbonnement {
   ACTIF
   SUSPENDU
   EXPIRE
+}
+
+enum PeriodiciteAbonnement {
+  MENSUELLE
+  ANNUELLE
+}
+
+enum StatutFacture {
+  BROUILLON
+  EMISE
+  PAYEE
+  ANNULEE
+  EN_RETARD
+}
+
+/// Catalogue commercial (source de vérité des prix affichés sur la landing).
+model Plan {
+  id              String   @id @default(uuid())
+  code            String   @unique // ESSENTIEL | STARTER | PRO | ENTERPRISE
+  nom             String
+  description     String?
+  prixMensuel     Decimal  @default(0) @db.Decimal(15, 2)
+  prixAnnuel      Decimal  @default(0) @db.Decimal(15, 2)
+  devise          Devise   @default(XOF)
+  maxUtilisateurs Int? // null = illimité
+  modulesInclus   String[] @default([])
+  surDevis        Boolean  @default(false)
+  ordre           Int      @default(0)
+  actif           Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  abonnements     Abonnement[]
+
+  @@index([actif])
+  @@map("plans")
+}
+
+model Abonnement {
+  id                String                @id @default(uuid())
+  organisationId    String
+  planId            String
+  periodicite       PeriodiciteAbonnement @default(MENSUELLE)
+  dateDebut         DateTime              @default(now())
+  dateFin           DateTime
+  statut            StatutAbonnement      @default(ACTIF)
+  montant           Decimal               @db.Decimal(15, 2)
+  devise            Devise                @default(XOF)
+  renouvellementAuto Boolean              @default(true)
+  notes             String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  organisation      Organisation          @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  plan              Plan                  @relation(fields: [planId], references: [id])
+  factures          Facture[]
+
+  @@index([organisationId])
+  @@index([statut])
+  @@map("abonnements")
+}
+
+model Facture {
+  id             String        @id @default(uuid())
+  numero         String        @unique // FAC-2026-00001
+  abonnementId   String?
+  organisationId String
+  montantHT      Decimal       @db.Decimal(15, 2)
+  tauxTva        Decimal       @default(0) @db.Decimal(5, 2)
+  montantTTC     Decimal       @db.Decimal(15, 2)
+  devise         Devise        @default(XOF)
+  statut         StatutFacture @default(BROUILLON)
+  dateEmission   DateTime      @default(now())
+  dateEcheance   DateTime
+  datePaiement   DateTime?
+  modePaiement   String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  abonnement     Abonnement?   @relation(fields: [abonnementId], references: [id], onDelete: SetNull)
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  lignes         LigneFacture[]
+
+  @@index([organisationId])
+  @@index([statut])
+  @@map("factures")
+}
+
+model LigneFacture {
+  id           String  @id @default(uuid())
+  factureId    String
+  libelle      String
+  quantite     Decimal @default(1) @db.Decimal(15, 2)
+  prixUnitaire Decimal @db.Decimal(15, 2)
+  montant      Decimal @db.Decimal(15, 2)
+  ordre        Int     @default(0)
+
+  facture      Facture @relation(fields: [factureId], references: [id], onDelete: Cascade)
+
+  @@index([factureId])
+  @@map("lignes_facture")
 }
 
 // ============================================================

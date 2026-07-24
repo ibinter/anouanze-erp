@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { CreditCard, TrendingUp, CheckCircle, XCircle, Clock, Plus, X, RefreshCw } from 'lucide-react';
+import { CreditCard, TrendingUp, CheckCircle, Clock, Plus, X, RefreshCw, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { toNum } from '@/lib/utils';
@@ -18,6 +18,19 @@ interface Transaction {
   payeur_email?: string;
   payeur_tel?: string;
   created_at: string;
+  /** Renseigné par l'API quand une page de paiement CinetPay a été ouverte. */
+  metadata?: { cinetpay?: { paymentUrl?: string } | null } | null;
+}
+
+/** Réponse de POST /paiements/initier. */
+interface InitiationResponse {
+  id: string;
+  reference: string;
+  statut: string;
+  passerelle: string | null;
+  paymentUrl: string | null;
+  motif?: string;
+  erreur?: string;
 }
 
 interface PaiementStats {
@@ -39,20 +52,40 @@ const TYPE_IDS = ['DON', 'COTISATION', 'PRESTATION', 'REMBOURSEMENT'];
 const STATUT_IDS = ['EN_ATTENTE', 'SUCCES', 'ECHEC', 'ANNULE'];
 
 /**
- * Statut d'intégration réel de chaque passerelle — audité sur
- * apps/api/src/modules/paiements (contrôleur + service) :
+ * Statut d'intégration réel de chaque passerelle :
  *  - DISPONIBLE  : initiation ET confirmation opérées de bout en bout
- *  - INTEGRATION : callback (webhook) implémenté, initiation encore manuelle
+ *  - INTEGRATION : callback (webhook) implémenté, initiation non opérationnelle
  *  - BIENTOT     : aucun code d'intégration côté API
- * Le cahier des charges IBIG SOFT interdit d'annoncer « disponible » une
- * intégration non opérationnelle : ne pas modifier sans changement côté API.
+ *
+ * ⚠️ Ces statuts ne sont PLUS codés en dur : ils proviennent de
+ * `GET /paiements/configuration`, qui n'annonce « DISPONIBLE » que si les clés
+ * CinetPay sont réellement présentes sur le serveur. Le cahier des charges
+ * IBIG SOFT interdit d'annoncer « disponible » une intégration non
+ * opérationnelle — les valeurs ci-dessous ne servent que de repli pessimiste
+ * (chargement en cours ou API injoignable) et ne doivent jamais valoir
+ * « DISPONIBLE ».
  */
 type StatutIntegration = 'DISPONIBLE' | 'INTEGRATION' | 'BIENTOT';
+
+interface ConfigurationPasserelles {
+  cinetpay: { configure: boolean; mode: string | null; signatureVerifiable: boolean };
+  initiationOperationnelle: boolean;
+  operateurs: { id: string; label: string; integration: StatutIntegration; via: string | null }[];
+}
 
 const INTEGRATION_BADGES: Record<StatutIntegration, { className: string }> = {
   DISPONIBLE: { className: 'bg-green-100 text-green-700' },
   INTEGRATION: { className: 'bg-amber-100 text-amber-700' },
   BIENTOT: { className: 'bg-gray-100 text-gray-500' },
+};
+
+/** Habillage visuel par opérateur (indépendant du statut d'intégration). */
+const PRESENTATION: Record<string, { initiales: string; pastille: string }> = {
+  ORANGE_MONEY: { initiales: 'OM', pastille: 'bg-orange-500' },
+  MTN_MOMO: { initiales: 'MTN', pastille: 'bg-yellow-500' },
+  MOOV_MONEY: { initiales: 'MOOV', pastille: 'bg-blue-500' },
+  WAVE: { initiales: 'W', pastille: 'bg-sky-500' },
+  CINETPAY: { initiales: 'CP', pastille: 'bg-blue-600' },
 };
 
 interface Operateur {
@@ -61,46 +94,23 @@ interface Operateur {
   initiales: string;
   pastille: string;
   integration: StatutIntegration;
-  /** Clé de traduction du détail affiché sous le badge d'intégration. */
-  detailKey: 'detailWebhook' | 'detailNonDemarre';
+  via: string | null;
 }
 
-const OPERATEURS: Operateur[] = [
-  {
-    id: 'ORANGE_MONEY',
-    label: 'Orange Money',
-    initiales: 'OM',
-    pastille: 'bg-orange-500',
-    integration: 'INTEGRATION',
-    detailKey: 'detailWebhook',
-  },
-  {
-    id: 'CINETPAY',
-    label: 'CinetPay',
-    initiales: 'CP',
-    pastille: 'bg-blue-600',
-    integration: 'INTEGRATION',
-    detailKey: 'detailWebhook',
-  },
-  {
-    id: 'MTN_MOMO',
-    label: 'MTN MoMo',
-    initiales: 'MTN',
-    pastille: 'bg-yellow-500',
-    integration: 'BIENTOT',
-    detailKey: 'detailNonDemarre',
-  },
-  {
-    id: 'WAVE',
-    label: 'Wave',
-    initiales: 'W',
-    pastille: 'bg-sky-500',
-    integration: 'BIENTOT',
-    detailKey: 'detailNonDemarre',
-  },
+/** Repli utilisé tant que la configuration serveur n'a pas répondu. */
+const OPERATEURS_REPLI: Operateur[] = [
+  { id: 'ORANGE_MONEY', label: 'Orange Money', ...PRESENTATION.ORANGE_MONEY, integration: 'INTEGRATION', via: null },
+  { id: 'CINETPAY', label: 'CinetPay', ...PRESENTATION.CINETPAY, integration: 'INTEGRATION', via: null },
+  { id: 'MTN_MOMO', label: 'MTN MoMo', ...PRESENTATION.MTN_MOMO, integration: 'BIENTOT', via: null },
+  { id: 'WAVE', label: 'Wave', ...PRESENTATION.WAVE, integration: 'BIENTOT', via: null },
 ];
 
-const OPERATEURS_SELECTIONNABLES = OPERATEURS.filter((o) => o.integration !== 'BIENTOT');
+/** Détail affiché sous le badge — dépend du statut réel, jamais d'un a priori. */
+function detailKey(op: Operateur): 'detailViaCinetpay' | 'detailOperationnel' | 'detailWebhook' | 'detailNonDemarre' {
+  if (op.integration === 'DISPONIBLE') return op.via === 'CINETPAY' ? 'detailViaCinetpay' : 'detailOperationnel';
+  if (op.integration === 'INTEGRATION') return 'detailWebhook';
+  return 'detailNonDemarre';
+}
 
 export default function PaiementsPage() {
   const t = useTranslations('finance.paiements');
@@ -114,6 +124,30 @@ export default function PaiementsPage() {
   const [filtreStatut, setFiltreStatut] = useState('');
   const [filtreType, setFiltreType] = useState('');
   const [form, setForm] = useState({ montant: '', devise: 'XOF', description: '', payeurEmail: '', payeurTel: '', type: 'DON', operateur: 'ORANGE_MONEY' });
+  /** Dernière initiation aboutie — conserve le lien si la popup est bloquée. */
+  const [dernierPaiement, setDernierPaiement] = useState<InitiationResponse | null>(null);
+  const [erreurInitiation, setErreurInitiation] = useState<string | null>(null);
+
+  const { data: configData } = useQuery<ConfigurationPasserelles>({
+    queryKey: ['paiements-configuration'],
+    queryFn: () => api.get('/paiements/configuration').then((r: any) => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Sans réponse serveur, on reste sur le repli pessimiste : jamais « Disponible ».
+  const operateurs: Operateur[] = configData?.operateurs?.length
+    ? configData.operateurs.map((op) => ({
+        id: op.id,
+        label: op.label,
+        initiales: PRESENTATION[op.id]?.initiales ?? op.label.slice(0, 2).toUpperCase(),
+        pastille: PRESENTATION[op.id]?.pastille ?? 'bg-gray-400',
+        integration: op.integration,
+        via: op.via,
+      }))
+    : OPERATEURS_REPLI;
+
+  const passerelleActive = configData?.initiationOperationnelle === true;
+  const operateursSelectionnables = operateurs.filter((o) => o.integration !== 'BIENTOT');
 
   const { data: statsData } = useQuery<PaiementStats>({
     queryKey: ['paiements-stats'],
@@ -125,13 +159,22 @@ export default function PaiementsPage() {
     queryFn: () => api.get('/paiements/transactions', { params: { statut: filtreStatut || undefined, type: filtreType || undefined, limit: 50 } }).then((r: any) => r.data),
   });
 
-  const initierPaiement = useMutation({
-    mutationFn: (data: any) => api.post('/paiements/initier', data),
-    onSuccess: () => {
+  const initierPaiement = useMutation<InitiationResponse, any, any>({
+    mutationFn: (data: any) => api.post('/paiements/initier', data).then((r: any) => r.data),
+    onSuccess: (resultat) => {
       qc.invalidateQueries({ queryKey: ['paiements-transactions'] });
       qc.invalidateQueries({ queryKey: ['paiements-stats'] });
       setShowInitier(false);
       setForm({ montant: '', devise: 'XOF', description: '', payeurEmail: '', payeurTel: '', type: 'DON', operateur: 'ORANGE_MONEY' });
+      setErreurInitiation(resultat?.erreur ?? null);
+      setDernierPaiement(resultat ?? null);
+      // Redirection vers la page de paiement de la passerelle, si elle existe.
+      if (resultat?.paymentUrl) {
+        window.open(resultat.paymentUrl, '_blank', 'noopener,noreferrer');
+      }
+    },
+    onError: (e: any) => {
+      setErreurInitiation(e?.response?.data?.message ?? e?.message ?? 'Erreur');
     },
   });
 
@@ -185,9 +228,9 @@ export default function PaiementsPage() {
         </div>
       </div>
 
-      {/* Opérateurs — statut d'intégration honnête (cf. audit API en tête de fichier) */}
+      {/* Opérateurs — statut d'intégration servi par l'API (cf. commentaire en tête de fichier) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {OPERATEURS.map(op => {
+        {operateurs.map(op => {
           const badge = INTEGRATION_BADGES[op.integration];
           return (
             <div key={op.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-start gap-3">
@@ -202,18 +245,54 @@ export default function PaiementsPage() {
                 <span className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full ${badge.className}`}>
                   {t(`integration.${op.integration}`)}
                 </span>
-                <p className="text-[11px] text-gray-400 mt-1 leading-snug">{t(`operateurs.${op.detailKey}`)}</p>
+                <p className="text-[11px] text-gray-400 mt-1 leading-snug">{t(`operateurs.${detailKey(op)}`)}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-        {t.rich('avertissement', {
+      <p
+        className={`text-xs rounded-lg px-3 py-2 border ${
+          passerelleActive
+            ? 'text-gray-600 bg-blue-50 border-blue-100'
+            : 'text-gray-500 bg-amber-50 border-amber-100'
+        }`}
+      >
+        {t.rich(passerelleActive ? 'avertissementActif' : 'avertissement', {
           b: (chunks) => <span className="font-semibold">{chunks}</span>,
         })}
       </p>
+
+      {/* Lien de paiement de la dernière initiation (secours si la popup est bloquée) */}
+      {dernierPaiement?.paymentUrl && (
+        <div className="flex flex-wrap items-center gap-2 text-xs bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+          <span className="text-green-800">{t('initiation.pageOuverte', { reference: dernierPaiement.reference })}</span>
+          <a
+            href={dernierPaiement.paymentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-green-700 underline"
+          >
+            {t('initiation.rouvrir')} <ExternalLink className="w-3 h-3" />
+          </a>
+          <button onClick={() => setDernierPaiement(null)} className="ml-auto text-green-700" aria-label={tc('cancel')}>
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {erreurInitiation && (
+        <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {t('initiation.erreur', { message: erreurInitiation })}
+        </p>
+      )}
+
+      {dernierPaiement && !dernierPaiement.paymentUrl && dernierPaiement.motif === 'PASSERELLE_NON_CONFIGUREE' && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          {t('initiation.sansPasserelle', { reference: dernierPaiement.reference })}
+        </p>
+      )}
 
       {/* Filtres */}
       <div className="flex gap-2 flex-wrap">
@@ -251,6 +330,7 @@ export default function PaiementsPage() {
                 <th className="px-4 py-3 text-right">{t('table.montant')}</th>
                 <th className="px-4 py-3 text-left">{t('table.statut')}</th>
                 <th className="px-4 py-3 text-left">{t('table.date')}</th>
+                <th className="px-4 py-3 text-right">{t('table.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -264,6 +344,20 @@ export default function PaiementsPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[tx.statut] ?? 'bg-gray-100 text-gray-600'}`}>{statutLabel(tx.statut)}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-400">{new Date(tx.created_at).toLocaleDateString('fr-FR')}</td>
+                  <td className="px-4 py-3 text-right">
+                    {tx.statut === 'EN_ATTENTE' && tx.metadata?.cinetpay?.paymentUrl ? (
+                      <a
+                        href={tx.metadata.cinetpay.paymentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary underline"
+                      >
+                        {t('table.payer')} <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -295,14 +389,14 @@ export default function PaiementsPage() {
               </select>
               <div>
                 <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.operateur} onChange={e => setForm(f => ({ ...f, operateur: e.target.value }))}>
-                  {OPERATEURS_SELECTIONNABLES.map(op => (
+                  {operateursSelectionnables.map(op => (
                     <option key={op.id} value={op.id}>
                       {op.label} — {t(`integration.${op.integration}`)}
                     </option>
                   ))}
                 </select>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  {t('modal.canalNote')}
+                  {t(passerelleActive ? 'modal.canalNoteActif' : 'modal.canalNote')}
                 </p>
               </div>
               <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.descriptionPlaceholder')} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
@@ -312,9 +406,14 @@ export default function PaiementsPage() {
             <div className="flex gap-2 mt-4">
               <button onClick={() => setShowInitier(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">{tc('cancel')}</button>
               <button
-                onClick={() =>
-                  // `operateur` est volontairement exclu : le DTO API le rejette
-                  // (ValidationPipe forbidNonWhitelisted) tant que le routage passerelle n'existe pas.
+                onClick={() => {
+                  setErreurInitiation(null);
+                  setDernierPaiement(null);
+                  // `operateur` est désormais accepté par le DTO API et sert à
+                  // choisir le canal CinetPay (MOBILE_MONEY / CREDIT_CARD / ALL).
+                  const operateur = operateursSelectionnables.some(o => o.id === form.operateur)
+                    ? form.operateur
+                    : operateursSelectionnables[0]?.id;
                   initierPaiement.mutate({
                     montant: parseFloat(form.montant),
                     devise: form.devise,
@@ -322,8 +421,9 @@ export default function PaiementsPage() {
                     payeurEmail: form.payeurEmail,
                     payeurTel: form.payeurTel,
                     type: form.type,
-                  })
-                }
+                    ...(operateur ? { operateur } : {}),
+                  });
+                }}
                 disabled={!form.montant || !form.payeurTel || !form.payeurEmail || initierPaiement.isPending}
                 className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60"
               >

@@ -36,6 +36,7 @@ import { NotificationsRestModule } from './modules/notifications-rest/notificati
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { ImportModule } from './modules/import/import.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
+import { AbonnementsModule } from './modules/abonnements/abonnements.module';
 import { StorageModule } from './common/storage/storage.module';
 import { OrganisationGuard } from './common/guards/organisation.guard';
 import { EmailModule } from './common/email/email.module';
@@ -98,6 +99,7 @@ import { NotificationsModule } from './common/notifications/notifications.module
     TicketsModule,
     ImportModule,
     ProspectsModule,
+    AbonnementsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

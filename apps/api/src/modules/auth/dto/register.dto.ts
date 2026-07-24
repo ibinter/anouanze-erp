@@ -6,9 +6,12 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 'motdepasse123' })
+  @ApiProperty({
+    example: 'Kouassi!2026#Erp',
+    description: 'Doit respecter la politique de mot de passe (12 caractères minimum)',
+  })
   @IsString()
-  @MinLength(8)
+  @MinLength(12)
   motDePasse: string;
 
   @ApiProperty({ example: 'Kouakou' })

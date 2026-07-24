@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 import {
+  buildEmailJobId,
   EMAIL_JOB_NAME,
   EMAIL_JOB_OPTIONS,
   EMAIL_QUEUE_NAME,
@@ -11,6 +12,13 @@ import {
 
 /** Délai maximal accordé à Redis pour accepter un job avant repli en mode dégradé. */
 const ENQUEUE_TIMEOUT_MS = 2000;
+
+/**
+ * Délai accordé à la vérification post-timeout : après un `add()` non
+ * acquitté, on demande à Redis si le job existe malgré tout. Court, car il
+ * s'agit d'une simple lecture par clé.
+ */
+const CONFIRM_TIMEOUT_MS = 1000;
 
 /**
  * Producteur de la file `email`.
@@ -71,29 +79,81 @@ export class EmailQueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Met un email en file. Renvoie `true` si Redis a accepté le job,
+   * Met un email en file. Renvoie `true` si Redis détient le job,
    * `false` dans tous les autres cas (jamais d'exception).
+   *
+   * ## Déduplication
+   *
+   * Le job porte un `jobId` **déterministe** dérivé du destinataire, de
+   * l'étiquette, du sujet et d'une fenêtre temporelle d'une minute
+   * (`buildEmailJobId`). BullMQ refuse silencieusement un `add()` dont le
+   * `jobId` existe déjà : deux demandes identiques rapprochées ne produisent
+   * donc qu'un seul envoi.
+   *
+   * ## Accusé perdu
+   *
+   * Auparavant, si Redis acceptait le job mais que l'accusé dépassait
+   * {@link ENQUEUE_TIMEOUT_MS}, on renvoyait `false` et l'appelant envoyait
+   * l'email en direct : le destinataire le recevait **deux fois** (une par la
+   * file, une par le repli mémoire). Le `jobId` étant maintenant prévisible,
+   * on interroge Redis après le timeout : si le job est présent, on renvoie
+   * `true` et aucun envoi direct n'a lieu.
    */
   async enqueue(data: EmailJobData): Promise<boolean> {
     if (!this.queue) return false;
 
+    const jobId = buildEmailJobId(data);
+
     try {
       const added = await Promise.race([
-        this.queue.add(EMAIL_JOB_NAME, { ...data, enqueuedAt: new Date().toISOString() }),
+        this.queue.add(
+          EMAIL_JOB_NAME,
+          { ...data, enqueuedAt: new Date().toISOString() },
+          { ...EMAIL_JOB_OPTIONS, jobId },
+        ),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('délai de mise en file dépassé')), ENQUEUE_TIMEOUT_MS),
         ),
       ]);
 
+      // `add()` avec un jobId déjà connu renvoie le job existant : rien n'est
+      // dupliqué, on considère l'email comme pris en charge.
       this.logger.log(
-        `[email:${data.tag}] mis en file (job ${added.id ?? 'n/a'}) → ${data.to} — « ${data.subject} »`,
+        `[email:${data.tag}] mis en file (job ${added.id ?? jobId}) → ${data.to} — « ${data.subject} »`,
       );
       return true;
     } catch (err) {
       this.warnConnection(err as Error);
+
+      // L'accusé s'est perdu : le job a-t-il tout de même été créé ?
+      if (await this.jobExists(jobId)) {
+        this.logger.warn(
+          `[email:${data.tag}] accusé de mise en file perdu, mais le job ${jobId} existe dans Redis — pas d'envoi direct (anti-doublon).`,
+        );
+        return true;
+      }
+
       this.logger.warn(
         `[email:${data.tag}] mise en file impossible (${(err as Error).message}) — bascule en envoi direct.`,
       );
+      return false;
+    }
+  }
+
+  /**
+   * Le job existe-t-il dans Redis ? Utilisé uniquement pour lever le doute
+   * après un accusé perdu. Toute erreur ou lenteur vaut « absent » : on
+   * préfère un doublon improbable à un email jamais parti.
+   */
+  private async jobExists(jobId: string): Promise<boolean> {
+    if (!this.queue) return false;
+    try {
+      const job = await Promise.race([
+        this.queue.getJob(jobId),
+        new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), CONFIRM_TIMEOUT_MS)),
+      ]);
+      return Boolean(job);
+    } catch {
       return false;
     }
   }

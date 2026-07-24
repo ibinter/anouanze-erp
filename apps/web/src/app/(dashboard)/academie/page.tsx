@@ -6,17 +6,28 @@ import {
   GraduationCap, Clock, CheckCircle2, Circle, PlayCircle, VideoOff,
   ChevronRight, RotateCcw, Library, ExternalLink, Target, BookOpen,
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
-  PARCOURS, CATEGORIES_PARCOURS, RESSOURCES,
-  type CategorieParcours, type Lecon,
+  CATEGORIES_PARCOURS, getParcours, getRessources,
+  libelleCategorieParcours, libelleNiveau, libelleTypeRessource,
+  type CategorieParcours,
 } from '@/lib/help';
 
 const STORAGE_KEY = 'anouanze-academie-progression';
 
-/** Toutes les leçons, tous parcours confondus. */
-const TOUTES_LECONS: Lecon[] = PARCOURS.flatMap((p) => p.lecons);
-
 export default function AcademiePage() {
+  const locale = useLocale();
+  const t = useTranslations('outils.academie');
+  const parcoursSource = useMemo(() => getParcours(locale), [locale]);
+  const ressources = useMemo(() => getRessources(locale), [locale]);
+
+  /**
+   * Toutes les leçons, tous parcours confondus.
+   * Les `id` sont identiques d'une langue à l'autre : la progression stockée
+   * dans localStorage reste valable après un changement de langue.
+   */
+  const toutesLecons = useMemo(() => parcoursSource.flatMap((p) => p.lecons), [parcoursSource]);
+
   const [categorie, setCategorie] = useState<CategorieParcours | 'Toutes'>('Toutes');
   const [terminees, setTerminees] = useState<string[]>([]);
   const [charge, setCharge] = useState(false);
@@ -56,14 +67,14 @@ export default function AcademiePage() {
   const reinitialiser = useCallback(() => persister([]), [persister]);
 
   const parcoursAffiches = useMemo(
-    () => PARCOURS.filter((p) => categorie === 'Toutes' || p.categorie === categorie),
-    [categorie],
+    () => parcoursSource.filter((p) => categorie === 'Toutes' || p.categorie === categorie),
+    [categorie, parcoursSource],
   );
 
-  const total = TOUTES_LECONS.length;
-  const faites = terminees.filter((id) => TOUTES_LECONS.some((l) => l.id === id)).length;
+  const total = toutesLecons.length;
+  const faites = terminees.filter((id) => toutesLecons.some((l) => l.id === id)).length;
   const pourcentage = total > 0 ? Math.round((faites / total) * 100) : 0;
-  const minutesTotales = TOUTES_LECONS.reduce((s, l) => s + l.dureeMinutes, 0);
+  const minutesTotales = toutesLecons.reduce((s, l) => s + l.dureeMinutes, 0);
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
@@ -73,14 +84,18 @@ export default function AcademiePage() {
           <GraduationCap className="w-7 h-7 text-primary-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Académie ANOUANZÊ</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">{t('titre')}</h1>
           <p className="text-sm text-neutral-500 mt-0.5">
-            {PARCOURS.length} parcours · {total} leçons · environ {Math.round(minutesTotales / 60)} h de formation
+            {t('sousTitre', {
+              parcours: parcoursSource.length,
+              lecons: total,
+              heures: Math.round(minutesTotales / 60),
+            })}
           </p>
         </div>
         <Link href="/aide" className="btn-secondary flex items-center gap-2 justify-center text-sm">
           <BookOpen className="w-4 h-4" />
-          Centre d&apos;aide
+          {t('centreAide')}
         </Link>
       </header>
 
@@ -88,12 +103,8 @@ export default function AcademiePage() {
       <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
         <VideoOff className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-sm text-amber-900">
-          <p className="font-medium">Contenu vidéo bientôt disponible</p>
-          <p className="text-xs mt-1 text-amber-800">
-            Les capsules vidéo ne sont pas encore produites. Les parcours ci-dessous décrivent les
-            objectifs pédagogiques et renvoient vers le guide utilisateur et les modules réels de
-            l&apos;ERP, qui restent la référence en attendant la publication des vidéos.
-          </p>
+          <p className="font-medium">{t('videoTitre')}</p>
+          <p className="text-xs mt-1 text-amber-800">{t('videoTexte')}</p>
         </div>
       </div>
 
@@ -102,7 +113,7 @@ export default function AcademiePage() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-semibold text-neutral-800">Votre progression</h2>
+              <h2 className="text-sm font-semibold text-neutral-800">{t('progression.titre')}</h2>
               <span className="text-sm font-bold text-primary-600">{pourcentage}%</span>
             </div>
             <div className="h-2 rounded-full bg-neutral-100 overflow-hidden">
@@ -112,11 +123,9 @@ export default function AcademiePage() {
               />
             </div>
             <p className="text-xs text-neutral-500 mt-2">
-              {charge ? `${faites} leçon${faites > 1 ? 's' : ''} sur ${total} marquée${faites > 1 ? 's' : ''} comme terminée${faites > 1 ? 's' : ''}` : 'Chargement…'}
+              {charge ? t('progression.detail', { faites, total }) : t('progression.chargement')}
               {' · '}
-              <span className="text-neutral-400">
-                progression enregistrée sur cet appareil uniquement
-              </span>
+              <span className="text-neutral-400">{t('progression.appareil')}</span>
             </p>
           </div>
           <button
@@ -125,7 +134,7 @@ export default function AcademiePage() {
             className="btn-secondary flex items-center gap-2 justify-center text-xs disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            Réinitialiser
+            {t('progression.reinitialiser')}
           </button>
         </div>
       </section>
@@ -142,7 +151,7 @@ export default function AcademiePage() {
                 : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
             }`}
           >
-            {c}
+            {c === 'Toutes' ? t('toutes') : libelleCategorieParcours(c, locale)}
           </button>
         ))}
       </div>
@@ -158,8 +167,8 @@ export default function AcademiePage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-semibold text-neutral-800">{parcours.titre}</h2>
-                    <span className="badge text-[10px]">{parcours.categorie}</span>
-                    <span className="badge text-[10px]">{parcours.niveau}</span>
+                    <span className="badge text-[10px]">{libelleCategorieParcours(parcours.categorie, locale)}</span>
+                    <span className="badge text-[10px]">{libelleNiveau(parcours.niveau, locale)}</span>
                   </div>
                   <p className="text-xs text-neutral-500 mt-0.5">{parcours.description}</p>
                 </div>
@@ -182,7 +191,7 @@ export default function AcademiePage() {
                         <button
                           onClick={() => basculer(lecon.id)}
                           aria-pressed={fait}
-                          aria-label={fait ? 'Marquer comme non terminée' : 'Marquer comme terminée'}
+                          aria-label={fait ? t('lecon.marquerNonTerminee') : t('lecon.marquerTerminee')}
                           className="shrink-0 mt-0.5"
                         >
                           {fait ? (
@@ -209,20 +218,20 @@ export default function AcademiePage() {
                       <div className="flex flex-wrap items-center gap-2 pl-8 mt-auto">
                         <span className="inline-flex items-center gap-1 text-[11px] text-neutral-500">
                           <Clock className="w-3 h-3" />
-                          {lecon.dureeMinutes} min
+                          {t('lecon.minutes', { count: lecon.dureeMinutes })}
                         </span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
-                          {lecon.niveau}
+                          {libelleNiveau(lecon.niveau, locale)}
                         </span>
                         {lecon.disponible ? (
                           <span className="inline-flex items-center gap-1 text-[11px] text-primary-600 font-medium">
                             <PlayCircle className="w-3.5 h-3.5" />
-                            Vidéo disponible
+                            {t('lecon.videoDisponible')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
                             <VideoOff className="w-3 h-3" />
-                            Contenu vidéo bientôt disponible
+                            {t('lecon.videoBientot')}
                           </span>
                         )}
                       </div>
@@ -232,7 +241,7 @@ export default function AcademiePage() {
                           href={lecon.lienInterne}
                           className="ml-8 inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:underline"
                         >
-                          Voir dans l&apos;application
+                          {t('lecon.voirDansApp')}
                           <ChevronRight className="w-3 h-3" />
                         </Link>
                       )}
@@ -249,10 +258,10 @@ export default function AcademiePage() {
       <section className="space-y-3">
         <h2 className="font-semibold text-neutral-800 flex items-center gap-2">
           <Library className="w-5 h-5 text-primary-600" />
-          Bibliothèque de ressources
+          {t('ressources.titre')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {RESSOURCES.map((r) => {
+          {ressources.map((r) => {
             const contenu = (
               <>
                 <div className="flex items-start justify-between gap-3">
@@ -271,7 +280,7 @@ export default function AcademiePage() {
                       : 'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}
                 >
-                  {r.disponible ? r.type : 'Bientôt disponible'}
+                  {r.disponible ? libelleTypeRessource(r.type, locale) : t('ressources.bientot')}
                 </span>
               </>
             );

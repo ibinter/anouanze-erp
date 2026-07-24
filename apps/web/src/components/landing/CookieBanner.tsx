@@ -2,21 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+  CONSENT_STORAGE_KEY,
+  DEFAULT_CONSENT,
+  notifyConsentChanged,
+  type ConsentPreferences,
+} from '@/lib/analytics/consent';
+import { useLandingAnalytics } from '@/lib/analytics/landing-autotrack';
 
-type Prefs = { necessary: true; analytics: boolean; marketing: boolean };
+type Prefs = ConsentPreferences;
 
 export default function CookieBanner() {
   const [show, setShow] = useState(false);
   const [customize, setCustomize] = useState(false);
-  const [prefs, setPrefs] = useState<Prefs>({ necessary: true, analytics: false, marketing: false });
+  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_CONSENT);
+
+  // Instrumentation de la landing : posée ici car la bannière n'est montée
+  // que sur la page publique. Elle reste inerte tant que l'utilisateur n'a
+  // pas accepté les cookies analytiques (filtre appliqué dans `trackEvent`).
+  useLandingAnalytics();
 
   useEffect(() => {
-    const saved = localStorage.getItem('anouanze-cookie-consent');
+    const saved = localStorage.getItem(CONSENT_STORAGE_KEY);
     if (!saved) setTimeout(() => setShow(true), 1500);
   }, []);
 
   function save(p: Prefs) {
-    localStorage.setItem('anouanze-cookie-consent', JSON.stringify(p));
+    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(p));
+    // Prend effet immédiatement : la couche analytics écoute ce signal.
+    notifyConsentChanged(p);
     setShow(false);
   }
 

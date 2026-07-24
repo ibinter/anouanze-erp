@@ -7,6 +7,7 @@ import {
   Query,
   Request,
   UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { PaiementsService } from './paiements.service';
@@ -44,15 +45,39 @@ export class PaiementsController {
     return this.paiementsService.verifierStatut(id);
   }
 
+  @Get('configuration')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_LECTURE_LARGE)
+  @ApiOperation({
+    summary:
+      "Statut d'intégration réel des passerelles (pilote l'affichage Disponible / En intégration)",
+  })
+  getConfiguration(): Record<string, unknown> {
+    return this.paiementsService.getConfigurationPasserelles();
+  }
+
+  @Get('diagnostic')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(...ROLES_ECRITURE_FINANCE)
+  @ApiOperation({ summary: "Variables d'environnement passerelle manquantes (aucune clé exposée)" })
+  getDiagnostic(): Record<string, unknown> {
+    return this.paiementsService.getDiagnosticPasserelles();
+  }
+
   @Post('webhook/cinetpay')
   @ApiOperation({ summary: 'Webhook CinetPay' })
-  webhookCinetpay(@Body() payload: Record<string, unknown>) {
-    return this.paiementsService.webhookCinetpay(payload);
+  webhookCinetpay(
+    @Body() payload: Record<string, unknown>,
+    @Headers('x-token') xToken?: string,
+  ): Promise<any> {
+    return this.paiementsService.webhookCinetpay(payload, xToken);
   }
 
   @Post('webhook/orange-money')
   @ApiOperation({ summary: 'Webhook Orange Money' })
-  webhookOrangeMoney(@Body() payload: Record<string, unknown>) {
+  webhookOrangeMoney(@Body() payload: Record<string, unknown>): Promise<any> {
     return this.paiementsService.webhookOrangeMoney(payload);
   }
 

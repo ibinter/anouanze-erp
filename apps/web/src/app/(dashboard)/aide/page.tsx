@@ -8,30 +8,36 @@ import {
   AlertTriangle, Lightbulb, ShieldCheck, Users, ClipboardCheck, Target,
   CheckCircle2, X,
 } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
-  GUIDE_MODULES, CATEGORIES_GUIDE,
-  FAQ_ITEMS, CATEGORIES_FAQ,
-  CAS_PRATIQUES,
-  rechercherAide, getFaqItems, libelleCategorieFaq,
-  type CategorieFaq,
+  CATEGORIES_GUIDE, CATEGORIES_FAQ,
+  rechercherAide, getFaqItems, getGuideModules, getCasPratiques,
+  libelleCategorieFaq, libelleCategorieGuide, libelleNiveau,
+  type CategorieFaq, type CategorieGuide,
   type ResultatRecherche,
 } from '@/lib/help';
 
 type Onglet = 'guide' | 'faq' | 'cas';
 
-const ONGLETS: { id: Onglet; label: string; icon: typeof BookOpen; compte: number }[] = [
-  { id: 'guide', label: 'Guide utilisateur', icon: BookOpen, compte: GUIDE_MODULES.length },
-  { id: 'faq', label: 'FAQ', icon: FileQuestion, compte: FAQ_ITEMS.length },
-  { id: 'cas', label: 'Cas pratiques', icon: ListChecks, compte: CAS_PRATIQUES.length },
-];
-
 export default function AidePage() {
   const locale = useLocale();
+  const t = useTranslations('outils.aide');
+  const guideModules = useMemo(() => getGuideModules(locale), [locale]);
   const faqItems = useMemo(() => getFaqItems(locale), [locale]);
+  const casPratiques = useMemo(() => getCasPratiques(locale), [locale]);
+
+  const onglets = useMemo(
+    () => [
+      { id: 'guide' as const, label: t('onglets.guide'), icon: BookOpen, compte: guideModules.length },
+      { id: 'faq' as const, label: t('onglets.faq'), icon: FileQuestion, compte: faqItems.length },
+      { id: 'cas' as const, label: t('onglets.cas'), icon: ListChecks, compte: casPratiques.length },
+    ],
+    [t, guideModules.length, faqItems.length, casPratiques.length],
+  );
+
   const [search, setSearch] = useState('');
   const [onglet, setOnglet] = useState<Onglet>('guide');
-  const [catGuide, setCatGuide] = useState<string>('Toutes');
+  const [catGuide, setCatGuide] = useState<CategorieGuide | 'Toutes'>('Toutes');
   const [catFaq, setCatFaq] = useState<CategorieFaq | 'Toutes'>('Toutes');
   const [moduleOuvert, setModuleOuvert] = useState<string | null>(null);
   const [faqOuverte, setFaqOuverte] = useState<string | null>(null);
@@ -43,8 +49,8 @@ export default function AidePage() {
   );
 
   const modulesFiltres = useMemo(
-    () => GUIDE_MODULES.filter((m) => catGuide === 'Toutes' || m.categorie === catGuide),
-    [catGuide],
+    () => guideModules.filter((m) => catGuide === 'Toutes' || m.categorie === catGuide),
+    [catGuide, guideModules],
   );
 
   const faqFiltrees = useMemo(
@@ -87,10 +93,8 @@ export default function AidePage() {
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-50 mb-3">
           <HelpCircle className="w-7 h-7 text-primary-600" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Centre d&apos;aide</h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          Guide utilisateur, questions fréquentes et cas pratiques d&apos;ANOUANZÊ ERP
-        </p>
+        <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+        <p className="text-sm text-neutral-500 mt-1">{t('sousTitre')}</p>
       </header>
 
       {/* Recherche globale */}
@@ -98,17 +102,17 @@ export default function AidePage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
         <input
           type="search"
-          placeholder="Rechercher dans le guide, la FAQ et les cas pratiques…"
+          placeholder={t('recherche.placeholder')}
           className="input pl-10 pr-10 w-full text-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Rechercher dans le centre d'aide"
+          aria-label={t('recherche.aria')}
         />
         {search && (
           <button
             onClick={() => setSearch('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
-            aria-label="Effacer la recherche"
+            aria-label={t('recherche.effacer')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -120,17 +124,15 @@ export default function AidePage() {
         <section className="card p-4 space-y-3">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
             <span className="font-semibold text-neutral-700">
-              {resultats.length} résultat{resultats.length > 1 ? 's' : ''} pour « {search} »
+              {t('recherche.resultats', { count: resultats.length, terme: search })}
             </span>
-            <span>{compteParType('guide')} guide</span>
-            <span>{compteParType('faq')} FAQ</span>
-            <span>{compteParType('cas')} cas pratique{compteParType('cas') > 1 ? 's' : ''}</span>
+            <span>{t('recherche.compteGuide', { count: compteParType('guide') })}</span>
+            <span>{t('recherche.compteFaq', { count: compteParType('faq') })}</span>
+            <span>{t('recherche.compteCas', { count: compteParType('cas') })}</span>
           </div>
 
           {resultats.length === 0 ? (
-            <p className="text-sm text-neutral-500 py-4 text-center">
-              Aucun résultat. Essayez un autre mot-clé, ou posez la question à SARA.
-            </p>
+            <p className="text-sm text-neutral-500 py-4 text-center">{t('recherche.aucun')}</p>
           ) : (
             <ul className="divide-y divide-neutral-100">
               {resultats.slice(0, 25).map((r) => (
@@ -141,7 +143,7 @@ export default function AidePage() {
                   >
                     <div className="flex items-start gap-2">
                       <span className="badge shrink-0 mt-0.5 text-[10px] uppercase tracking-wide">
-                        {r.type === 'guide' ? 'Guide' : r.type === 'faq' ? 'FAQ' : 'Cas'}
+                        {r.type === 'guide' ? t('badges.guide') : r.type === 'faq' ? t('badges.faq') : t('badges.cas')}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-neutral-800">{r.titre}</p>
@@ -162,29 +164,29 @@ export default function AidePage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Link href="/ia" className="card card-hover p-4 flex flex-col items-center gap-2 text-center">
           <MessageCircle className="w-6 h-6 text-primary-600" />
-          <span className="text-xs font-medium text-neutral-700">Poser la question à SARA</span>
+          <span className="text-xs font-medium text-neutral-700">{t('acces.sara')}</span>
         </Link>
         <Link href="/tickets" className="card card-hover p-4 flex flex-col items-center gap-2 text-center">
           <LifeBuoy className="w-6 h-6 text-accent-500" />
-          <span className="text-xs font-medium text-neutral-700">Ouvrir un ticket</span>
+          <span className="text-xs font-medium text-neutral-700">{t('acces.ticket')}</span>
         </Link>
         <Link href="/academie" className="card card-hover p-4 flex flex-col items-center gap-2 text-center">
           <GraduationCap className="w-6 h-6 text-purple-600" />
-          <span className="text-xs font-medium text-neutral-700">Académie ANOUANZÊ</span>
+          <span className="text-xs font-medium text-neutral-700">{t('acces.academie')}</span>
         </Link>
         <button
           onClick={relancerVisite}
           className="card card-hover p-4 flex flex-col items-center gap-2 text-center"
         >
           <Zap className="w-6 h-6 text-blue-600" />
-          <span className="text-xs font-medium text-neutral-700">Relancer la visite guidée</span>
+          <span className="text-xs font-medium text-neutral-700">{t('acces.visite')}</span>
         </button>
       </div>
 
       {/* Onglets */}
       <div className="border-b border-neutral-200 overflow-x-auto">
         <div className="flex gap-1 min-w-max">
-          {ONGLETS.map((o) => {
+          {onglets.map((o) => {
             const actif = onglet === o.id;
             return (
               <button
@@ -209,7 +211,7 @@ export default function AidePage() {
       {onglet === 'guide' && (
         <section className="space-y-4">
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {(['Toutes', ...CATEGORIES_GUIDE] as string[]).map((c) => (
+            {(['Toutes', ...CATEGORIES_GUIDE] as (CategorieGuide | 'Toutes')[]).map((c) => (
               <button
                 key={c}
                 onClick={() => setCatGuide(c)}
@@ -219,7 +221,7 @@ export default function AidePage() {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
-                {c}
+                {c === 'Toutes' ? t('toutes') : libelleCategorieGuide(c, locale)}
               </button>
             ))}
           </div>
@@ -236,7 +238,7 @@ export default function AidePage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="font-semibold text-neutral-800 text-sm">{mod.titre}</h2>
-                        <span className="badge text-[10px]">{mod.categorie}</span>
+                        <span className="badge text-[10px]">{libelleCategorieGuide(mod.categorie, locale)}</span>
                       </div>
                       <p className="text-xs text-neutral-500 mt-1">{mod.objectif}</p>
                     </div>
@@ -248,17 +250,17 @@ export default function AidePage() {
                   {ouvert && (
                     <div className="px-4 pb-5 space-y-5 border-t border-neutral-100 pt-4 bg-neutral-50/60">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Bloc icon={Users} titre="Utilisateurs concernés">
+                        <Bloc icon={Users} titre={t('guide.utilisateurs')}>
                           <ListeSimple items={mod.utilisateurs} />
                         </Bloc>
-                        <Bloc icon={ClipboardCheck} titre="Prérequis">
+                        <Bloc icon={ClipboardCheck} titre={t('guide.prerequis')}>
                           <ListeSimple items={mod.prerequis} />
                         </Bloc>
                       </div>
 
                       <div>
                         <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">
-                          Procédure pas à pas
+                          {t('guide.procedure')}
                         </h3>
                         <ol className="space-y-2">
                           {mod.procedure.map((etape, i) => (
@@ -280,15 +282,15 @@ export default function AidePage() {
 
                       <div>
                         <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">
-                          Erreurs fréquentes
+                          {t('guide.erreurs')}
                         </h3>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs min-w-[560px]">
                             <thead>
                               <tr className="text-left text-neutral-400 border-b border-neutral-200">
-                                <th className="py-2 pr-3 font-medium">Problème</th>
-                                <th className="py-2 pr-3 font-medium">Cause probable</th>
-                                <th className="py-2 font-medium">Solution</th>
+                                <th className="py-2 pr-3 font-medium">{t('table.probleme')}</th>
+                                <th className="py-2 pr-3 font-medium">{t('table.cause')}</th>
+                                <th className="py-2 font-medium">{t('table.solution')}</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-neutral-100">
@@ -305,16 +307,16 @@ export default function AidePage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Bloc icon={Lightbulb} titre="Conseils">
+                        <Bloc icon={Lightbulb} titre={t('guide.conseils')}>
                           <ListeSimple items={mod.conseils} />
                         </Bloc>
-                        <Bloc icon={ShieldCheck} titre="Permissions nécessaires">
+                        <Bloc icon={ShieldCheck} titre={t('guide.permissions')}>
                           <ListeSimple items={mod.permissions} />
                         </Bloc>
                       </div>
 
                       <Link href={mod.href} className="btn-secondary inline-flex items-center gap-2 text-xs">
-                        Ouvrir le module
+                        {t('guide.ouvrirModule')}
                         <ChevronRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
@@ -340,15 +342,13 @@ export default function AidePage() {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
-                {c === 'Toutes' ? (locale === 'en' ? 'All' : 'Toutes') : libelleCategorieFaq(c, locale)}
+                {c === 'Toutes' ? t('toutes') : libelleCategorieFaq(c, locale)}
               </button>
             ))}
           </div>
 
           <p className="text-xs text-neutral-400">
-            {locale === 'en'
-              ? `${faqFiltrees.length} question${faqFiltrees.length > 1 ? 's' : ''} shown`
-              : `${faqFiltrees.length} question${faqFiltrees.length > 1 ? 's' : ''} affichée${faqFiltrees.length > 1 ? 's' : ''}`}
+            {t('faq.compte', { count: faqFiltrees.length })}
           </p>
 
           <div className="card divide-y divide-neutral-100">
@@ -399,13 +399,10 @@ export default function AidePage() {
         <section className="space-y-3">
           <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-100 p-3">
             <AlertTriangle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-800">
-              Les noms, montants et références utilisés dans ces cas pratiques sont fictifs et servent
-              uniquement d&apos;illustration.
-            </p>
+            <p className="text-xs text-blue-800">{t('cas.avertissement')}</p>
           </div>
 
-          {CAS_PRATIQUES.map((cas) => {
+          {casPratiques.map((cas) => {
             const ouvert = casOuvert === cas.id;
             return (
               <article key={cas.id} className="card overflow-hidden">
@@ -417,8 +414,8 @@ export default function AidePage() {
                     <h2 className="font-semibold text-neutral-800 text-sm">{cas.titre}</h2>
                     <p className="text-xs text-neutral-500 mt-1">{cas.contexte}</p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="badge text-[10px]">{cas.niveau}</span>
-                      <span className="badge text-[10px]">≈ {cas.dureeMinutes} min</span>
+                      <span className="badge text-[10px]">{libelleNiveau(cas.niveau, locale)}</span>
+                      <span className="badge text-[10px]">{t('cas.duree', { count: cas.dureeMinutes })}</span>
                       {cas.modules.map((m) => (
                         <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
                           {m}
@@ -433,13 +430,13 @@ export default function AidePage() {
 
                 {ouvert && (
                   <div className="px-4 pb-5 pt-4 border-t border-neutral-100 bg-neutral-50/60 space-y-5">
-                    <Bloc icon={Target} titre="Objectif">
+                    <Bloc icon={Target} titre={t('cas.objectif')}>
                       <p className="text-xs text-neutral-600">{cas.objectif}</p>
                     </Bloc>
 
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">
-                        Étapes
+                        {t('cas.etapes')}
                       </h3>
                       <ol className="space-y-2">
                         {cas.etapes.map((etape, i) => (
@@ -459,21 +456,21 @@ export default function AidePage() {
                       </ol>
                     </div>
 
-                    <Bloc icon={CheckCircle2} titre="Résultat attendu">
+                    <Bloc icon={CheckCircle2} titre={t('cas.resultat')}>
                       <ListeSimple items={cas.resultatAttendu} />
                     </Bloc>
 
                     <div>
                       <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-2">
-                        Erreurs possibles
+                        {t('cas.erreurs')}
                       </h3>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs min-w-[560px]">
                           <thead>
                             <tr className="text-left text-neutral-400 border-b border-neutral-200">
-                              <th className="py-2 pr-3 font-medium">Problème</th>
-                              <th className="py-2 pr-3 font-medium">Cause probable</th>
-                              <th className="py-2 font-medium">Solution</th>
+                              <th className="py-2 pr-3 font-medium">{t('table.probleme')}</th>
+                              <th className="py-2 pr-3 font-medium">{t('table.cause')}</th>
+                              <th className="py-2 font-medium">{t('table.solution')}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-neutral-100">
@@ -503,21 +500,16 @@ export default function AidePage() {
             <LifeBuoy className="w-6 h-6 text-primary-600" />
           </div>
           <div className="flex-1 w-full">
-            <h2 className="font-semibold text-neutral-800 mb-1">
-              Vous n&apos;avez pas trouvé votre réponse ?
-            </h2>
-            <p className="text-sm text-neutral-500 mb-4">
-              Posez la question à SARA pour une explication immédiate, ou ouvrez un ticket auprès du
-              support IBIG SOFT en précisant le module, l&apos;action réalisée et le message d&apos;erreur exact.
-            </p>
+            <h2 className="font-semibold text-neutral-800 mb-1">{t('support.titre')}</h2>
+            <p className="text-sm text-neutral-500 mb-4">{t('support.texte')}</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/ia" className="btn-primary flex items-center gap-2 justify-center">
                 <MessageCircle className="w-4 h-4" />
-                Poser la question à SARA
+                {t('support.sara')}
               </Link>
               <Link href="/tickets" className="btn-secondary flex items-center gap-2 justify-center">
                 <LifeBuoy className="w-4 h-4" />
-                Ouvrir un ticket
+                {t('support.ticket')}
               </Link>
             </div>
           </div>

@@ -362,9 +362,18 @@
       },
       "operateurs": {
         "detailWebhook": "Confirmation webhook active — initiation still to be completed",
-        "detailNonDemarre": "Integration not started"
+        "detailNonDemarre": "Integration not started",
+        "detailViaCinetpay": "Operational through the CinetPay aggregator",
+        "detailOperationnel": "Initiation and confirmation operational"
       },
       "avertissement": "No gateway performs end-to-end automatic collection yet: a payment initiated here is recorded with the status <b>Pending</b> and is only confirmed once the operator’s webhook is received.",
+      "avertissementActif": "Automatic collection is active through <b>CinetPay</b>: the payer is redirected to the payment page, then the status is confirmed by the gateway notification and re-validated against CinetPay.",
+      "initiation": {
+        "pageOuverte": "Payment {reference} initiated — the CinetPay payment page opened in a new tab.",
+        "rouvrir": "Reopen the payment page",
+        "sansPasserelle": "Payment {reference} recorded as Pending: no gateway is configured on the server, confirmation will have to be entered manually.",
+        "erreur": "Gateway initiation failed: {message}"
+      },
       "filtre": {
         "tousStatuts": "All statuses",
         "tousTypes": "All types"
@@ -388,7 +397,9 @@
         "montant": "Amount",
         "statut": "Status",
         "date": "Date",
-        "empty": "No transaction"
+        "empty": "No transaction",
+        "action": "Action",
+        "payer": "Pay"
       },
       "modal": {
         "title": "Initiate a payment",
@@ -398,6 +409,7 @@
         "emailPlaceholder": "Payer email *",
         "telPlaceholder": "Payer phone number *",
         "canalNote": "Indicative channel: only operators whose confirmation webhook is active are offered. Automatic routing to the gateway is not active yet.",
+        "canalNoteActif": "Preferred channel: the payment is routed to CinetPay, which then presents the available operators to the payer.",
         "submit": "Initiate",
         "sending": "Sending..."
       }

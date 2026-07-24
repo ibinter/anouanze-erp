@@ -6,6 +6,20 @@ export enum TypePaiement {
   COTISATION = 'COTISATION',
 }
 
+/**
+ * Canal souhaité par le payeur. CinetPay étant un agrégateur, le choix d'un
+ * opérateur mobile précis se traduit par le canal `MOBILE_MONEY` : c'est la
+ * page CinetPay qui présente ensuite Orange Money / MTN / Moov / Wave.
+ */
+export enum OperateurPaiement {
+  ORANGE_MONEY = 'ORANGE_MONEY',
+  MTN_MOMO = 'MTN_MOMO',
+  MOOV_MONEY = 'MOOV_MONEY',
+  WAVE = 'WAVE',
+  CINETPAY = 'CINETPAY',
+  CARTE_BANCAIRE = 'CARTE_BANCAIRE',
+}
+
 export class InitierPaiementDto {
   @ApiProperty()
   @IsNumber()
@@ -41,4 +55,13 @@ export class InitierPaiementDto {
   @ApiProperty({ enum: TypePaiement })
   @IsEnum(TypePaiement)
   type: TypePaiement;
+
+  @ApiPropertyOptional({
+    enum: OperateurPaiement,
+    description:
+      "Canal souhaité. Purement indicatif : la sélection finale de l'opérateur se fait sur la page CinetPay.",
+  })
+  @IsOptional()
+  @IsEnum(OperateurPaiement)
+  operateur?: OperateurPaiement;
 }

@@ -362,9 +362,18 @@
       },
       "operateurs": {
         "detailWebhook": "Webhook de confirmation actif — initiation à finaliser",
-        "detailNonDemarre": "Intégration non démarrée"
+        "detailNonDemarre": "Intégration non démarrée",
+        "detailViaCinetpay": "Opérationnel via l’agrégateur CinetPay",
+        "detailOperationnel": "Initiation et confirmation opérationnelles"
       },
       "avertissement": "Aucune passerelle n’est encore en collecte automatique de bout en bout : un paiement initié ici est enregistré au statut <b>En attente</b> et n’est confirmé qu’à réception du webhook de l’opérateur.",
+      "avertissementActif": "Collecte automatique active via <b>CinetPay</b> : le payeur est redirigé vers la page de paiement, puis le statut est confirmé par la notification de la passerelle et revalidé auprès de CinetPay.",
+      "initiation": {
+        "pageOuverte": "Paiement {reference} initié — la page de paiement CinetPay a été ouverte dans un nouvel onglet.",
+        "rouvrir": "Rouvrir la page de paiement",
+        "sansPasserelle": "Paiement {reference} enregistré au statut En attente : aucune passerelle n’est configurée sur le serveur, la confirmation devra être saisie manuellement.",
+        "erreur": "Échec de l’initiation auprès de la passerelle : {message}"
+      },
       "filtre": {
         "tousStatuts": "Tous les statuts",
         "tousTypes": "Tous les types"
@@ -388,7 +397,9 @@
         "montant": "Montant",
         "statut": "Statut",
         "date": "Date",
-        "empty": "Aucune transaction"
+        "empty": "Aucune transaction",
+        "action": "Action",
+        "payer": "Payer"
       },
       "modal": {
         "title": "Initier un paiement",
@@ -398,6 +409,7 @@
         "emailPlaceholder": "Email du payeur *",
         "telPlaceholder": "Téléphone du payeur *",
         "canalNote": "Canal indicatif : seuls les opérateurs dont le webhook de confirmation est actif sont proposés. Le routage automatique vers la passerelle n’est pas encore actif.",
+        "canalNoteActif": "Canal souhaité : le paiement est routé vers CinetPay, qui présente ensuite les opérateurs disponibles au payeur.",
         "submit": "Initier",
         "sending": "Envoi..."
       }

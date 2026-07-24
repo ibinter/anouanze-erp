@@ -13,6 +13,7 @@ import { ChangerMotDePasseDto } from './dto/changer-mot-de-passe.dto';
 import { InviterUtilisateurDto } from './dto/inviter-utilisateur.dto';
 import { RoleUtilisateur } from '@prisma/client';
 import { construireMatricePermissions } from './permissions.matrice';
+import { validerMotDePasse } from '../auth/politique-mot-de-passe';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
@@ -98,6 +99,23 @@ export class UtilisateursService {
     const valid = await bcrypt.compare(dto.ancienMotDePasse, user.motDePasseHash);
     if (!valid) {
       throw new BadRequestException('Ancien mot de passe incorrect');
+    }
+
+    // Politique de mot de passe — appliquée côté serveur
+    const controle = validerMotDePasse(dto.nouveauMotDePasse, {
+      email: user.email,
+      nom: user.nom,
+      prenom: user.prenom,
+    });
+    if (!controle.valide) {
+      throw new BadRequestException(controle.erreurs);
+    }
+
+    const identique = await bcrypt.compare(dto.nouveauMotDePasse, user.motDePasseHash);
+    if (identique) {
+      throw new BadRequestException(
+        'Le nouveau mot de passe doit être différent de l’ancien.',
+      );
     }
 
     const motDePasseHash = await bcrypt.hash(dto.nouveauMotDePasse, 12);

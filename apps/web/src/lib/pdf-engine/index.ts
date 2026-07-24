@@ -26,6 +26,7 @@ export * from './types';
 export {
   ANOUANZE_BRANDING, formatFCFA, formatDateFR, formatBoolShort,
   membresExportDef, budgetExportDef, comptabiliteExportDef, tresorerieExportDef,
+  factureExportDef,
 } from './export-definitions';
 
 /**

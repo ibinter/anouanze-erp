@@ -10,18 +10,46 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import PWABanner from '@/components/landing/PWABanner';
 import LandingNav from '@/components/landing/LandingNav';
 import IbigSolutions from '@/components/landing/IbigSolutions';
+import { SITE_NAME, SITE_URL } from '@/lib/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('metadata');
+  const title = t('title');
+  const description = t('description');
+  const ogTitle = t('ogTitle');
+  const ogDescription = t('ogDescription');
+
   return {
-    title: t('title'),
-    description: t('description'),
+    title,
+    description,
     keywords: t('keywords').split(',').map((k) => k.trim()),
-    robots: 'index, follow',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+    },
+    // URL canonique de la landing.
+    //
+    // ⚠️ Pas d'`alternates.languages` ici : l'internationalisation passe par le
+    // cookie `NEXT_LOCALE`, sans préfixe d'URL. Déclarer `/en/` ou `?lang=en`
+    // reviendrait à annoncer aux moteurs des URLs qui n'existent pas. La
+    // variante anglaise est signalée par `openGraph.alternateLocale`
+    // (voir `layout.tsx`), ce qui reste exact.
+    alternates: { canonical: '/' },
     openGraph: {
-      title: t('ogTitle'),
-      description: t('ogDescription'),
       type: 'website',
+      siteName: SITE_NAME,
+      locale: 'fr_FR',
+      alternateLocale: ['en_US'],
+      url: SITE_URL,
+      title: ogTitle,
+      description: ogDescription,
+      // Visuel : `app/opengraph-image.tsx` (généré par next/og).
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description: ogDescription,
     },
   };
 }

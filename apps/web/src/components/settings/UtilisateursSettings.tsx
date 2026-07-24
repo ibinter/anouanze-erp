@@ -9,8 +9,9 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/utils';
-import { Section, BientotDisponible, Champ, LigneOption, Toggle } from './primitives';
+import { Section, BientotDisponible, Champ, LigneOption } from './primitives';
 import { MatricePermissions } from './MatricePermissions';
+import { SecuriteSettings } from './SecuriteSettings';
 import {
   ROLES,
   ROLES_ADMINISTRATION,
@@ -339,22 +340,14 @@ export function UtilisateursSettings({
       </Section>
 
       <Section titre={t('authTitre')} description={t('authDesc')}>
-        <LigneOption titre={t('deuxFacteursTitre')} description={t('deuxFacteursDesc')}>
-          <Toggle label={t('deuxFacteursLabel')} checked={false} disabled onChange={() => undefined} />
-        </LigneOption>
         <LigneOption titre={t('sessionTitre')} description={t('sessionDesc')}>
           <span className="badge badge-neutral">{t('sessionBadge')}</span>
         </LigneOption>
         <BientotDisponible titre={t('sessionBientotTitre')} raison={t('sessionBientotRaison')} />
       </Section>
 
-      <Section titre={t('motDePasseTitre')} description={t('motDePasseDesc')}>
-        <BientotDisponible titre={t('motDePasseBientotTitre')} raison={t('motDePasseBientotRaison')} />
-      </Section>
-
-      <Section titre={t('sessionsTitre')} description={t('sessionsDesc')}>
-        <BientotDisponible titre={t('sessionsBientotTitre')} raison={t('sessionsBientotRaison')} />
-      </Section>
+      {/* Sécurité du compte courant : 2FA, sessions/appareils, politique de mot de passe */}
+      <SecuriteSettings />
 
       <Modal
         open={modalInvitation}
