@@ -422,7 +422,7 @@
         "sessionExpiree": "Expired",
         "fermerCetteSession": "Close",
         "revoquer": "Revoke",
-        "noteRotation": "“Last renewal” is the last time the access token was issued (every 15 minutes while the session is in use): the Session model does not store a separate activity timestamp.",
+        "noteRotation": "“Last renewal” is the last time the access token was issued (every 15 minutes while the session is in use): the Session model does not store a separate activity timestamp. Revoking a session immediately prevents any renewal; the access token already issued remains valid for up to 15 minutes.",
         "politiqueTitre": "Password policy",
         "politiqueDesc": "Rules actually enforced by the API when a password is created, reset or changed.",
         "hachage": "Storage: {valeur}.",

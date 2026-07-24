@@ -422,7 +422,7 @@
         "sessionExpiree": "Expirée",
         "fermerCetteSession": "Fermer",
         "revoquer": "Révoquer",
-        "noteRotation": "« Dernier renouvellement » correspond à la dernière émission du jeton d'accès (toutes les 15 minutes tant que la session est utilisée) : le modèle Session ne stocke pas de date d'activité distincte.",
+        "noteRotation": "« Dernier renouvellement » correspond à la dernière émission du jeton d'accès (toutes les 15 minutes tant que la session est utilisée) : le modèle Session ne stocke pas de date d'activité distincte. Une révocation empêche immédiatement tout renouvellement ; le jeton d'accès déjà émis, lui, reste valable jusqu'à 15 minutes.",
         "politiqueTitre": "Politique de mot de passe",
         "politiqueDesc": "Règles réellement appliquées par l'API à la création, à la réinitialisation et au changement de mot de passe.",
         "hachage": "Stockage : {valeur}.",
