@@ -106,8 +106,8 @@ export class RhController {
 
   @ApiOperation({ summary: 'Fiches de paie d\'un employé' })
   @Get('employes/:id/fiches-paie')
-  getFichesPaie(@Param('id') id: string) {
-    return this.rhService.getFichesPaie(id);
+  getFichesPaie(@Param('id') id: string, @Request() req: any) {
+    return this.rhService.getFichesPaie(id, req.user.organisationId);
   }
 
   @ApiOperation({ summary: 'Générer une fiche de paie' })
@@ -116,45 +116,72 @@ export class RhController {
   genererFichePaie(
     @Param('id') id: string,
     @Param('periode') periode: string,
+    @Request() req: any,
     @Body() dto: GenererFichePaieDto,
   ) {
-    return this.rhService.genererFichePaie(id, periode, dto);
+    return this.rhService.genererFichePaie(id, req.user.organisationId, periode, dto);
   }
 
   @ApiOperation({ summary: 'Valider une fiche de paie' })
   @Roles(...ROLES_ECRITURE_RH)
   @Patch('fiches-paie/:id/valider')
-  validerFichePaie(@Param('id') id: string) {
-    return this.rhService.validerFichePaie(id);
+  validerFichePaie(@Param('id') id: string, @Request() req: any) {
+    return this.rhService.validerFichePaie(id, req.user.organisationId);
   }
 
   // ─── Congés ───────────────────────────────────────────────
+  //
+  // Deux points d'entrée volontairement distincts :
+  //  • `/mes-conges`          → self-service, employé déduit du jeton, ouvert large ;
+  //  • `/employes/:id/conges` → dépôt/consultation pour un tiers, réservé RH.
+  // Dans les deux cas l'employé ciblé est vérifié comme appartenant à
+  // l'organisation du jeton.
+
+  @ApiOperation({ summary: 'Mes congés (utilisateur connecté)' })
+  @Roles(...ROLES_LECTURE_LARGE)
+  @Get('mes-conges')
+  getMesConges(@Request() req: any) {
+    return this.rhService.getMesConges(req.user);
+  }
+
+  @ApiOperation({ summary: 'Déposer ma propre demande de congé' })
+  // Self-service : aucun `:id` accepté, l'employé est résolu depuis le jeton.
+  // Un utilisateur ne peut donc déposer que pour lui-même.
+  @Roles(...ROLES_LECTURE_LARGE)
+  @Post('mes-conges')
+  demanderMonConge(@Request() req: any, @Body() dto: DemanderCongeDto) {
+    return this.rhService.demanderMonConge(req.user, dto);
+  }
 
   @ApiOperation({ summary: 'Congés d\'un employé' })
   @Get('employes/:id/conges')
-  getConges(@Param('id') id: string) {
-    return this.rhService.getConges(id);
+  getConges(@Param('id') id: string, @Request() req: any) {
+    return this.rhService.getConges(id, req.user.organisationId);
   }
 
-  @ApiOperation({ summary: 'Demander un congé' })
+  @ApiOperation({ summary: 'Demander un congé au nom d\'un employé (RH)' })
   @Roles(...ROLES_ECRITURE_RH)
   @Post('employes/:id/conges')
-  demanderConge(@Param('id') id: string, @Body() dto: DemanderCongeDto) {
-    return this.rhService.demanderConge(id, dto);
+  demanderConge(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body() dto: DemanderCongeDto,
+  ) {
+    return this.rhService.demanderConge(id, req.user.organisationId, dto);
   }
 
   @ApiOperation({ summary: 'Approuver un congé' })
   @Roles(...ROLES_ECRITURE_RH)
   @Patch('conges/:id/approuver')
-  approuverConge(@Param('id') id: string) {
-    return this.rhService.approuverConge(id);
+  approuverConge(@Param('id') id: string, @Request() req: any) {
+    return this.rhService.approuverConge(id, req.user.organisationId);
   }
 
   @ApiOperation({ summary: 'Rejeter un congé' })
   @Roles(...ROLES_ECRITURE_RH)
   @Patch('conges/:id/rejeter')
-  rejeterConge(@Param('id') id: string) {
-    return this.rhService.rejeterConge(id);
+  rejeterConge(@Param('id') id: string, @Request() req: any) {
+    return this.rhService.rejeterConge(id, req.user.organisationId);
   }
 
   // ─── Volontaires ──────────────────────────────────────────

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateEmployeDto } from './dto/create-employe.dto';
@@ -12,6 +13,60 @@ import { CreateVolontaireDto } from './dto/create-volontaire.dto';
 @Injectable()
 export class RhService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // ─── Garde-fous d'isolation ───────────────────────────────
+
+  /**
+   * Contrôle non négociable : l'employé ciblé doit appartenir à
+   * l'organisation portée par le jeton. Sans ce filtre, un `:id` arbitraire
+   * permet de lire ou d'écrire les données RH d'une autre organisation.
+   * On renvoie systématiquement 404 (jamais 403) pour ne pas révéler
+   * l'existence d'une fiche appartenant à un autre tenant.
+   */
+  private async assertEmployeDansOrganisation(employeId: string, organisationId: string) {
+    const employe = await this.prisma.employe.findFirst({
+      where: { id: employeId, organisationId },
+    });
+    if (!employe) throw new NotFoundException(`Employé ${employeId} introuvable`);
+    return employe;
+  }
+
+  /**
+   * Résout la fiche employé de l'utilisateur connecté.
+   *
+   * LIMITE CONNUE : le modèle `Employe` ne porte aucune relation vers
+   * `Utilisateur`. Le rapprochement se fait donc par e-mail (insensible à la
+   * casse) et reste borné à l'organisation du jeton. À remplacer par un champ
+   * `utilisateurId` sur `Employe` dès qu'une migration sera possible.
+   */
+  async resoudreEmployeCourant(user: { email?: string; organisationId: string }) {
+    const email = user?.email?.trim();
+    if (!email) {
+      throw new ForbiddenException(
+        "Votre compte ne porte aucune adresse e-mail : impossible de le rattacher à une fiche employé.",
+      );
+    }
+
+    const employes = await this.prisma.employe.findMany({
+      where: {
+        organisationId: user.organisationId,
+        email: { equals: email, mode: 'insensitive' },
+      },
+    });
+
+    if (employes.length === 0) {
+      throw new NotFoundException(
+        "Aucune fiche employé n'est rattachée à votre compte. Contactez le service RH pour qu'il renseigne votre adresse e-mail sur votre fiche.",
+      );
+    }
+    if (employes.length > 1) {
+      throw new BadRequestException(
+        'Plusieurs fiches employé partagent votre adresse e-mail. Contactez le service RH pour lever l’ambiguïté.',
+      );
+    }
+
+    return employes[0];
+  }
 
   async findAllEmployes(
     organisationId: string,
@@ -103,9 +158,8 @@ export class RhService {
     return { message: 'Employé supprimé avec succès' };
   }
 
-  async getFichesPaie(employeId: string) {
-    const employe = await this.prisma.employe.findUnique({ where: { id: employeId } });
-    if (!employe) throw new NotFoundException(`Employé ${employeId} introuvable`);
+  async getFichesPaie(employeId: string, organisationId: string) {
+    await this.assertEmployeDansOrganisation(employeId, organisationId);
 
     return this.prisma.fichePaie.findMany({
       where: { employeId },
@@ -113,9 +167,13 @@ export class RhService {
     });
   }
 
-  async genererFichePaie(employeId: string, periode: string, dto: GenererFichePaieDto) {
-    const employe = await this.prisma.employe.findUnique({ where: { id: employeId } });
-    if (!employe) throw new NotFoundException(`Employé ${employeId} introuvable`);
+  async genererFichePaie(
+    employeId: string,
+    organisationId: string,
+    periode: string,
+    dto: GenererFichePaieDto,
+  ) {
+    const employe = await this.assertEmployeDansOrganisation(employeId, organisationId);
 
     const existing = await this.prisma.fichePaie.findUnique({
       where: { employeId_periode: { employeId, periode } },
@@ -150,8 +208,10 @@ export class RhService {
     });
   }
 
-  async validerFichePaie(id: string) {
-    const fiche = await this.prisma.fichePaie.findUnique({ where: { id } });
+  async validerFichePaie(id: string, organisationId: string) {
+    const fiche = await this.prisma.fichePaie.findFirst({
+      where: { id, employe: { organisationId } },
+    });
     if (!fiche) throw new NotFoundException(`Fiche de paie ${id} introuvable`);
     if (fiche.statut === 'VALIDE') {
       throw new BadRequestException('Cette fiche de paie est déjà validée');
@@ -163,9 +223,8 @@ export class RhService {
     });
   }
 
-  async getConges(employeId: string) {
-    const employe = await this.prisma.employe.findUnique({ where: { id: employeId } });
-    if (!employe) throw new NotFoundException(`Employé ${employeId} introuvable`);
+  async getConges(employeId: string, organisationId: string) {
+    await this.assertEmployeDansOrganisation(employeId, organisationId);
 
     return this.prisma.conge.findMany({
       where: { employeId },
@@ -173,26 +232,97 @@ export class RhService {
     });
   }
 
-  async demanderConge(employeId: string, dto: DemanderCongeDto) {
-    const employe = await this.prisma.employe.findUnique({ where: { id: employeId } });
-    if (!employe) throw new NotFoundException(`Employé ${employeId} introuvable`);
+  /** Congés de l'utilisateur connecté, déduits du jeton (aucun `:id` accepté). */
+  async getMesConges(user: { email?: string; organisationId: string }) {
+    const employe = await this.resoudreEmployeCourant(user);
+
+    const conges = await this.prisma.conge.findMany({
+      where: { employeId: employe.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      employe: {
+        id: employe.id,
+        matricule: employe.matricule,
+        nom: employe.nom,
+        prenom: employe.prenom,
+        poste: employe.poste,
+      },
+      conges,
+    };
+  }
+
+  /**
+   * Dépôt d'une demande pour un tiers : réservé aux RH côté contrôleur.
+   * L'appartenance de l'employé à l'organisation du jeton est vérifiée ici.
+   */
+  async demanderConge(employeId: string, organisationId: string, dto: DemanderCongeDto) {
+    await this.assertEmployeDansOrganisation(employeId, organisationId);
+    return this.creerDemandeConge(employeId, dto);
+  }
+
+  /** Self-service : l'employé est déduit du jeton, jamais du corps de requête. */
+  async demanderMonConge(
+    user: { email?: string; organisationId: string },
+    dto: DemanderCongeDto,
+  ) {
+    const employe = await this.resoudreEmployeCourant(user);
+    return this.creerDemandeConge(employe.id, dto);
+  }
+
+  /** Validation métier commune aux deux points d'entrée. */
+  private async creerDemandeConge(employeId: string, dto: DemanderCongeDto) {
+    const dateDebut = new Date(dto.dateDebut);
+    const dateFin = new Date(dto.dateFin);
+
+    if (Number.isNaN(dateDebut.getTime()) || Number.isNaN(dateFin.getTime())) {
+      throw new BadRequestException('Dates de congé invalides');
+    }
+    if (dateFin.getTime() < dateDebut.getTime()) {
+      throw new BadRequestException(
+        'La date de fin doit être postérieure ou égale à la date de début',
+      );
+    }
+
+    // Chevauchement avec un congé DÉJÀ APPROUVÉ (deux intervalles se croisent
+    // si debutA <= finB et finA >= debutB).
+    const chevauchement = await this.prisma.conge.findFirst({
+      where: {
+        employeId,
+        statut: 'APPROUVE',
+        dateDebut: { lte: dateFin },
+        dateFin: { gte: dateDebut },
+      },
+    });
+    if (chevauchement) {
+      throw new BadRequestException(
+        'Un congé déjà approuvé chevauche la période demandée',
+      );
+    }
+
+    const jours =
+      dto.nombreJours != null && dto.nombreJours > 0
+        ? dto.nombreJours
+        : Math.floor((dateFin.getTime() - dateDebut.getTime()) / 86_400_000) + 1;
 
     return this.prisma.conge.create({
       data: {
         employeId,
         type: dto.type,
-        dateDebut: new Date(dto.dateDebut),
-        dateFin: new Date(dto.dateFin),
-        nombreJours: dto.nombreJours,
+        dateDebut,
+        dateFin,
+        nombreJours: jours,
         motif: dto.motif,
+        // Statut initial imposé côté serveur : une demande ne peut pas
+        // s'auto-approuver, quel que soit le corps envoyé.
         statut: 'EN_ATTENTE',
       },
     });
   }
 
-  async approuverConge(id: string) {
-    const conge = await this.prisma.conge.findUnique({ where: { id } });
-    if (!conge) throw new NotFoundException(`Congé ${id} introuvable`);
+  async approuverConge(id: string, organisationId: string) {
+    const conge = await this.getCongeDansOrganisation(id, organisationId);
     if (conge.statut !== 'EN_ATTENTE') {
       throw new BadRequestException('Ce congé ne peut plus être approuvé');
     }
@@ -200,14 +330,21 @@ export class RhService {
     return this.prisma.conge.update({ where: { id }, data: { statut: 'APPROUVE' } });
   }
 
-  async rejeterConge(id: string) {
-    const conge = await this.prisma.conge.findUnique({ where: { id } });
-    if (!conge) throw new NotFoundException(`Congé ${id} introuvable`);
+  async rejeterConge(id: string, organisationId: string) {
+    const conge = await this.getCongeDansOrganisation(id, organisationId);
     if (conge.statut !== 'EN_ATTENTE') {
       throw new BadRequestException('Ce congé ne peut plus être rejeté');
     }
 
     return this.prisma.conge.update({ where: { id }, data: { statut: 'REJETE' } });
+  }
+
+  private async getCongeDansOrganisation(id: string, organisationId: string) {
+    const conge = await this.prisma.conge.findFirst({
+      where: { id, employe: { organisationId } },
+    });
+    if (!conge) throw new NotFoundException(`Congé ${id} introuvable`);
+    return conge;
   }
 
   async findAllVolontaires(

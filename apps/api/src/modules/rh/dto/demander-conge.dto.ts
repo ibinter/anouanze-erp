@@ -14,9 +14,14 @@ export class DemanderCongeDto {
   @IsDateString()
   dateFin: string;
 
-  @ApiProperty()
+  /**
+   * Optionnel : si absent, le serveur le déduit de l'intervalle
+   * [dateDebut, dateFin] (bornes incluses).
+   */
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsInt()
-  nombreJours: number;
+  nombreJours?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

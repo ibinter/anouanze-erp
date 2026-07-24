@@ -38,6 +38,7 @@ import { ProspectsModule } from './modules/prospects/prospects.module';
 import { StorageModule } from './common/storage/storage.module';
 import { OrganisationGuard } from './common/guards/organisation.guard';
 import { EmailModule } from './common/email/email.module';
+import { QueueModule } from './common/queue/queue.module';
 import { NotificationsModule } from './common/notifications/notifications.module';
 
 @Module({
@@ -62,6 +63,8 @@ import { NotificationsModule } from './common/notifications/notifications.module
 
     PrismaModule,
     StorageModule,
+    // Files BullMQ (Redis) — dégradation sûre si REDIS_URL absent/injoignable.
+    QueueModule,
     EmailModule,
     NotificationsModule,
 

@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, Logger, OnModuleInit } from '
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
+import { EmailQueueService } from '../queue/email-queue.service';
 import {
   BrandOptions,
   RenderedEmail,
@@ -45,11 +46,14 @@ export class EmailService implements OnModuleInit {
   private readonly enabled: boolean;
   private readonly logger = new Logger(EmailService.name);
 
-  /** File d'attente en mémoire — sérialise les envois pour ne pas saturer le SMTP. */
+  /** File d'attente en mémoire — repli quand Redis/BullMQ est indisponible. */
   private queue: Promise<unknown> = Promise.resolve();
   private queueLength = 0;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(
+    private readonly config: ConfigService,
+    private readonly queueService: EmailQueueService,
+  ) {
     this.from = this.config.get<string>('EMAIL_FROM', 'ANOUANZÊ ERP <no-reply@anouanze-erp.com>');
     this.appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000').replace(/\/$/, '');
 
@@ -99,7 +103,11 @@ export class EmailService implements OnModuleInit {
     return this.enabled;
   }
 
-  /** Nombre d'emails en attente dans la file interne. */
+  /**
+   * Nombre d'emails en attente dans la file en mémoire (repli uniquement).
+   * En fonctionnement nominal la file durable est dans Redis :
+   * voir `EmailQueueService.getCounts()`.
+   */
   getQueueLength(): number {
     return this.queueLength;
   }
@@ -150,26 +158,62 @@ export class EmailService implements OnModuleInit {
 
   /**
    * Envoi « sûr », asynchrone et journalisé : ne lève JAMAIS d'exception et
-   * ne bloque pas l'action métier appelante. Les envois sont sérialisés dans
-   * une file en mémoire.
+   * ne bloque pas l'action métier appelante.
    *
-   * (Aucune file BullMQ n'est configurée dans ce projet — voir le rapport
-   * technique. Le jour où Redis/BullMQ sera branché, seule cette méthode
-   * est à réécrire, les appelants restent inchangés.)
+   * Chemin nominal : le message est poussé dans la file BullMQ `email`
+   * (durable, persistée dans Redis, 3 tentatives avec backoff exponentiel).
+   * `dispatch()` rend la main dès la mise en file — l'envoi SMTP réel est
+   * effectué par {@link EmailProcessor}.
+   *
+   * Chemin dégradé : si Redis est absent ou injoignable, on retombe sur la
+   * file en mémoire historique (envoi direct sérialisé, best effort). Aucune
+   * action métier ne doit jamais échouer à cause d'un email.
    */
-  dispatch(to: string | undefined | null, mail: RenderedEmail, tag: string): Promise<EmailDispatchResult> {
+  async dispatch(
+    to: string | undefined | null,
+    mail: RenderedEmail,
+    tag: string,
+  ): Promise<EmailDispatchResult> {
     if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
       this.logger.warn(`[email:${tag}] destinataire absent ou invalide — envoi ignoré`);
-      return Promise.resolve({ ok: false, skipped: true, reason: 'destinataire-invalide' });
+      return { ok: false, skipped: true, reason: 'destinataire-invalide' };
     }
 
     if (!this.enabled) {
       this.logger.warn(
         `[email:${tag}] SMTP non configuré — email « ${mail.subject} » destiné à ${to} non envoyé (journalisé uniquement)`,
       );
-      return Promise.resolve({ ok: false, skipped: true, reason: 'smtp-non-configure' });
+      return { ok: false, skipped: true, reason: 'smtp-non-configure' };
     }
 
+    // 1) File durable BullMQ (ne lève jamais : renvoie false si indisponible).
+    const queued = await this.queueService.enqueue({
+      to,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      tag,
+    });
+
+    if (queued) {
+      return { ok: true, reason: 'mis-en-file' };
+    }
+
+    // 2) Repli : file en mémoire (perdue au redémarrage, mais l'email part).
+    if (this.queueService.isEnabled()) {
+      this.logger.warn(
+        `[email:${tag}] Redis indisponible — repli sur la file en mémoire pour ${to}.`,
+      );
+    }
+    return this.dispatchInMemory(to, mail, tag);
+  }
+
+  /** File en mémoire historique — utilisée uniquement en repli. */
+  private dispatchInMemory(
+    to: string,
+    mail: RenderedEmail,
+    tag: string,
+  ): Promise<EmailDispatchResult> {
     this.queueLength += 1;
     const task = this.queue.then(async (): Promise<EmailDispatchResult> => {
       try {
