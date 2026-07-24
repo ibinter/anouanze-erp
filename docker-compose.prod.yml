@@ -51,6 +51,16 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       APP_URL: ${APP_URL:-https://anouanze.ibigsoft.com}
+      # Chiffrement des secrets saisis depuis la console superadmin.
+      # Absente : l'app démarre, seule l'écriture d'un secret est refusée.
+      CONFIG_ENCRYPTION_KEY: ${CONFIG_ENCRYPTION_KEY:-}
+      # Passerelle de paiement — saisissable aussi depuis la console superadmin.
+      CINETPAY_API_KEY: ${CINETPAY_API_KEY:-}
+      CINETPAY_SITE_ID: ${CINETPAY_SITE_ID:-}
+      CINETPAY_SECRET_KEY: ${CINETPAY_SECRET_KEY:-}
+      CINETPAY_NOTIFY_URL: ${CINETPAY_NOTIFY_URL:-}
+      CINETPAY_RETURN_URL: ${CINETPAY_RETURN_URL:-}
+      CINETPAY_MODE: ${CINETPAY_MODE:-PRODUCTION}
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     ports:
       - "4000:4000"
