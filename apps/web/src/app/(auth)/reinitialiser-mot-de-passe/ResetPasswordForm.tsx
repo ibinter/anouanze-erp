@@ -3,6 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import {
+  COULEURS_ROBUSTESSE,
+  LONGUEUR_MINIMALE_PAR_DEFAUT,
+  scoreMotDePasse,
+} from '@/components/settings/mot-de-passe';
+
+const LIBELLES_ROBUSTESSE = ['très faible', 'faible', 'moyenne', 'bonne', 'excellente'];
+
+/** Règles réellement appliquées par l'API (auth/politique-mot-de-passe.ts). */
+const REGLES = [
+  `Au moins ${LONGUEUR_MINIMALE_PAR_DEFAUT} caractères`,
+  'Au moins 3 types parmi minuscules, majuscules, chiffres et symboles',
+  'Pas de mot de passe courant, de suite évidente ni de caractère répété 4 fois',
+  'Pas de reprise de votre nom, prénom ou adresse email',
+];
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -22,7 +37,10 @@ export function ResetPasswordForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (motDePasse.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return; }
+    if (motDePasse.length < LONGUEUR_MINIMALE_PAR_DEFAUT) {
+      setError(`Le mot de passe doit contenir au moins ${LONGUEUR_MINIMALE_PAR_DEFAUT} caractères.`);
+      return;
+    }
     if (motDePasse !== confirmation) { setError('Les mots de passe ne correspondent pas.'); return; }
     setError('');
     setLoading(true);
@@ -82,10 +100,10 @@ export function ResetPasswordForm() {
           <input
             type={showPwd ? 'text' : 'password'}
             className="input pr-10"
-            placeholder="Minimum 8 caractères"
+            placeholder={`Minimum ${LONGUEUR_MINIMALE_PAR_DEFAUT} caractères`}
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
-            minLength={8}
+            minLength={LONGUEUR_MINIMALE_PAR_DEFAUT}
             required
           />
           <button
@@ -96,6 +114,32 @@ export function ResetPasswordForm() {
             {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
+
+        {/* Indicateur de robustesse — la validation qui fait foi reste serveur */}
+        <div className="mt-2 space-y-1">
+          <div className="flex gap-1">
+            {[1, 2, 3, 4].map((n) => {
+              const score = scoreMotDePasse(motDePasse);
+              return (
+                <span
+                  key={n}
+                  className={`h-1.5 flex-1 rounded-full ${
+                    n <= score ? COULEURS_ROBUSTESSE[score] : 'bg-neutral-200'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-neutral-500">
+            Robustesse : <strong>{LIBELLES_ROBUSTESSE[scoreMotDePasse(motDePasse)]}</strong>
+          </p>
+        </div>
+
+        <ul className="mt-2 space-y-0.5 text-[11px] text-neutral-500">
+          {REGLES.map((regle) => (
+            <li key={regle}>• {regle}</li>
+          ))}
+        </ul>
       </div>
 
       <div>

@@ -20,6 +20,7 @@ import { useSession } from 'next-auth/react';
 import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/utils';
 import { Section, BientotDisponible, Champ, LigneOption } from './primitives';
+import { COULEURS_ROBUSTESSE, scoreMotDePasse } from './mot-de-passe';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types renvoyés par l'API
@@ -68,51 +69,15 @@ interface Politique {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Indicateur de robustesse — miroir exact de la règle appliquée par l'API
-// (apps/api/src/modules/auth/politique-mot-de-passe.ts). La validation qui fait
-// foi reste serveur : cet affichage n'est qu'une aide à la saisie.
+// Indicateur de robustesse (le calcul vit dans ./mot-de-passe, partagé avec
+// l'écran de réinitialisation). La validation qui fait foi reste serveur.
 // ─────────────────────────────────────────────────────────────────────────────
-
-function classesUtilisees(valeur: string): number {
-  let n = 0;
-  if (/[a-z]/.test(valeur)) n++;
-  if (/[A-Z]/.test(valeur)) n++;
-  if (/[0-9]/.test(valeur)) n++;
-  if (/[^A-Za-z0-9]/.test(valeur)) n++;
-  return n;
-}
-
-const SEQUENCES = ['abcdefghijklmnopqrstuvwxyz', 'azertyuiopqsdfghjklmwxcvbn', '01234567890'];
-
-function contientSequence(valeur: string): boolean {
-  const v = valeur.toLowerCase();
-  return SEQUENCES.some((sequence) => {
-    for (let i = 0; i + 4 <= sequence.length; i++) {
-      const morceau = sequence.slice(i, i + 4);
-      const inverse = morceau.split('').reverse().join('');
-      if (v.includes(morceau) || v.includes(inverse)) return true;
-    }
-    return false;
-  });
-}
-
-export function scoreMotDePasse(valeur: string, longueurMinimale = 12): number {
-  if (!valeur) return 0;
-  let score = 0;
-  if (valeur.length >= longueurMinimale) score++;
-  if (valeur.length >= 16) score++;
-  const classes = classesUtilisees(valeur);
-  if (classes >= 3) score++;
-  if (classes === 4) score++;
-  if (contientSequence(valeur)) score = Math.max(0, score - 1);
-  return Math.min(4, score);
-}
 
 function JaugeMotDePasse({ valeur, longueurMinimale }: { valeur: string; longueurMinimale: number }) {
   const t = useTranslations('shell.parametres.securite');
   const score = scoreMotDePasse(valeur, longueurMinimale);
   const libelles = [t('force0'), t('force1'), t('force2'), t('force3'), t('force4')];
-  const couleurs = ['bg-neutral-200', 'bg-red-500', 'bg-amber-500', 'bg-lime-500', 'bg-emerald-600'];
+  const couleurs = COULEURS_ROBUSTESSE;
 
   return (
     <div className="space-y-1">
