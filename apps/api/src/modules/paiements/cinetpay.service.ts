@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { ConfigurationService } from '../configuration/configuration.service';
 
 /**
  * Intégration réelle de l'agrégateur CinetPay (Orange Money, MTN MoMo, Moov,
@@ -10,7 +10,13 @@ import { createHmac, timingSafeEqual } from 'crypto';
  * tant que `CINETPAY_API_KEY` et `CINETPAY_SITE_ID` ne sont pas renseignés,
  * `isConfigured()` renvoie `false`, AUCUN appel HTTP sortant n'est tenté et
  * l'interface doit continuer d'afficher « En intégration ».
- * Aucune clé n'est écrite en dur dans ce fichier.
+ * Aucune clé n'est écrite en dur dans ce fichier, ni journalisée.
+ *
+ * 🔄 RECONFIGURATION À CHAUD : toutes les valeurs sont lues à la demande via
+ * `ConfigurationService` (base d'abord, repli `process.env`). Rien n'est figé au
+ * démarrage : dès que le SUPER_ADMIN saisit les clés dans l'interface, le
+ * prochain appel les prend en compte (au plus après expiration du cache 30 s du
+ * ConfigurationService) — sans redémarrage du conteneur.
  */
 
 /** Canaux de paiement acceptés par l'API CinetPay v2. */
@@ -99,90 +105,116 @@ const CHAMPS_SIGNATURE_WEBHOOK = [
   'cpm_error_message',
 ] as const;
 
+/** Instantané de configuration lu à la demande (jamais mis en cache ici). */
+interface CinetPayConfiguration {
+  apiKey: string;
+  siteId: string;
+  secretKey: string;
+  mode: 'PRODUCTION' | 'TEST';
+  notifyUrl: string;
+  returnUrl: string;
+  timeoutMs: number;
+}
+
 @Injectable()
 export class CinetPayService {
   private readonly logger = new Logger(CinetPayService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigurationService) {}
 
   // ---------------------------------------------------------------------
-  // Configuration
+  // Configuration (lue à chaud, base puis process.env)
   // ---------------------------------------------------------------------
 
-  private lire(cle: string): string {
-    const valeur = this.config.get<string>(cle);
+  private async lire(cle: string): Promise<string> {
+    const valeur = await this.config.get(cle);
     return typeof valeur === 'string' ? valeur.trim() : '';
   }
 
-  private get apiKey(): string {
-    return this.lire('CINETPAY_API_KEY');
+  /**
+   * Lit l'intégralité des paramètres CinetPay pour l'opération en cours.
+   * Aucun état n'est conservé entre deux appels : la seule mémoïsation est le
+   * cache court du `ConfigurationService`, ce qui permet la reconfiguration à
+   * chaud depuis l'interface superadmin.
+   */
+  private async chargerConfiguration(): Promise<CinetPayConfiguration> {
+    const [apiKey, siteId, secretKey, mode, notifyExplicite, apiUrl, returnExplicite, appUrl, timeoutBrut] =
+      await Promise.all([
+        this.lire('CINETPAY_API_KEY'),
+        this.lire('CINETPAY_SITE_ID'),
+        this.lire('CINETPAY_SECRET_KEY'),
+        this.lire('CINETPAY_MODE'),
+        this.lire('CINETPAY_NOTIFY_URL'),
+        this.lire('API_URL'),
+        this.lire('CINETPAY_RETURN_URL'),
+        this.lire('APP_URL'),
+        this.lire('CINETPAY_TIMEOUT_MS'),
+      ]);
+
+    const notifyUrl =
+      notifyExplicite ||
+      (apiUrl ? `${apiUrl.replace(/\/+$/, '')}/api/v1/paiements/webhook/cinetpay` : '');
+    const returnUrl = returnExplicite || (appUrl ? `${appUrl.replace(/\/+$/, '')}/paiements` : '');
+
+    const timeout = Number(timeoutBrut);
+
+    return {
+      apiKey,
+      siteId,
+      secretKey,
+      mode: mode.toUpperCase() === 'TEST' ? 'TEST' : 'PRODUCTION',
+      notifyUrl,
+      returnUrl,
+      timeoutMs: Number.isFinite(timeout) && timeout > 0 ? timeout : 15000,
+    };
   }
 
-  private get siteId(): string {
-    return this.lire('CINETPAY_SITE_ID');
-  }
-
-  private get secretKey(): string {
-    return this.lire('CINETPAY_SECRET_KEY');
+  /** Identifiants marchands ET URLs de rappel présents ? */
+  private estConfiguree(cfg: CinetPayConfiguration): boolean {
+    return Boolean(cfg.apiKey && cfg.siteId && cfg.notifyUrl && cfg.returnUrl);
   }
 
   /** `PRODUCTION` par défaut ; `TEST` bascule la journalisation en mode verbeux. */
-  getMode(): 'PRODUCTION' | 'TEST' {
-    return this.lire('CINETPAY_MODE').toUpperCase() === 'TEST' ? 'TEST' : 'PRODUCTION';
-  }
-
-  private get notifyUrl(): string {
-    const explicite = this.lire('CINETPAY_NOTIFY_URL');
-    if (explicite) return explicite;
-    const apiUrl = this.lire('API_URL');
-    return apiUrl ? `${apiUrl.replace(/\/+$/, '')}/api/v1/paiements/webhook/cinetpay` : '';
-  }
-
-  private get returnUrl(): string {
-    const explicite = this.lire('CINETPAY_RETURN_URL');
-    if (explicite) return explicite;
-    const appUrl = this.lire('APP_URL');
-    return appUrl ? `${appUrl.replace(/\/+$/, '')}/paiements` : '';
-  }
-
-  private get timeoutMs(): number {
-    const brut = Number(this.lire('CINETPAY_TIMEOUT_MS'));
-    return Number.isFinite(brut) && brut > 0 ? brut : 15000;
+  async getMode(): Promise<'PRODUCTION' | 'TEST'> {
+    return (await this.chargerConfiguration()).mode;
   }
 
   /**
    * Vrai uniquement si les identifiants marchands ET les URLs de rappel sont
    * présents. Pilote l'affichage « Disponible » / « En intégration » côté web.
+   *
+   * Asynchrone : la lecture peut venir de la base (configuration superadmin).
    */
-  isConfigured(): boolean {
-    return Boolean(this.apiKey && this.siteId && this.notifyUrl && this.returnUrl);
+  async isConfigured(): Promise<boolean> {
+    return this.estConfiguree(await this.chargerConfiguration());
   }
 
   /** Vrai si la vérification HMAC locale des webhooks est possible. */
-  peutVerifierSignature(): boolean {
-    return Boolean(this.secretKey);
+  async peutVerifierSignature(): Promise<boolean> {
+    return Boolean((await this.chargerConfiguration()).secretKey);
   }
 
   /** Diagnostic non sensible — ne renvoie jamais la moindre clé. */
-  getDiagnostic() {
+  async getDiagnostic() {
+    const cfg = await this.chargerConfiguration();
     return {
-      configure: this.isConfigured(),
-      mode: this.getMode(),
-      apiKeyPresente: Boolean(this.apiKey),
-      siteIdPresent: Boolean(this.siteId),
-      secretKeyPresente: Boolean(this.secretKey),
-      notifyUrlPresente: Boolean(this.notifyUrl),
-      returnUrlPresente: Boolean(this.returnUrl),
-      variablesManquantes: this.variablesManquantes(),
+      configure: this.estConfiguree(cfg),
+      mode: cfg.mode,
+      apiKeyPresente: Boolean(cfg.apiKey),
+      siteIdPresent: Boolean(cfg.siteId),
+      secretKeyPresente: Boolean(cfg.secretKey),
+      notifyUrlPresente: Boolean(cfg.notifyUrl),
+      returnUrlPresente: Boolean(cfg.returnUrl),
+      variablesManquantes: this.variablesManquantes(cfg),
     };
   }
 
-  private variablesManquantes(): string[] {
+  private variablesManquantes(cfg: CinetPayConfiguration): string[] {
     const manquantes: string[] = [];
-    if (!this.apiKey) manquantes.push('CINETPAY_API_KEY');
-    if (!this.siteId) manquantes.push('CINETPAY_SITE_ID');
-    if (!this.notifyUrl) manquantes.push('CINETPAY_NOTIFY_URL');
-    if (!this.returnUrl) manquantes.push('CINETPAY_RETURN_URL');
+    if (!cfg.apiKey) manquantes.push('CINETPAY_API_KEY');
+    if (!cfg.siteId) manquantes.push('CINETPAY_SITE_ID');
+    if (!cfg.notifyUrl) manquantes.push('CINETPAY_NOTIFY_URL');
+    if (!cfg.returnUrl) manquantes.push('CINETPAY_RETURN_URL');
     return manquantes;
   }
 
@@ -193,10 +225,11 @@ export class CinetPayService {
   private async postJson(
     chemin: string,
     corps: Record<string, unknown>,
+    cfg: CinetPayConfiguration,
   ): Promise<{ ok: boolean; body?: CinetPayApiResponse; erreur?: string }> {
     const url = `${CINETPAY_BASE_URL}${chemin}`;
     const controleur = new AbortController();
-    const minuterie = setTimeout(() => controleur.abort(), this.timeoutMs);
+    const minuterie = setTimeout(() => controleur.abort(), cfg.timeoutMs);
 
     try {
       const reponse = await fetch(url, {
@@ -215,7 +248,7 @@ export class CinetPayService {
         return { ok: false, erreur: `Réponse CinetPay illisible (HTTP ${reponse.status})` };
       }
 
-      if (this.getMode() === 'TEST') {
+      if (cfg.mode === 'TEST') {
         this.logger.debug(`CinetPay ${chemin} → HTTP ${reponse.status} code=${body?.code}`);
       }
 
@@ -223,7 +256,7 @@ export class CinetPayService {
     } catch (erreur: unknown) {
       const estTimeout = erreur instanceof Error && erreur.name === 'AbortError';
       const message = estTimeout
-        ? `Délai dépassé (${this.timeoutMs} ms) sur ${chemin}`
+        ? `Délai dépassé (${cfg.timeoutMs} ms) sur ${chemin}`
         : erreur instanceof Error
           ? erreur.message
           : 'Erreur réseau inconnue';
@@ -239,10 +272,13 @@ export class CinetPayService {
   // ---------------------------------------------------------------------
 
   async initierPaiement(params: CinetPayInitiationParams): Promise<CinetPayInitiationResult> {
-    if (!this.isConfigured()) {
+    const cfg = await this.chargerConfiguration();
+
+    // Sans clés : aucun appel HTTP sortant n'est tenté.
+    if (!this.estConfiguree(cfg)) {
       return {
         ok: false,
-        erreur: `CinetPay non configuré (variables manquantes : ${this.variablesManquantes().join(', ')})`,
+        erreur: `CinetPay non configuré (variables manquantes : ${this.variablesManquantes(cfg).join(', ')})`,
       };
     }
 
@@ -261,14 +297,14 @@ export class CinetPayService {
     }
 
     const charge: Record<string, unknown> = {
-      apikey: this.apiKey,
-      site_id: this.siteId,
+      apikey: cfg.apiKey,
+      site_id: cfg.siteId,
       transaction_id: params.transactionId,
       amount: montant,
       currency: devise,
       description: (params.description || 'Paiement ANOUANZÊ').slice(0, 255),
-      notify_url: this.notifyUrl,
-      return_url: this.returnUrl,
+      notify_url: cfg.notifyUrl,
+      return_url: cfg.returnUrl,
       channels: params.canal ?? 'ALL',
       lang: 'fr',
     };
@@ -279,7 +315,7 @@ export class CinetPayService {
     if (params.clientTelephone) charge.customer_phone_number = params.clientTelephone;
     if (params.metadata) charge.metadata = params.metadata.slice(0, 255);
 
-    const resultat = await this.postJson('/payment', charge);
+    const resultat = await this.postJson('/payment', charge, cfg);
     if (!resultat.ok || !resultat.body) {
       return { ok: false, erreur: resultat.erreur ?? 'Appel CinetPay en échec' };
     }
@@ -309,15 +345,22 @@ export class CinetPayService {
   // ---------------------------------------------------------------------
 
   async verifierTransaction(transactionId: string): Promise<CinetPayCheckResult> {
-    if (!this.isConfigured()) {
+    const cfg = await this.chargerConfiguration();
+
+    // Sans clés : aucun appel HTTP sortant n'est tenté.
+    if (!this.estConfiguree(cfg)) {
       return { ok: false, statut: 'EN_ATTENTE', erreur: 'CinetPay non configuré' };
     }
 
-    const resultat = await this.postJson('/payment/check', {
-      apikey: this.apiKey,
-      site_id: this.siteId,
-      transaction_id: transactionId,
-    });
+    const resultat = await this.postJson(
+      '/payment/check',
+      {
+        apikey: cfg.apiKey,
+        site_id: cfg.siteId,
+        transaction_id: transactionId,
+      },
+      cfg,
+    );
 
     if (!resultat.ok || !resultat.body) {
       return { ok: false, statut: 'EN_ATTENTE', erreur: resultat.erreur ?? 'Appel CinetPay en échec' };
@@ -377,19 +420,21 @@ export class CinetPayService {
    * secret ou de header : l'appelant doit alors se rabattre sur un appel
    * `/v2/payment/check` (source de vérité) plutôt que de faire confiance au corps.
    */
-  verifierSignatureWebhook(
+  async verifierSignatureWebhook(
     payload: Record<string, unknown>,
     tokenRecu?: string,
-  ): boolean | null {
-    if (!this.secretKey) return null;
+  ): Promise<boolean | null> {
     if (!tokenRecu) return null;
+
+    const { secretKey } = await this.chargerConfiguration();
+    if (!secretKey) return null;
 
     const concatene = CHAMPS_SIGNATURE_WEBHOOK.map((champ) => {
       const valeur = payload[champ];
       return valeur === undefined || valeur === null ? '' : String(valeur);
     }).join('');
 
-    const attendu = createHmac('sha256', this.secretKey).update(concatene).digest('hex');
+    const attendu = createHmac('sha256', secretKey).update(concatene).digest('hex');
 
     try {
       const a = Buffer.from(attendu, 'utf8');

@@ -11,6 +11,7 @@ const NAV = [
   { href: '/superadmin/utilisateurs', label: '👤 Utilisateurs globaux' },
   { href: '/superadmin/sara', label: '🤖 SARA — IA Visiteurs' },
   { href: '/superadmin/logs', label: '📋 Logs système' },
+  { href: '/superadmin/configuration', label: '⚙️ Configuration' },
 ];
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {

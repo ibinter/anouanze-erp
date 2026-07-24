@@ -37,6 +37,7 @@ import { TicketsModule } from './modules/tickets/tickets.module';
 import { ImportModule } from './modules/import/import.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
 import { AbonnementsModule } from './modules/abonnements/abonnements.module';
+import { ConfigurationModule } from './modules/configuration/configuration.module';
 import { StorageModule } from './common/storage/storage.module';
 import { OrganisationGuard } from './common/guards/organisation.guard';
 import { EmailModule } from './common/email/email.module';
@@ -64,6 +65,8 @@ import { NotificationsModule } from './common/notifications/notifications.module
     }),
 
     PrismaModule,
+    // Paramètres d'intégration éditables en ligne (base d'abord, .env en repli).
+    ConfigurationModule,
     StorageModule,
     // Files BullMQ (Redis) — dégradation sûre si REDIS_URL absent/injoignable.
     QueueModule,

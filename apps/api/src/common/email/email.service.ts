@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
+import { ConfigurationService } from '../../modules/configuration/configuration.service';
 import { EmailQueueService } from '../queue/email-queue.service';
 import {
   BrandOptions,
@@ -38,49 +38,55 @@ export interface EmailDispatchResult {
   reason?: string;
 }
 
+/** Instantané des paramètres SMTP lus via la configuration (base puis env). */
+interface SmtpConfiguration {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  from: string;
+  appUrl: string;
+}
+
+const FROM_PAR_DEFAUT = 'ANOUANZÊ ERP <no-reply@anouanze-erp.com>';
+const APP_URL_PAR_DEFAUT = 'http://localhost:3000';
+
 @Injectable()
 export class EmailService implements OnModuleInit {
-  private readonly transporter: Transporter | null;
-  private readonly from: string;
-  private readonly appUrl: string;
-  private readonly enabled: boolean;
+  private transporter: Transporter | null = null;
+  private from: string = FROM_PAR_DEFAUT;
+  private appUrl: string = APP_URL_PAR_DEFAUT;
+  private enabled = false;
   private readonly logger = new Logger(EmailService.name);
+
+  /**
+   * Empreinte des paramètres ayant servi à construire le transport courant.
+   * Dès qu'elle change (nouveau SMTP saisi dans l'interface superadmin), le
+   * transport est fermé puis reconstruit — sans redémarrage du conteneur.
+   * ⚠️ Contient un condensat, jamais le mot de passe en clair.
+   */
+  private empreinteTransport: string | null = null;
+
+  /** Fenêtre de relecture de la configuration (le ConfigurationService cache déjà 30 s). */
+  private static readonly TTL_RELECTURE_MS = 30_000;
+  private prochaineRelecture = 0;
+  private relectureEnCours: Promise<void> | null = null;
 
   /** File d'attente en mémoire — repli quand Redis/BullMQ est indisponible. */
   private queue: Promise<unknown> = Promise.resolve();
   private queueLength = 0;
 
   constructor(
-    private readonly config: ConfigService,
+    private readonly config: ConfigurationService,
     private readonly queueService: EmailQueueService,
-  ) {
-    this.from = this.config.get<string>('EMAIL_FROM', 'ANOUANZÊ ERP <no-reply@anouanze-erp.com>');
-    this.appUrl = this.config.get<string>('APP_URL', 'http://localhost:3000').replace(/\/$/, '');
+  ) {}
 
-    const host = (this.config.get<string>('SMTP_HOST') ?? '').trim();
-    this.enabled = host.length > 0;
+  async onModuleInit(): Promise<void> {
+    // Chargement initial avant toute prise de trafic : `appUrl` / `from` sont
+    // disponibles dès le premier email.
+    await this.rafraichirConfiguration(true);
 
-    if (!this.enabled) {
-      this.transporter = null;
-    } else {
-      const user = (this.config.get<string>('SMTP_USER') ?? '').trim();
-      const pass = (this.config.get<string>('SMTP_PASSWORD') ?? '').trim();
-      const port = Number(this.config.get<string | number>('SMTP_PORT', 587)) || 587;
-      const secure =
-        String(this.config.get<string | boolean>('SMTP_SECURE', false)) === 'true' || port === 465;
-
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        // Auth optionnelle : les relais locaux (MailHog, Postfix) n'en ont pas.
-        ...(user ? { auth: { user, pass } } : {}),
-        tls: { rejectUnauthorized: false },
-      });
-    }
-  }
-
-  onModuleInit(): void {
     if (!this.enabled) {
       this.logger.warn(
         "SMTP non configuré (SMTP_HOST absent) — les emails seront journalisés puis ignorés. L'application fonctionne normalement.",
@@ -90,7 +96,7 @@ export class EmailService implements OnModuleInit {
     // Vérification non bloquante : un SMTP injoignable ne doit pas empêcher le démarrage.
     this.transporter
       ?.verify()
-      .then(() => this.logger.log(`SMTP opérationnel (${this.config.get('SMTP_HOST')})`))
+      .then(() => this.logger.log('SMTP opérationnel'))
       .catch((err: unknown) =>
         this.logger.warn(
           `SMTP injoignable au démarrage (${(err as Error).message}) — les envois seront tentés puis journalisés en cas d'échec.`,
@@ -98,8 +104,108 @@ export class EmailService implements OnModuleInit {
       );
   }
 
-  /** Le service dispose-t-il d'un relais SMTP configuré ? */
+  // ------------------------------------------------------------
+  // Configuration à chaud
+  // ------------------------------------------------------------
+
+  /** Lecture des paramètres SMTP : base d'abord, repli `process.env`. */
+  private async lireConfiguration(): Promise<SmtpConfiguration> {
+    const texte = async (cle: string): Promise<string> => {
+      const valeur = await this.config.get(cle);
+      return typeof valeur === 'string' ? valeur.trim() : '';
+    };
+
+    const [host, user, pass, portBrut, secureBrut, from, appUrl] = await Promise.all([
+      texte('SMTP_HOST'),
+      texte('SMTP_USER'),
+      texte('SMTP_PASSWORD'),
+      texte('SMTP_PORT'),
+      texte('SMTP_SECURE'),
+      texte('EMAIL_FROM'),
+      texte('APP_URL'),
+    ]);
+
+    const port = Number(portBrut) || 587;
+
+    return {
+      host,
+      port,
+      secure: secureBrut.toLowerCase() === 'true' || port === 465,
+      user,
+      pass,
+      from: from || FROM_PAR_DEFAUT,
+      appUrl: (appUrl || APP_URL_PAR_DEFAUT).replace(/\/$/, ''),
+    };
+  }
+
+  /**
+   * Relit la configuration et reconstruit le transport si les paramètres ont
+   * bougé. Ne lève jamais : en cas d'erreur, l'état courant est conservé.
+   */
+  private async rafraichirConfiguration(force = false): Promise<void> {
+    if (!force && Date.now() < this.prochaineRelecture) return;
+    if (this.relectureEnCours) return this.relectureEnCours;
+
+    this.relectureEnCours = (async () => {
+      try {
+        const cfg = await this.lireConfiguration();
+
+        this.from = cfg.from;
+        this.appUrl = cfg.appUrl;
+        this.enabled = cfg.host.length > 0;
+
+        // Empreinte sans secret en clair : la longueur du mot de passe suffit
+        // à détecter un changement.
+        const empreinte = this.enabled
+          ? `${cfg.host}|${cfg.port}|${cfg.secure}|${cfg.user}|${cfg.pass.length}`
+          : null;
+
+        if (empreinte !== this.empreinteTransport) {
+          this.fermerTransport();
+          this.empreinteTransport = empreinte;
+
+          if (this.enabled) {
+            this.transporter = nodemailer.createTransport({
+              host: cfg.host,
+              port: cfg.port,
+              secure: cfg.secure,
+              // Auth optionnelle : les relais locaux (MailHog, Postfix) n'en ont pas.
+              ...(cfg.user ? { auth: { user: cfg.user, pass: cfg.pass } } : {}),
+              tls: { rejectUnauthorized: false },
+            });
+            this.logger.log('Transport SMTP (re)construit depuis la configuration.');
+          }
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Lecture de la configuration SMTP impossible (${(err as Error).message}) — paramètres précédents conservés.`,
+        );
+      } finally {
+        this.prochaineRelecture = Date.now() + EmailService.TTL_RELECTURE_MS;
+        this.relectureEnCours = null;
+      }
+    })();
+
+    return this.relectureEnCours;
+  }
+
+  private fermerTransport(): void {
+    try {
+      (this.transporter as unknown as { close?: () => void } | null)?.close?.();
+    } catch {
+      // Fermeture best effort — ne doit jamais interrompre quoi que ce soit.
+    }
+    this.transporter = null;
+  }
+
+  /**
+   * Le service dispose-t-il d'un relais SMTP configuré ?
+   * Synchrone (compatibilité des appelants) : renvoie le dernier état connu,
+   * rafraîchi au plus toutes les 30 s et systématiquement avant chaque
+   * `dispatch()` / `sendEmail()`.
+   */
   isConfigured(): boolean {
+    void this.rafraichirConfiguration();
     return this.enabled;
   }
 
@@ -130,6 +236,9 @@ export class EmailService implements OnModuleInit {
    * Pour tout envoi transactionnel, préférer `dispatch()`.
    */
   async sendEmail(options: SendEmailOptions): Promise<void> {
+    // Relit la configuration : un SMTP saisi entre-temps est pris en compte.
+    await this.rafraichirConfiguration();
+
     if (!this.enabled || !this.transporter) {
       this.logger.warn(
         `[email:${options.tag ?? 'brut'}] SMTP non configuré — envoi ignoré (destinataire ${options.to}, sujet « ${options.subject} »)`,
@@ -178,6 +287,10 @@ export class EmailService implements OnModuleInit {
       this.logger.warn(`[email:${tag}] destinataire absent ou invalide — envoi ignoré`);
       return { ok: false, skipped: true, reason: 'destinataire-invalide' };
     }
+
+    // Relecture à chaud (ne lève jamais) : dès que le SMTP est renseigné dans
+    // l'interface, l'envoi suivant part sans redémarrage.
+    await this.rafraichirConfiguration();
 
     if (!this.enabled) {
       this.logger.warn(

@@ -88,14 +88,21 @@ export class PaiementsService {
    * Sans clés, on retombe sur l'état antérieur (« En intégration » /
    * « Bientôt disponible ») — jamais de promesse mensongère.
    */
-  getConfigurationPasserelles() {
-    const configure = this.cinetpay.isConfigured();
+  async getConfigurationPasserelles() {
+    // Lecture à chaud (base superadmin puis process.env) : dès que les clés
+    // sont saisies dans l'interface, les opérateurs passent « DISPONIBLE »
+    // sans redémarrage. Tant qu'elles manquent → « INTEGRATION ».
+    const [configure, mode, signatureVerifiable] = await Promise.all([
+      this.cinetpay.isConfigured(),
+      this.cinetpay.getMode(),
+      this.cinetpay.peutVerifierSignature(),
+    ]);
 
     return {
       cinetpay: {
         configure,
-        mode: configure ? this.cinetpay.getMode() : null,
-        signatureVerifiable: this.cinetpay.peutVerifierSignature(),
+        mode: configure ? mode : null,
+        signatureVerifiable,
       },
       /** Initiation réellement opérationnelle de bout en bout ? */
       initiationOperationnelle: configure,
@@ -109,8 +116,8 @@ export class PaiementsService {
   }
 
   /** Diagnostic administrateur : quelles variables d'environnement manquent. */
-  getDiagnosticPasserelles() {
-    return { cinetpay: this.cinetpay.getDiagnostic() };
+  async getDiagnosticPasserelles() {
+    return { cinetpay: await this.cinetpay.getDiagnostic() };
   }
 
   // =====================================================================
@@ -150,7 +157,7 @@ export class PaiementsService {
 
     // Dégradation honnête : sans clés, on conserve exactement l'ancien
     // comportement (simple enregistrement EN_ATTENTE, aucun appel sortant).
-    if (!this.cinetpay.isConfigured()) {
+    if (!(await this.cinetpay.isConfigured())) {
       return {
         ...base,
         passerelle: null,
@@ -191,7 +198,7 @@ export class PaiementsService {
         initiation: 'OK',
         paymentUrl: resultat.paymentUrl,
         paymentToken: resultat.paymentToken ?? null,
-        mode: this.cinetpay.getMode(),
+        mode: await this.cinetpay.getMode(),
         canal,
       },
     });
@@ -217,8 +224,8 @@ export class PaiementsService {
     // (source de vérité) pour les transactions encore en attente.
     if (
       transaction.statut === 'EN_ATTENTE' &&
-      this.cinetpay.isConfigured() &&
-      transaction.reference
+      transaction.reference &&
+      (await this.cinetpay.isConfigured())
     ) {
       const check = await this.cinetpay.verifierTransaction(transaction.reference);
       if (check.ok && check.statut !== 'EN_ATTENTE') {
@@ -267,7 +274,7 @@ export class PaiementsService {
     }
 
     // 1 — Signature HMAC (si le secret est configuré).
-    const signature = this.cinetpay.verifierSignatureWebhook(payload, token);
+    const signature = await this.cinetpay.verifierSignatureWebhook(payload, token);
     if (signature === false) {
       this.logger.error(`Webhook CinetPay : signature invalide pour ${transaction.reference}`);
       return { received: true, traite: false, motif: 'SIGNATURE_INVALIDE' };
@@ -282,7 +289,7 @@ export class PaiementsService {
     let statut: StatutTransaction;
     let details: Record<string, unknown>;
 
-    if (this.cinetpay.isConfigured() && transaction.reference) {
+    if (transaction.reference && (await this.cinetpay.isConfigured())) {
       const check = await this.cinetpay.verifierTransaction(transaction.reference);
       if (!check.ok) {
         this.logger.warn(

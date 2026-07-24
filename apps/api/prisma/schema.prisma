@@ -1383,3 +1383,31 @@ model EmailLog {
   @@index([template])
   @@map("email_logs")
 }
+
+// ============================================================
+// CONFIGURATION APPLICATIVE (clés d'intégration éditables en ligne)
+// ============================================================
+
+enum CategorieConfiguration {
+  PAIEMENT
+  EMAIL
+  IA
+  GENERAL
+}
+
+/// Paramètres d'intégration saisis par un SUPER_ADMIN depuis l'interface.
+/// `valeur` est chiffrée (AES-256-GCM) dès que `secret` vaut true ;
+/// dans ce cas elle n'est JAMAIS renvoyée en clair par l'API.
+model Configuration {
+  id          String                 @id @default(uuid())
+  cle         String                 @unique
+  valeur      String
+  categorie   CategorieConfiguration @default(GENERAL)
+  secret      Boolean                @default(false)
+  description String?
+  modifieLe   DateTime               @default(now()) @updatedAt
+  modifiePar  String?
+
+  @@index([categorie])
+  @@map("configurations")
+}

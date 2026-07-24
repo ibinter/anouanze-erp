@@ -697,6 +697,65 @@
           "contenu": "Stay informed of important alerts: deadlines, budget overruns, required actions."
         }
       }
+    },
+    "superadminConfig": {
+      "titre": "System configuration",
+      "sousTitre": "Technical keys for external services. A stored secret value is never displayed again.",
+      "accesRefuseTitre": "Access denied",
+      "accesRefuseMessage": "This page is restricted to the SUPER_ADMIN role. Sign in with an authorised account to manage the configuration.",
+      "onglets": {
+        "paiement": "Payments",
+        "email": "Email",
+        "ia": "Artificial intelligence",
+        "general": "General"
+      },
+      "aide": {
+        "paiement": "These keys enable online collection through CinetPay (Mobile Money, bank cards) for every organisation.",
+        "paiementAvertissement": "As long as the CinetPay keys are missing, no payment operator is offered to users: this is the intended behaviour.",
+        "email": "These keys enable transactional emails: invitations, password resets, notifications and reminders.",
+        "ia": "These keys enable the SARA assistant and automated analyses with the artificial intelligence providers.",
+        "general": "These settings define the platform-wide behaviour: public URL, application identity and cross-cutting options."
+      },
+      "source": {
+        "base": "Configured",
+        "environnement": "From the environment",
+        "absent": "Not configured",
+        "environnementInfobulle": "Value inherited from the server environment variables. You can override it here."
+      },
+      "champ": {
+        "valeurDefinie": "Value stored",
+        "placeholderSecret": "Enter the new secret value",
+        "placeholderValeur": "Enter the value",
+        "modifieLe": "Modified on {date}",
+        "jamaisModifie": "Never modified from this console.",
+        "avertissementSecret": "For security reasons, the stored value is never displayed again."
+      },
+      "actions": {
+        "enregistrer": "Save",
+        "annuler": "Cancel",
+        "remplacer": "Replace",
+        "supprimer": "Delete",
+        "tester": "Test connection",
+        "testEnCours": "Testing…",
+        "rafraichir": "Refresh"
+      },
+      "suppressionTitre": "Revert to the environment value?",
+      "suppressionMessage": "The stored value for “{cle}” will be erased. The system will fall back to the server environment variable if it exists, otherwise the key becomes unconfigured.",
+      "etat": {
+        "chargement": "Loading configuration…",
+        "erreur": "Unable to load the configuration.",
+        "vide": "No key is declared for this category.",
+        "enregistre": "Value saved.",
+        "supprime": "Value deleted: falling back to the environment.",
+        "echecEnregistrement": "Unable to save.",
+        "echecSuppression": "Unable to delete."
+      },
+      "test": {
+        "succes": "Connection successful",
+        "echec": "Connection failed",
+        "details": "Details",
+        "jamaisLance": "No test run yet."
+      }
     }
   }
 }

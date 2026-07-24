@@ -697,6 +697,65 @@
           "contenu": "Restez informé des alertes importantes : échéances, budgets dépassés, actions requises."
         }
       }
+    },
+    "superadminConfig": {
+      "titre": "Configuration système",
+      "sousTitre": "Clés techniques des services externes. Une valeur secrète enregistrée n'est jamais réaffichée.",
+      "accesRefuseTitre": "Accès refusé",
+      "accesRefuseMessage": "Cette page est réservée au rôle SUPER_ADMIN. Connectez-vous avec un compte autorisé pour gérer la configuration.",
+      "onglets": {
+        "paiement": "Paiements",
+        "email": "Email",
+        "ia": "Intelligence artificielle",
+        "general": "Général"
+      },
+      "aide": {
+        "paiement": "Ces clés activent l'encaissement en ligne via CinetPay (Mobile Money, cartes bancaires) pour toutes les organisations.",
+        "paiementAvertissement": "Tant que les clés CinetPay ne sont pas renseignées, aucun opérateur de paiement n'est proposé aux utilisateurs : c'est le comportement voulu.",
+        "email": "Ces clés activent l'envoi des emails transactionnels : invitations, réinitialisation de mot de passe, notifications et relances.",
+        "ia": "Ces clés activent l'assistant SARA et les analyses automatiques auprès des fournisseurs d'intelligence artificielle.",
+        "general": "Ces paramètres définissent le comportement global de la plateforme : URL publique, identité de l'application et réglages transverses."
+      },
+      "source": {
+        "base": "Configuré",
+        "environnement": "Depuis l'environnement",
+        "absent": "Non configuré",
+        "environnementInfobulle": "Valeur héritée des variables d'environnement du serveur. Vous pouvez la remplacer ici."
+      },
+      "champ": {
+        "valeurDefinie": "Valeur enregistrée",
+        "placeholderSecret": "Saisir la nouvelle valeur secrète",
+        "placeholderValeur": "Saisir la valeur",
+        "modifieLe": "Modifié le {date}",
+        "jamaisModifie": "Jamais modifié depuis cette console.",
+        "avertissementSecret": "Par sécurité, la valeur enregistrée n'est jamais réaffichée."
+      },
+      "actions": {
+        "enregistrer": "Enregistrer",
+        "annuler": "Annuler",
+        "remplacer": "Remplacer",
+        "supprimer": "Supprimer",
+        "tester": "Tester la connexion",
+        "testEnCours": "Test en cours…",
+        "rafraichir": "Rafraîchir"
+      },
+      "suppressionTitre": "Revenir à la valeur d'environnement ?",
+      "suppressionMessage": "La valeur enregistrée pour « {cle} » sera effacée. Le système repartira sur la variable d'environnement du serveur si elle existe, sinon la clé deviendra non configurée.",
+      "etat": {
+        "chargement": "Chargement de la configuration…",
+        "erreur": "Impossible de charger la configuration.",
+        "vide": "Aucune clé n'est déclarée pour cette catégorie.",
+        "enregistre": "Valeur enregistrée.",
+        "supprime": "Valeur supprimée : repli sur l'environnement.",
+        "echecEnregistrement": "Enregistrement impossible.",
+        "echecSuppression": "Suppression impossible."
+      },
+      "test": {
+        "succes": "Connexion réussie",
+        "echec": "Échec de la connexion",
+        "details": "Détails",
+        "jamaisLance": "Aucun test lancé pour le moment."
+      }
     }
   }
 }

@@ -53,7 +53,7 @@ export class PaiementsController {
     summary:
       "Statut d'intégration réel des passerelles (pilote l'affichage Disponible / En intégration)",
   })
-  getConfiguration(): Record<string, unknown> {
+  getConfiguration(): Promise<Record<string, unknown>> {
     return this.paiementsService.getConfigurationPasserelles();
   }
 
@@ -62,7 +62,7 @@ export class PaiementsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(...ROLES_ECRITURE_FINANCE)
   @ApiOperation({ summary: "Variables d'environnement passerelle manquantes (aucune clé exposée)" })
-  getDiagnostic(): Record<string, unknown> {
+  getDiagnostic(): Promise<Record<string, unknown>> {
     return this.paiementsService.getDiagnosticPasserelles();
   }
 
