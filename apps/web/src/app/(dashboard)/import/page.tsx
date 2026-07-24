@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { Upload, Download, CheckCircle, AlertCircle, FileSpreadsheet, X } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -19,14 +20,10 @@ interface ImportResult {
   erreurs: { ligne: number; message: string }[];
 }
 
-const TYPE_LABELS: Record<ImportType, string> = {
-  membres: 'Membres',
-  donateurs: 'Donateurs',
-  employes: 'Employés',
-  beneficiaires: 'Bénéficiaires',
-};
+const TYPES: ImportType[] = ['membres', 'donateurs', 'employes', 'beneficiaires'];
 
 export default function ImportPage() {
+  const t = useTranslations('outils.import');
   const [type, setType] = useState<ImportType>('membres');
   const [file, setFile] = useState<File | null>(null);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
@@ -45,7 +42,7 @@ export default function ImportPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert('Erreur lors du téléchargement du template');
+      alert(t('erreurTemplate'));
     }
   };
 
@@ -69,7 +66,7 @@ export default function ImportPage() {
       setValidation(res.data);
       setStep('validate');
     } catch (e: any) {
-      alert('Erreur de validation : ' + (e.response?.data?.message ?? e.message));
+      alert(t('erreurValidation', { message: e.response?.data?.message ?? e.message }));
     } finally {
       setLoading(false);
     }
@@ -85,7 +82,7 @@ export default function ImportPage() {
       setResult(res.data);
       setStep('result');
     } catch (e: any) {
-      alert('Erreur d\'import : ' + (e.response?.data?.message ?? e.message));
+      alert(t('erreurImport', { message: e.response?.data?.message ?? e.message }));
     } finally {
       setLoading(false);
     }
@@ -102,32 +99,32 @@ export default function ImportPage() {
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Import de données</h1>
-        <p className="text-gray-500 text-sm mt-1">Importez vos données en masse depuis un fichier Excel</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('titre')}</h1>
+        <p className="text-gray-500 text-sm mt-1">{t('sousTitre')}</p>
       </div>
 
       {/* Sélection du type */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <p className="text-sm font-medium text-gray-700 mb-3">Type de données à importer</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">{t('typeDonnees')}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {(Object.keys(TYPE_LABELS) as ImportType[]).map(t => (
-            <button key={t} onClick={() => { setType(t); reset(); }} className={`py-2 px-3 rounded-lg text-sm border transition-colors ${type === t ? 'bg-primary/10 border-primary text-primary font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-              {TYPE_LABELS[t]}
+          {TYPES.map((v) => (
+            <button key={v} onClick={() => { setType(v); reset(); }} className={`py-2 px-3 rounded-lg text-sm border transition-colors ${type === v ? 'bg-primary/10 border-primary text-primary font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+              {t(`types.${v}` as never)}
             </button>
           ))}
         </div>
 
         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-          <p className="text-sm text-gray-500">Téléchargez d'abord le modèle Excel pour ce type</p>
+          <p className="text-sm text-gray-500">{t('modeleAide')}</p>
           <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm text-primary hover:underline">
-            <Download className="w-4 h-4" /> Télécharger le modèle
+            <Download className="w-4 h-4" /> {t('telechargerModele')}
           </button>
         </div>
       </div>
 
       {/* Upload */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <p className="text-sm font-medium text-gray-700 mb-3">Fichier à importer</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">{t('fichier')}</p>
         <div
           className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-primary/40 bg-primary/5' : 'border-gray-200 hover:border-gray-300'}`}
           onClick={() => fileRef.current?.click()}
@@ -146,8 +143,8 @@ export default function ImportPage() {
           ) : (
             <>
               <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-500 text-sm">Cliquez pour sélectionner un fichier Excel (.xlsx)</p>
-              <p className="text-xs text-gray-400 mt-1">Taille maximum : 10 Mo</p>
+              <p className="text-gray-500 text-sm">{t('choisirFichier')}</p>
+              <p className="text-xs text-gray-400 mt-1">{t('tailleMax')}</p>
             </>
           )}
         </div>
@@ -155,7 +152,7 @@ export default function ImportPage() {
 
         {file && step === 'select' && (
           <button onClick={valider} disabled={loading} className="mt-4 w-full bg-primary text-white py-2.5 rounded-xl text-sm font-medium disabled:opacity-60 hover:bg-primary/90">
-            {loading ? 'Validation en cours...' : 'Valider le fichier'}
+            {loading ? t('validationEnCours') : t('valider')}
           </button>
         )}
       </div>
@@ -165,31 +162,31 @@ export default function ImportPage() {
         <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2">
             {validation.valide ? (
-              <><CheckCircle className="w-5 h-5 text-green-500" /><p className="font-medium text-green-700">Fichier valide — {validation.lignes} ligne{validation.lignes > 1 ? 's' : ''} détectée{validation.lignes > 1 ? 's' : ''}</p></>
+              <><CheckCircle className="w-5 h-5 text-green-500" /><p className="font-medium text-green-700">{t('fichierValide', { count: validation.lignes })}</p></>
             ) : (
-              <><AlertCircle className="w-5 h-5 text-red-500" /><p className="font-medium text-red-700">{validation.erreurs.length} erreur{validation.erreurs.length > 1 ? 's' : ''} détectée{validation.erreurs.length > 1 ? 's' : ''}</p></>
+              <><AlertCircle className="w-5 h-5 text-red-500" /><p className="font-medium text-red-700">{t('erreursDetectees', { count: validation.erreurs.length })}</p></>
             )}
           </div>
 
           {validation.erreurs.length > 0 && (
             <div className="bg-red-50 rounded-lg p-3 space-y-1 max-h-40 overflow-y-auto">
               {validation.erreurs.map((e, i) => (
-                <p key={i} className="text-sm text-red-700">Ligne {e.ligne} · {e.champ} : {e.message}</p>
+                <p key={i} className="text-sm text-red-700">{t('erreurLigneChamp', { ligne: String(e.ligne), champ: e.champ, message: e.message })}</p>
               ))}
             </div>
           )}
 
           {validation.apercu.length > 0 && (
             <div>
-              <p className="text-xs text-gray-500 mb-2">Aperçu des premières lignes :</p>
+              <p className="text-xs text-gray-500 mb-2">{t('apercu')}</p>
               <div className="overflow-x-auto">
                 <table className="text-xs w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="border border-gray-200 px-2 py-1 text-left">Ligne</th>
-                      <th className="border border-gray-200 px-2 py-1 text-left">Nom</th>
-                      <th className="border border-gray-200 px-2 py-1 text-left">Prénom</th>
-                      <th className="border border-gray-200 px-2 py-1 text-left">Email</th>
+                      <th className="border border-gray-200 px-2 py-1 text-left">{t('colLigne')}</th>
+                      <th className="border border-gray-200 px-2 py-1 text-left">{t('colNom')}</th>
+                      <th className="border border-gray-200 px-2 py-1 text-left">{t('colPrenom')}</th>
+                      <th className="border border-gray-200 px-2 py-1 text-left">{t('colEmail')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -208,9 +205,9 @@ export default function ImportPage() {
           )}
 
           <div className="flex gap-2 pt-2">
-            <button onClick={reset} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+            <button onClick={reset} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">{t('annuler')}</button>
             <button onClick={importer} disabled={!validation.valide || loading} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60 hover:bg-primary/90">
-              {loading ? 'Import en cours...' : `Importer ${validation.lignes} ligne${validation.lignes > 1 ? 's' : ''}`}
+              {loading ? t('importEnCours') : t('importer', { count: validation.lignes })}
             </button>
           </div>
         </div>
@@ -222,30 +219,30 @@ export default function ImportPage() {
           <div className="flex items-center gap-4">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-600">{result.succes}</p>
-              <p className="text-xs text-gray-500">Importé{result.succes > 1 ? 's' : ''}</p>
+              <p className="text-xs text-gray-500">{t('importes', { count: result.succes })}</p>
             </div>
             {result.erreurs.length > 0 && (
               <div className="text-center">
                 <p className="text-3xl font-bold text-red-500">{result.erreurs.length}</p>
-                <p className="text-xs text-gray-500">Erreur{result.erreurs.length > 1 ? 's' : ''}</p>
+                <p className="text-xs text-gray-500">{t('erreursLabel', { count: result.erreurs.length })}</p>
               </div>
             )}
             <div className="text-center">
               <p className="text-3xl font-bold text-gray-700">{result.total}</p>
-              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-xs text-gray-500">{t('total')}</p>
             </div>
           </div>
 
           {result.erreurs.length > 0 && (
             <div className="bg-red-50 rounded-lg p-3 space-y-1 max-h-40 overflow-y-auto">
               {result.erreurs.map((e, i) => (
-                <p key={i} className="text-sm text-red-700">Ligne {e.ligne} : {e.message}</p>
+                <p key={i} className="text-sm text-red-700">{t('erreurLigne', { ligne: String(e.ligne), message: e.message })}</p>
               ))}
             </div>
           )}
 
           <button onClick={reset} className="w-full border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-50">
-            Nouvel import
+            {t('nouvelImport')}
           </button>
         </div>
       )}

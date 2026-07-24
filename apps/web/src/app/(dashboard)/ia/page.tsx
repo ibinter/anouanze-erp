@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Sparkles, Lightbulb, AlertTriangle, CheckCircle, TrendingUp, RefreshCw } from 'lucide-react';
 import { AiChat } from './AiChat';
 import { api } from '@/lib/api';
@@ -13,6 +14,7 @@ interface IaAnalyse {
 }
 
 export default function IaPage() {
+  const t = useTranslations('outils.ia');
   const [loadingRapport, setLoadingRapport] = useState(false);
   const [loadingAnomalies, setLoadingAnomalies] = useState(false);
   const [analyse, setAnalyse] = useState<IaAnalyse | null>(null);
@@ -38,9 +40,9 @@ export default function IaPage() {
     setLoadingRapport(true);
     try {
       await api.post('/ia/rapport-narratif', { type: 'trimestriel', params: {} });
-      toast.success('Rapport narratif généré avec succès');
+      toast.success(t('toasts.rapportOk'));
     } catch {
-      toast.error('Erreur lors de la génération du rapport');
+      toast.error(t('toasts.rapportErreur'));
     } finally {
       setLoadingRapport(false);
     }
@@ -50,9 +52,9 @@ export default function IaPage() {
     setLoadingAnomalies(true);
     try {
       await api.get('/ia/anomalies');
-      toast.success('Analyse des anomalies terminée');
+      toast.success(t('toasts.anomaliesOk'));
     } catch {
-      toast.error('Erreur lors de l\'analyse');
+      toast.error(t('toasts.anomaliesErreur'));
     } finally {
       setLoadingAnomalies(false);
     }
@@ -70,10 +72,10 @@ export default function IaPage() {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-neutral-800">ANOUANZÊ AI</h1>
-            <span className="badge-info text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">Bêta</span>
+            <h1 className="text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+            <span className="badge-info text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">{t('beta')}</span>
           </div>
-          <p className="text-sm text-neutral-500">Assistant intelligent pour votre organisation</p>
+          <p className="text-sm text-neutral-500">{t('sousTitre')}</p>
         </div>
       </div>
 
@@ -81,7 +83,7 @@ export default function IaPage() {
         <div className="flex-1 card flex flex-col min-h-[500px] lg:min-h-0 p-0 overflow-hidden">
           <div className="px-4 py-3 border-b border-neutral-100 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary-600" />
-            <span className="font-medium text-sm text-neutral-700">Conversation</span>
+            <span className="font-medium text-sm text-neutral-700">{t('conversation')}</span>
           </div>
           <div className="flex-1 min-h-0">
             <AiChat />
@@ -94,7 +96,7 @@ export default function IaPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-accent-400" />
-                <h2 className="font-semibold text-sm text-neutral-800">Insights IA</h2>
+                <h2 className="font-semibold text-sm text-neutral-800">{t('insights.titre')}</h2>
               </div>
               <button
                 onClick={chargerAnalyse}
@@ -120,7 +122,7 @@ export default function IaPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-neutral-400">Aucun insight disponible</p>
+              <p className="text-xs text-neutral-400">{t('insights.vide')}</p>
             )}
           </div>
 
@@ -128,7 +130,7 @@ export default function IaPage() {
           <div className="card space-y-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-500" />
-              <h2 className="font-semibold text-sm text-neutral-800">Alertes détectées</h2>
+              <h2 className="font-semibold text-sm text-neutral-800">{t('alertes.titre')}</h2>
             </div>
             {loadingAnalyse ? (
               <div className="space-y-2">
@@ -145,7 +147,7 @@ export default function IaPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-neutral-400 italic">Aucune alerte critique détectée</p>
+              <p className="text-xs text-neutral-400 italic">{t('alertes.vide')}</p>
             )}
           </div>
 
@@ -153,7 +155,7 @@ export default function IaPage() {
           <div className="card space-y-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary-600" />
-              <h2 className="font-semibold text-sm text-neutral-800">Recommandations</h2>
+              <h2 className="font-semibold text-sm text-neutral-800">{t('recommandations.titre')}</h2>
             </div>
             {loadingAnalyse ? (
               <div className="space-y-2">
@@ -171,7 +173,7 @@ export default function IaPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-neutral-400">Aucune recommandation disponible</p>
+              <p className="text-xs text-neutral-400">{t('recommandations.vide')}</p>
             )}
           </div>
 
@@ -181,14 +183,14 @@ export default function IaPage() {
               disabled={loadingRapport}
               className="btn-primary w-full text-sm disabled:opacity-60"
             >
-              {loadingRapport ? 'Génération...' : 'Générer rapport narratif'}
+              {loadingRapport ? t('generation') : t('genererRapport')}
             </button>
             <button
               onClick={analyserAnomalies}
               disabled={loadingAnomalies}
               className="btn-secondary w-full text-sm disabled:opacity-60"
             >
-              {loadingAnomalies ? 'Analyse...' : 'Analyser anomalies'}
+              {loadingAnomalies ? t('analyse') : t('analyserAnomalies')}
             </button>
           </div>
         </div>

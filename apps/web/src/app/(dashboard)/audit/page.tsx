@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { ShieldCheck, Activity, AlertTriangle, Users, Eye } from 'lucide-react';
@@ -22,14 +23,19 @@ interface LogEntry {
   apres?: Record<string, unknown>;
 }
 
-const ACTION_STYLES: Record<string, { badge: string; label: string }> = {
-  CREATE: { badge: 'badge badge-success', label: 'Créé' },
-  UPDATE: { badge: 'badge bg-blue-100 text-blue-700', label: 'Modifié' },
-  DELETE: { badge: 'badge badge-error', label: 'Supprimé' },
-  LOGIN: { badge: 'badge badge-neutral', label: 'Connexion' },
+/** Classes de badge par valeur d'énumération API (valeurs jamais traduites). */
+const ACTION_BADGE: Record<string, string> = {
+  CREATE: 'badge badge-success',
+  UPDATE: 'badge bg-blue-100 text-blue-700',
+  DELETE: 'badge badge-error',
+  LOGIN: 'badge badge-neutral',
 };
 
 export default function AuditPage() {
+  const t = useTranslations('outils.audit');
+  const locale = useLocale();
+  const dateLocale = locale === 'en' ? 'en-GB' : 'fr-FR';
+  const actionLabel = (a: string) => (ACTION_BADGE[a] ? (t(`actions.${a}` as never) as string) : a);
   const [page, setPage] = useState(1);
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -77,23 +83,22 @@ export default function AuditPage() {
 
   const columns: Column<LogEntry>[] = [
     {
-      key: 'createdAt', header: 'Date / Heure',
-      render: (r) => <span className="font-mono text-xs text-neutral-600">{new Date(r.createdAt).toLocaleString('fr-FR')}</span>,
+      key: 'createdAt', header: t('colDateHeure'),
+      render: (r) => <span className="font-mono text-xs text-neutral-600">{new Date(r.createdAt).toLocaleString(dateLocale)}</span>,
     },
     {
-      key: 'utilisateur', header: 'Utilisateur',
+      key: 'utilisateur', header: t('colUtilisateur'),
       render: (r) => <span className="font-medium text-neutral-800">{getUserLabel(r)}</span>,
     },
     {
-      key: 'action', header: 'Action',
-      render: (r) => {
-        const s = ACTION_STYLES[r.action] ?? { badge: 'badge badge-neutral', label: r.action };
-        return <span className={s.badge}>{s.label}</span>;
-      },
+      key: 'action', header: t('colAction'),
+      render: (r) => (
+        <span className={ACTION_BADGE[r.action] ?? 'badge badge-neutral'}>{actionLabel(r.action)}</span>
+      ),
     },
-    { key: 'ressource', header: 'Ressource' },
+    { key: 'ressource', header: t('colRessource') },
     {
-      key: 'details', header: 'Détails',
+      key: 'details', header: t('colDetails'),
       render: (r) => <span className="text-neutral-600 text-xs">{r.details ?? '—'}</span>,
     },
     {
@@ -101,7 +106,7 @@ export default function AuditPage() {
       render: (r) => (
         <button onClick={() => setLogDetail(r)} className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium">
           <Eye className="w-3.5 h-3.5" />
-          Voir
+          {t('voir')}
         </button>
       ),
     },
@@ -114,43 +119,43 @@ export default function AuditPage() {
           <ShieldCheck className="w-5 h-5 text-primary-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-neutral-800">Audit & Traçabilité</h1>
-          <p className="text-sm text-neutral-500">Journal des actions utilisateurs</p>
+          <h1 className="text-xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500">{t('sousTitre')}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard titre="Actions ce mois" valeur={statsData?.totalActions ?? total} icone={<Activity className="w-5 h-5" />} couleur="blue" />
-        <StatCard titre="Utilisateurs actifs" valeur={statsData?.utilisateursActifs ?? '—'} icone={<Users className="w-5 h-5" />} couleur="green" />
-        <StatCard titre="Actions critiques" valeur={statsData?.suppressions ?? '—'} icone={<AlertTriangle className="w-5 h-5" />} couleur="red" description="Suppressions" />
+        <StatCard titre={t('stats.actionsMois')} valeur={statsData?.totalActions ?? total} icone={<Activity className="w-5 h-5" />} couleur="blue" />
+        <StatCard titre={t('stats.utilisateursActifs')} valeur={statsData?.utilisateursActifs ?? '—'} icone={<Users className="w-5 h-5" />} couleur="green" />
+        <StatCard titre={t('stats.actionsCritiques')} valeur={statsData?.suppressions ?? '—'} icone={<AlertTriangle className="w-5 h-5" />} couleur="red" description={t('stats.suppressions')} />
       </div>
 
       <div className="card space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="space-y-1">
-            <label className="label">Date début</label>
+            <label className="label">{t('filtres.dateDebut')}</label>
             <input type="date" className="input" value={dateDebut} onChange={(e) => { setDateDebut(e.target.value); setPage(1); }} />
           </div>
           <div className="space-y-1">
-            <label className="label">Date fin</label>
+            <label className="label">{t('filtres.dateFin')}</label>
             <input type="date" className="input" value={dateFin} onChange={(e) => { setDateFin(e.target.value); setPage(1); }} />
           </div>
           <div className="space-y-1">
-            <label className="label">Action</label>
+            <label className="label">{t('filtres.action')}</label>
             <select className="input" value={filtreAction} onChange={(e) => { setFiltreAction(e.target.value); setPage(1); }}>
-              <option value="">Toutes</option>
-              <option value="CREATE">Créé</option>
-              <option value="UPDATE">Modifié</option>
-              <option value="DELETE">Supprimé</option>
-              <option value="LOGIN">Connexion</option>
+              <option value="">{t('filtres.toutes')}</option>
+              <option value="CREATE">{t('actions.CREATE')}</option>
+              <option value="UPDATE">{t('actions.UPDATE')}</option>
+              <option value="DELETE">{t('actions.DELETE')}</option>
+              <option value="LOGIN">{t('actions.LOGIN')}</option>
             </select>
           </div>
           <div className="space-y-1">
-            <label className="label">Ressource</label>
+            <label className="label">{t('filtres.ressource')}</label>
             <input
               type="text"
               className="input"
-              placeholder="Ex: Membre, Projet…"
+              placeholder={t('filtres.ressourcePlaceholder')}
               value={filtreRessource}
               onChange={(e) => { setFiltreRessource(e.target.value); setPage(1); }}
             />
@@ -167,28 +172,28 @@ export default function AuditPage() {
       <Modal
         open={!!logDetail}
         onOpenChange={(o) => !o && setLogDetail(null)}
-        title="Détail de l'action"
+        title={t('detail.titre')}
         description={logDetail?.details}
         size="lg"
       >
         {logDetail && (
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div><span className="label">Date / Heure</span><p className="font-mono mt-1">{new Date(logDetail.createdAt).toLocaleString('fr-FR')}</p></div>
-              <div><span className="label">Utilisateur</span><p className="font-medium mt-1">{getUserLabel(logDetail)}</p></div>
+              <div><span className="label">{t('detail.dateHeure')}</span><p className="font-mono mt-1">{new Date(logDetail.createdAt).toLocaleString(dateLocale)}</p></div>
+              <div><span className="label">{t('detail.utilisateur')}</span><p className="font-medium mt-1">{getUserLabel(logDetail)}</p></div>
               <div>
-                <span className="label">Action</span>
+                <span className="label">{t('detail.action')}</span>
                 <p className="mt-1">
-                  <span className={(ACTION_STYLES[logDetail.action] ?? { badge: 'badge' }).badge}>
-                    {(ACTION_STYLES[logDetail.action] ?? { label: logDetail.action }).label}
+                  <span className={ACTION_BADGE[logDetail.action] ?? 'badge'}>
+                    {actionLabel(logDetail.action)}
                   </span>
                 </p>
               </div>
-              <div><span className="label">Ressource</span><p className="mt-1">{logDetail.ressource}</p></div>
+              <div><span className="label">{t('detail.ressource')}</span><p className="mt-1">{logDetail.ressource}</p></div>
             </div>
             {logDetail.avant && (
               <div>
-                <p className="label mb-1">État avant</p>
+                <p className="label mb-1">{t('detail.etatAvant')}</p>
                 <pre className="bg-red-50 border border-red-100 rounded-lg p-3 text-xs overflow-x-auto text-red-800">
                   {JSON.stringify(logDetail.avant, null, 2)}
                 </pre>
@@ -196,7 +201,7 @@ export default function AuditPage() {
             )}
             {logDetail.apres && (
               <div>
-                <p className="label mb-1">État après</p>
+                <p className="label mb-1">{t('detail.etatApres')}</p>
                 <pre className="bg-green-50 border border-green-100 rounded-lg p-3 text-xs overflow-x-auto text-green-800">
                   {JSON.stringify(logDetail.apres, null, 2)}
                 </pre>

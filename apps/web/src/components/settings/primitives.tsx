@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Clock3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface SectionProps {
@@ -36,6 +37,7 @@ export function BientotDisponible({
   titre: string;
   raison: string;
 }) {
+  const t = useTranslations('shell.parametres');
   return (
     <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-5">
       <div className="flex items-start gap-3">
@@ -45,7 +47,7 @@ export function BientotDisponible({
         <div className="space-y-1">
           <p className="text-sm font-medium text-neutral-700">
             {titre}{' '}
-            <span className="badge badge-neutral ml-1 align-middle">Bientôt disponible</span>
+            <span className="badge badge-neutral ml-1 align-middle">{t('bientotDisponible')}</span>
           </p>
           <p className="text-xs leading-relaxed text-neutral-500">{raison}</p>
         </div>

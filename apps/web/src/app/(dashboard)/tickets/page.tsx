@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { MessageSquare, Plus, Send, X, ChevronLeft } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
@@ -41,7 +42,17 @@ const PRIORITE_COLORS: Record<string, string> = {
   URGENTE: 'text-red-500',
 };
 
+const CATEGORIES = ['GENERAL', 'TECHNIQUE', 'FACTURATION', 'FORMATION', 'BUG'] as const;
+const PRIORITES = ['FAIBLE', 'NORMALE', 'HAUTE', 'URGENTE'] as const;
+
 export default function TicketsPage() {
+  const t = useTranslations('outils.tickets');
+  const locale = useLocale();
+  const dateLocale = locale === 'en' ? 'en-GB' : 'fr-FR';
+  const statutLabel = (s: string) =>
+    (STATUT_COLORS[s] ? (t(`statuts.${s}` as never) as string) : s.replace('_', ' '));
+  const prioriteLabel = (p: string) =>
+    ((PRIORITES as readonly string[]).includes(p) ? (t(`priorites.${p}` as never) as string) : p);
   const qc = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -89,11 +100,11 @@ export default function TicketsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Support & Tickets</h1>
-          <p className="text-gray-500 text-sm mt-1">Contactez l'équipe support ANOUANZÊ</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('titre')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('sousTitre')}</p>
         </div>
         <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary/90">
-          <Plus className="w-4 h-4" /> Nouveau ticket
+          <Plus className="w-4 h-4" /> {t('nouveau')}
         </button>
       </div>
 
@@ -103,7 +114,7 @@ export default function TicketsPage() {
           {Object.entries(statsData).map(([statut, count]) => (
             <div key={statut} className="bg-white border border-gray-200 rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-gray-900">{count}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{statut.replace('_', ' ')}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{statutLabel(statut)}</p>
             </div>
           ))}
         </div>
@@ -113,7 +124,7 @@ export default function TicketsPage() {
         {/* Liste tickets */}
         <div className="md:col-span-2 bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="p-4 border-b border-gray-100">
-            <p className="font-semibold text-gray-800">Mes tickets ({tickets.length})</p>
+            <p className="font-semibold text-gray-800">{t('mesTickets', { count: tickets.length })}</p>
           </div>
           {isLoading ? (
             <div className="p-4 space-y-3">
@@ -122,26 +133,26 @@ export default function TicketsPage() {
           ) : tickets.length === 0 ? (
             <div className="py-12 text-center text-gray-400">
               <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Aucun ticket ouvert</p>
+              <p className="text-sm">{t('vide')}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
-              {tickets.map((t) => (
+              {tickets.map((tk) => (
                 <button
-                  key={t.id}
-                  onClick={() => setSelectedTicket(t.id)}
-                  className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${selectedTicket === t.id ? 'bg-primary/5 border-r-2 border-r-primary' : ''}`}
+                  key={tk.id}
+                  onClick={() => setSelectedTicket(tk.id)}
+                  className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${selectedTicket === tk.id ? 'bg-primary/5 border-r-2 border-r-primary' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">{t.sujet}</p>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${STATUT_COLORS[t.statut] ?? 'bg-gray-100 text-gray-600'}`}>{t.statut.replace('_', ' ')}</span>
+                    <p className="text-sm font-medium text-gray-900 truncate">{tk.sujet}</p>
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap ${STATUT_COLORS[tk.statut] ?? 'bg-gray-100 text-gray-600'}`}>{statutLabel(tk.statut)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>{t.reference}</span>
+                    <span>{tk.reference}</span>
                     <span>·</span>
-                    <span className={PRIORITE_COLORS[t.priorite] ?? ''}>{t.priorite}</span>
+                    <span className={PRIORITE_COLORS[tk.priorite] ?? ''}>{prioriteLabel(tk.priorite)}</span>
                     <span>·</span>
-                    <span>{new Date(t.createdAt).toLocaleDateString('fr-FR')}</span>
+                    <span>{new Date(tk.createdAt).toLocaleDateString(dateLocale)}</span>
                   </div>
                 </button>
               ))}
@@ -154,7 +165,7 @@ export default function TicketsPage() {
           {!selectedTicket || !detail ? (
             <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400">
               <MessageSquare className="w-12 h-12 mb-3 opacity-30" />
-              <p className="text-sm">Sélectionnez un ticket pour voir la conversation</p>
+              <p className="text-sm">{t('selectionner')}</p>
             </div>
           ) : (
             <div className="flex flex-col h-[600px]">
@@ -165,7 +176,7 @@ export default function TicketsPage() {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <span className="text-xs text-gray-400">{detail.reference}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[detail.statut] ?? ''}`}>{detail.statut.replace('_', ' ')}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUT_COLORS[detail.statut] ?? ''}`}>{statutLabel(detail.statut)}</span>
                 </div>
                 <p className="font-semibold text-gray-900">{detail.sujet}</p>
                 <p className="text-sm text-gray-500 mt-1">{detail.description}</p>
@@ -176,13 +187,13 @@ export default function TicketsPage() {
                 {(detail.messages ?? []).map((m) => (
                   <div key={m.id} className={`flex ${m.estSupport ? 'justify-start' : 'justify-end'}`}>
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.estSupport ? 'bg-gray-100 text-gray-800 rounded-tl-none' : 'bg-primary text-white rounded-tr-none'}`}>
-                      <p className="text-xs mb-1 opacity-70">{m.auteur} · {new Date(m.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs mb-1 opacity-70">{m.auteur} · {new Date(m.createdAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}</p>
                       <p>{m.contenu}</p>
                     </div>
                   </div>
                 ))}
                 {(detail.messages ?? []).length === 0 && (
-                  <p className="text-center text-sm text-gray-400 py-4">Aucun message pour l'instant</p>
+                  <p className="text-center text-sm text-gray-400 py-4">{t('aucunMessage')}</p>
                 )}
               </div>
 
@@ -193,7 +204,7 @@ export default function TicketsPage() {
                     <input
                       type="text"
                       className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary"
-                      placeholder="Écrire un message..."
+                      placeholder={t('messagePlaceholder')}
                       value={messageText}
                       onChange={e => setMessageText(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter' && messageText.trim()) { sendMessage.mutate({ id: detail.id, contenu: messageText.trim() }); } }}
@@ -218,32 +229,29 @@ export default function TicketsPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Nouveau ticket support</h2>
+              <h2 className="text-lg font-bold">{t('modal.titre')}</h2>
               <button onClick={() => setShowCreateModal(false)}><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-3">
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Sujet *" value={form.sujet} onChange={e => setForm(f => ({ ...f, sujet: e.target.value }))} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder={t('modal.sujetPlaceholder')} value={form.sujet} onChange={e => setForm(f => ({ ...f, sujet: e.target.value }))} />
               <div className="grid grid-cols-2 gap-3">
                 <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.categorie} onChange={e => setForm(f => ({ ...f, categorie: e.target.value }))}>
-                  <option value="GENERAL">Général</option>
-                  <option value="TECHNIQUE">Technique</option>
-                  <option value="FACTURATION">Facturation</option>
-                  <option value="FORMATION">Formation</option>
-                  <option value="BUG">Bug</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{t(`modal.categories.${c}` as never)}</option>
+                  ))}
                 </select>
                 <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm" value={form.priorite} onChange={e => setForm(f => ({ ...f, priorite: e.target.value }))}>
-                  <option value="FAIBLE">Faible</option>
-                  <option value="NORMALE">Normale</option>
-                  <option value="HAUTE">Haute</option>
-                  <option value="URGENTE">Urgente</option>
+                  {PRIORITES.map((p) => (
+                    <option key={p} value={p}>{t(`priorites.${p}` as never)}</option>
+                  ))}
                 </select>
               </div>
-              <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows={4} placeholder="Décrivez votre problème en détail *" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              <textarea className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows={4} placeholder={t('modal.descriptionPlaceholder')} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setShowCreateModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">Annuler</button>
+              <button onClick={() => setShowCreateModal(false)} className="flex-1 border border-gray-300 rounded-lg py-2 text-sm">{t('modal.annuler')}</button>
               <button onClick={() => createTicket.mutate(form)} disabled={!form.sujet || !form.description || createTicket.isPending} className="flex-1 bg-primary text-white rounded-lg py-2 text-sm disabled:opacity-60">
-                {createTicket.isPending ? 'Envoi...' : 'Ouvrir le ticket'}
+                {createTicket.isPending ? t('modal.envoi') : t('modal.ouvrir')}
               </button>
             </div>
           </div>

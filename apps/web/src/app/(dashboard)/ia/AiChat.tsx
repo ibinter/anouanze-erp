@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Send } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -11,18 +12,16 @@ interface Message {
   timestamp: Date;
 }
 
-const SUGGESTIONS = [
-  'Analyser mon tableau de bord',
-  'Générer un rapport narratif',
-  'Détecter des anomalies',
-  'Proposer un budget',
-];
+const SUGGESTION_KEYS = ['analyser', 'rapport', 'anomalies', 'budget'] as const;
 
 export function AiChat() {
+  const t = useTranslations('outils.ia.chat');
+  const locale = useLocale();
+  const timeLocale = locale === 'en' ? 'en-GB' : 'fr-FR';
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Bonjour ! Je suis ANOUANZÊ AI. Comment puis-je vous aider à analyser vos données et optimiser la gestion de votre organisation ?',
+      content: t('accueil'),
       timestamp: new Date(),
     },
   ]);
@@ -58,7 +57,7 @@ export function AiChat() {
         ...prev,
         {
           role: 'assistant',
-          content: "Je rencontre une difficulté technique. Veuillez réessayer dans quelques instants.",
+          content: t('erreur'),
           timestamp: new Date(),
         },
       ]);
@@ -82,7 +81,7 @@ export function AiChat() {
             >
               {msg.content}
               <p className={cn('text-xs mt-1', msg.role === 'user' ? 'text-primary-200' : 'text-neutral-400')}>
-                {msg.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {msg.timestamp.toLocaleTimeString(timeLocale, { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>
@@ -91,7 +90,7 @@ export function AiChat() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-neutral-100 text-neutral-500 px-4 py-3 rounded-2xl rounded-bl-sm text-sm flex items-center gap-2">
-              <span>ANOUANZÊ AI réfléchit</span>
+              <span>{t('reflexion')}</span>
               <span className="flex gap-1">
                 <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce [animation-delay:0ms]" />
                 <span className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce [animation-delay:150ms]" />
@@ -105,16 +104,19 @@ export function AiChat() {
 
       <div className="p-4 border-t border-neutral-100 space-y-3">
         <div className="flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              onClick={() => sendMessage(s)}
-              disabled={loading}
-              className="px-3 py-1.5 text-xs rounded-full border border-neutral-200 text-neutral-600 hover:border-primary-600 hover:text-primary-600 transition-colors disabled:opacity-50"
-            >
-              {s}
-            </button>
-          ))}
+          {SUGGESTION_KEYS.map((k) => {
+            const libelle = t(`suggestions.${k}` as never) as string;
+            return (
+              <button
+                key={k}
+                onClick={() => sendMessage(libelle)}
+                disabled={loading}
+                className="px-3 py-1.5 text-xs rounded-full border border-neutral-200 text-neutral-600 hover:border-primary-600 hover:text-primary-600 transition-colors disabled:opacity-50"
+              >
+                {libelle}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex gap-2">
@@ -123,7 +125,7 @@ export function AiChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Posez votre question..."
+            placeholder={t('placeholder')}
             disabled={loading}
             className="input flex-1"
           />

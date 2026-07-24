@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   LineChart,
   Line,
@@ -19,18 +20,18 @@ import {
 } from 'recharts';
 
 const DONS_12_MOIS = [
-  { mois: 'Juil', montant: 3_200_000 },
-  { mois: 'Août', montant: 2_800_000 },
-  { mois: 'Sep', montant: 4_100_000 },
-  { mois: 'Oct', montant: 3_700_000 },
-  { mois: 'Nov', montant: 5_200_000 },
-  { mois: 'Déc', montant: 6_800_000 },
-  { mois: 'Jan', montant: 4_300_000 },
-  { mois: 'Fév', montant: 3_900_000 },
-  { mois: 'Mar', montant: 5_100_000 },
-  { mois: 'Avr', montant: 4_700_000 },
-  { mois: 'Mai', montant: 5_900_000 },
-  { mois: 'Jun', montant: 6_200_000 },
+  { mois: 'jul', montant: 3_200_000 },
+  { mois: 'aou', montant: 2_800_000 },
+  { mois: 'sep', montant: 4_100_000 },
+  { mois: 'oct', montant: 3_700_000 },
+  { mois: 'nov', montant: 5_200_000 },
+  { mois: 'dec', montant: 6_800_000 },
+  { mois: 'jan', montant: 4_300_000 },
+  { mois: 'fev', montant: 3_900_000 },
+  { mois: 'mar', montant: 5_100_000 },
+  { mois: 'avr', montant: 4_700_000 },
+  { mois: 'mai', montant: 5_900_000 },
+  { mois: 'jun', montant: 6_200_000 },
 ];
 
 const DEPENSES_PROJETS = [
@@ -45,20 +46,20 @@ const DEPENSES_PROJETS = [
 ];
 
 const CHARGES_NATURE = [
-  { name: 'Achats consommés', value: 32 },
-  { name: 'Services ext.', value: 24 },
-  { name: 'Charges personnel', value: 28 },
-  { name: 'Dotations amort.', value: 8 },
-  { name: 'Autres charges', value: 8 },
-];
+  { key: 'achats', value: 32 },
+  { key: 'servicesExt', value: 24 },
+  { key: 'personnel', value: 28 },
+  { key: 'amortissements', value: 8 },
+  { key: 'autres', value: 8 },
+] as const;
 
 const TRESORERIE_6_MOIS = [
-  { mois: 'Jan', solde: 18_500_000 },
-  { mois: 'Fév', solde: 22_100_000 },
-  { mois: 'Mar', solde: 19_800_000 },
-  { mois: 'Avr', solde: 25_400_000 },
-  { mois: 'Mai', solde: 28_900_000 },
-  { mois: 'Jun', solde: 31_200_000 },
+  { mois: 'jan', solde: 18_500_000 },
+  { mois: 'fev', solde: 22_100_000 },
+  { mois: 'mar', solde: 19_800_000 },
+  { mois: 'avr', solde: 25_400_000 },
+  { mois: 'mai', solde: 28_900_000 },
+  { mois: 'jun', solde: 31_200_000 },
 ];
 
 const COLORS = ['#146C43', '#F28C25', '#2563EB', '#7C3AED', '#0891B2'];
@@ -76,53 +77,58 @@ const tooltipStyle = {
 };
 
 export function ReportingCharts() {
+  const t = useTranslations('outils.reporting.graphiques');
+  const donsData = DONS_12_MOIS.map((d) => ({ ...d, mois: t(`mois.${d.mois}` as never) }));
+  const tresorerieData = TRESORERIE_6_MOIS.map((d) => ({ ...d, mois: t(`mois.${d.mois}` as never) }));
+  const chargesData = CHARGES_NATURE.map((c) => ({ name: t(`natures.${c.key}` as never), value: c.value }));
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="card space-y-3">
-        <h3 className="font-semibold text-neutral-800">Évolution des dons sur 12 mois</h3>
+        <h3 className="font-semibold text-neutral-800">{t('dons12Mois')}</h3>
         <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={DONS_12_MOIS} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <LineChart data={donsData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
             <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} />
             <YAxis tickFormatter={fmtM} tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} width={44} />
-            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', 'Dons']} contentStyle={tooltipStyle} />
+            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', t('legendeDons')]} contentStyle={tooltipStyle} />
             <Line type="monotone" dataKey="montant" stroke="#146C43" strokeWidth={2.5} dot={{ r: 3, fill: '#146C43' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="card space-y-3">
-        <h3 className="font-semibold text-neutral-800">Dépenses par projet (top 8)</h3>
+        <h3 className="font-semibold text-neutral-800">{t('depensesProjets')}</h3>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={DEPENSES_PROJETS} layout="vertical" margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" horizontal={false} />
             <XAxis type="number" tickFormatter={fmtM} tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} />
             <YAxis type="category" dataKey="projet" tick={{ fontSize: 10, fill: '#737373' }} axisLine={false} tickLine={false} width={80} />
-            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', 'Dépenses']} contentStyle={tooltipStyle} />
+            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', t('legendeDepenses')]} contentStyle={tooltipStyle} />
             <Bar dataKey="montant" fill="#F28C25" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       <div className="card space-y-3">
-        <h3 className="font-semibold text-neutral-800">Répartition charges par nature (Classe 6)</h3>
+        <h3 className="font-semibold text-neutral-800">{t('chargesNature')}</h3>
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
-            <Pie data={CHARGES_NATURE} cx="50%" cy="45%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
-              {CHARGES_NATURE.map((_, i) => (
+            <Pie data={chargesData} cx="50%" cy="45%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
+              {chargesData.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(v: number) => [`${v}%`, 'Part']} contentStyle={tooltipStyle} />
+            <Tooltip formatter={(v: number) => [`${v}%`, t('legendePart')]} contentStyle={tooltipStyle} />
             <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
           </PieChart>
         </ResponsiveContainer>
       </div>
 
       <div className="card space-y-3">
-        <h3 className="font-semibold text-neutral-800">Évolution trésorerie sur 6 mois</h3>
+        <h3 className="font-semibold text-neutral-800">{t('tresorerie6Mois')}</h3>
         <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={TRESORERIE_6_MOIS} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <AreaChart data={tresorerieData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="tresGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#146C43" stopOpacity={0.2} />
@@ -132,7 +138,7 @@ export function ReportingCharts() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
             <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} />
             <YAxis tickFormatter={fmtM} tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} width={48} />
-            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', 'Solde']} contentStyle={tooltipStyle} />
+            <Tooltip formatter={(v: number) => [fmtM(v) + ' FCFA', t('legendeSolde')]} contentStyle={tooltipStyle} />
             <Area type="monotone" dataKey="solde" stroke="#146C43" strokeWidth={2.5} fill="url(#tresGrad)" />
           </AreaChart>
         </ResponsiveContainer>

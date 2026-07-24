@@ -109,7 +109,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         )}
         {collapsed && (
           <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center mx-auto">
-            <img src="/logo.svg" alt="A" className="w-6 h-6" />
+            <img src="/logo.svg" alt={t('logoAlt')} className="w-6 h-6" />
           </div>
         )}
         {/* Desktop collapse button */}

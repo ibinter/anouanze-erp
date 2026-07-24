@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { CalendarDays, Plus, MapPin, Users, List, LayoutGrid, UserCheck, Percent } from 'lucide-react';
@@ -38,14 +39,21 @@ function groupByMonth(evts: Evenement[]) {
   return groups;
 }
 
-function moisLabel(ym: string) {
+function moisLabel(ym: string, dateLocale: string) {
   const [y, m] = ym.split('-');
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' });
 }
+
+const TYPES_EVENEMENT: TypeEvenement[] = ['AG', 'REUNION', 'FORMATION', 'ATELIER'];
 
 const FORM_INIT = { titre: '', type: 'FORMATION' as TypeEvenement, date: '', lieu: '', capacite: 30, description: '' };
 
 export default function EvenementsPage() {
+  const t = useTranslations('activites.evenements');
+  const locale = useLocale();
+  const dateLocale = locale === 'en' ? 'en-GB' : 'fr-FR';
+  const typeLabel = (v: string) =>
+    ((TYPES_EVENEMENT as string[]).includes(v) ? (t(`modal.types.${v}` as never) as string) : v);
   const [vue, setVue] = useState<'liste' | 'calendrier'>('calendrier');
   const [modalNouvel, setModalNouvel] = useState(false);
   const [form, setForm] = useState(FORM_INIT);
@@ -69,7 +77,7 @@ export default function EvenementsPage() {
       setForm(FORM_INIT);
       setError('');
     },
-    onError: (err: any) => setError(err?.response?.data?.message ?? 'Erreur lors de la création'),
+    onError: (err: any) => setError(err?.response?.data?.message ?? t('erreurCreation')),
   });
 
   const { data, isLoading } = useQuery({
@@ -91,10 +99,10 @@ export default function EvenementsPage() {
   const tauxRemplissage = totalCapacite > 0 ? Math.round((totalInscrits / totalCapacite) * 100) : 0;
 
   const KPIS = [
-    { label: 'Événements', value: evenements.length, icon: CalendarDays, tint: 'bg-primary-50', color: 'text-primary-600' },
-    { label: 'Total inscrits', value: totalInscrits, icon: UserCheck, tint: 'bg-blue-50', color: 'text-blue-500' },
-    { label: 'Places disponibles', value: placesDispo, icon: Users, tint: 'bg-orange-50', color: 'text-orange-500' },
-    { label: 'Taux de remplissage', value: `${tauxRemplissage}%`, icon: Percent, tint: 'bg-green-50', color: 'text-green-600' },
+    { label: t('kpi.evenements'), value: evenements.length, icon: CalendarDays, tint: 'bg-primary-50', color: 'text-primary-600' },
+    { label: t('kpi.totalInscrits'), value: totalInscrits, icon: UserCheck, tint: 'bg-blue-50', color: 'text-blue-500' },
+    { label: t('kpi.placesDisponibles'), value: placesDispo, icon: Users, tint: 'bg-orange-50', color: 'text-orange-500' },
+    { label: t('kpi.tauxRemplissage'), value: `${tauxRemplissage}%`, icon: Percent, tint: 'bg-green-50', color: 'text-green-600' },
   ];
 
   return (
@@ -105,8 +113,8 @@ export default function EvenementsPage() {
             <CalendarDays className="w-5 h-5 text-primary-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-neutral-800">Événements & Formations</h1>
-            <p className="text-sm text-neutral-500">{isLoading ? '…' : `${evenements.length} événements planifiés`}</p>
+            <h1 className="text-xl font-bold text-neutral-800">{t('titre')}</h1>
+            <p className="text-sm text-neutral-500">{isLoading ? '…' : t('sousTitre', { count: evenements.length })}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -125,7 +133,7 @@ export default function EvenementsPage() {
             </button>
           </div>
           <button onClick={() => setModalNouvel(true)} className="btn-primary flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Nouvel événement
+            <Plus className="w-4 h-4" /> {t('nouveau')}
           </button>
         </div>
       </div>
@@ -154,7 +162,7 @@ export default function EvenementsPage() {
         <div className="space-y-8">
           {Object.entries(grouped).map(([ym, evts]) => (
             <div key={ym}>
-              <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3 capitalize">{moisLabel(ym)}</h2>
+              <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3 capitalize">{moisLabel(ym, dateLocale)}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {evts.map((evt) => {
                   const nb = evt._count?.inscriptions ?? 0;
@@ -169,12 +177,12 @@ export default function EvenementsPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-neutral-800 text-sm leading-snug">{evt.titre}</h3>
-                        <span className={cn('flex-shrink-0', TYPE_STYLES[evt.type] ?? 'badge badge-neutral')}>{evt.type}</span>
+                        <span className={cn('flex-shrink-0', TYPE_STYLES[evt.type] ?? 'badge badge-neutral')}>{typeLabel(evt.type)}</span>
                       </div>
                       <div className="space-y-1 text-xs text-neutral-500">
                         <div className="flex items-center gap-1.5">
                           <CalendarDays className="w-3.5 h-3.5" />
-                          {new Date(evt.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          {new Date(evt.dateDebut).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                         </div>
                         {evt.lieu && (
                           <div className="flex items-center gap-1.5">
@@ -184,7 +192,9 @@ export default function EvenementsPage() {
                         )}
                         <div className="flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5" />
-                          {nb}{capacite > 0 ? ` / ${capacite}` : ''} inscrits
+                          {capacite > 0
+                            ? t('inscritsSurCapacite', { nb, capacite })
+                            : t('inscrits', { nb })}
                         </div>
                       </div>
                       {capacite > 0 && (
@@ -195,7 +205,7 @@ export default function EvenementsPage() {
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <p className="text-xs text-neutral-400">{pct}% de la capacité</p>
+                          <p className="text-xs text-neutral-400">{t('pctCapacite', { pct })}</p>
                         </div>
                       )}
                       <div className="flex gap-2 pt-1">
@@ -204,9 +214,9 @@ export default function EvenementsPage() {
                           onClick={(e) => e.stopPropagation()}
                           className={cn('flex-1 btn-primary text-xs py-1.5', complet && 'opacity-50 cursor-not-allowed')}
                         >
-                          {complet ? 'Complet' : "S'inscrire"}
+                          {complet ? t('complet') : t('sInscrire')}
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setDetail(evt); }} className="btn-secondary text-xs py-1.5 px-3">Gérer</button>
+                        <button onClick={(e) => { e.stopPropagation(); setDetail(evt); }} className="btn-secondary text-xs py-1.5 px-3">{t('gerer')}</button>
                       </div>
                     </div>
                   );
@@ -215,7 +225,7 @@ export default function EvenementsPage() {
             </div>
           ))}
           {evenements.length === 0 && (
-            <p className="text-sm text-neutral-400 text-center py-8">Aucun événement planifié.</p>
+            <p className="text-sm text-neutral-400 text-center py-8">{t('vide')}</p>
           )}
         </div>
       )}
@@ -230,12 +240,12 @@ export default function EvenementsPage() {
               <div key={evt.id} onClick={() => setDetail(evt)} className="flex items-center gap-4 py-3 px-2 -mx-1 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors">
                 <div className="w-12 text-center flex-shrink-0">
                   <p className="text-lg font-bold text-primary-600">{new Date(evt.dateDebut).getDate()}</p>
-                  <p className="text-xs text-neutral-400">{new Date(evt.dateDebut).toLocaleDateString('fr-FR', { month: 'short' })}</p>
+                  <p className="text-xs text-neutral-400">{new Date(evt.dateDebut).toLocaleDateString(dateLocale, { month: 'short' })}</p>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-neutral-800 text-sm truncate">{evt.titre}</span>
-                    <span className={cn('flex-shrink-0', TYPE_STYLES[evt.type] ?? 'badge badge-neutral')}>{evt.type}</span>
+                    <span className={cn('flex-shrink-0', TYPE_STYLES[evt.type] ?? 'badge badge-neutral')}>{typeLabel(evt.type)}</span>
                   </div>
                   {evt.lieu && <p className="text-xs text-neutral-400 mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{evt.lieu}</p>}
                 </div>
@@ -246,14 +256,14 @@ export default function EvenementsPage() {
                     <span className={cn('ml-1 text-xs font-medium', pct >= 90 ? 'text-red-500' : 'text-neutral-400')}>{pct}%</span>
                   </div>
                 )}
-                <button onClick={(e) => e.stopPropagation()} className="btn-primary text-xs py-1.5 px-3 flex-shrink-0">S'inscrire</button>
+                <button onClick={(e) => e.stopPropagation()} className="btn-primary text-xs py-1.5 px-3 flex-shrink-0">{t('sInscrire')}</button>
               </div>
             );
           })}
         </div>
       )}
 
-      <Modal open={!!detail} onOpenChange={(o) => !o && setDetail(null)} title="Détail de l'événement" size="lg">
+      <Modal open={!!detail} onOpenChange={(o) => !o && setDetail(null)} title={t('detail.titre')} size="lg">
         {detail && (() => {
           const nb = toNum(detail._count?.inscriptions);
           const cap = toNum(detail.capacite);
@@ -262,24 +272,24 @@ export default function EvenementsPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-semibold text-neutral-800">{detail.titre}</h3>
-                <span className={cn('flex-shrink-0', TYPE_STYLES[detail.type] ?? 'badge badge-neutral')}>{detail.type}</span>
+                <span className={cn('flex-shrink-0', TYPE_STYLES[detail.type] ?? 'badge badge-neutral')}>{typeLabel(detail.type)}</span>
               </div>
               {detail.description && <p className="text-sm text-neutral-600">{detail.description}</p>}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-neutral-500">Date</p>
-                  <p className="text-sm font-medium text-neutral-800">{new Date(detail.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  <p className="text-xs text-neutral-500">{t('detail.date')}</p>
+                  <p className="text-sm font-medium text-neutral-800">{new Date(detail.dateDebut).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500">Lieu</p>
+                  <p className="text-xs text-neutral-500">{t('detail.lieu')}</p>
                   <p className="text-sm font-medium text-neutral-800">{detail.lieu ?? '—'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500">Inscrits</p>
+                  <p className="text-xs text-neutral-500">{t('detail.inscrits')}</p>
                   <p className="text-sm font-medium text-neutral-800">{nb}{cap > 0 ? ` / ${cap}` : ''}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500">Remplissage</p>
+                  <p className="text-xs text-neutral-500">{t('detail.remplissage')}</p>
                   <p className="text-sm font-medium text-neutral-800">{cap > 0 ? `${pct}%` : '—'}</p>
                 </div>
               </div>
@@ -296,17 +306,17 @@ export default function EvenementsPage() {
       <Modal
         open={modalNouvel}
         onOpenChange={setModalNouvel}
-        title="Nouvel événement"
+        title={t('modal.titre')}
         size="lg"
         footer={
           <>
-            <button className="btn-secondary" onClick={() => { setModalNouvel(false); setError(''); }}>Annuler</button>
+            <button className="btn-secondary" onClick={() => { setModalNouvel(false); setError(''); }}>{t('modal.annuler')}</button>
             <button
               className="btn-primary"
               disabled={createMutation.isPending || !form.titre || !form.date}
               onClick={() => createMutation.mutate(form)}
             >
-              {createMutation.isPending ? 'Création…' : 'Créer'}
+              {createMutation.isPending ? t('modal.creation') : t('modal.creer')}
             </button>
           </>
         }
@@ -314,35 +324,34 @@ export default function EvenementsPage() {
         <div className="space-y-3">
           {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
           <div className="space-y-1">
-            <label className="label">Titre</label>
-            <input type="text" className="input" placeholder="Titre de l'événement" value={form.titre} onChange={(e) => setForm((f) => ({ ...f, titre: e.target.value }))} />
+            <label className="label">{t('modal.champTitre')}</label>
+            <input type="text" className="input" placeholder={t('modal.titrePlaceholder')} value={form.titre} onChange={(e) => setForm((f) => ({ ...f, titre: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="label">Type</label>
+              <label className="label">{t('modal.type')}</label>
               <select className="input" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as TypeEvenement }))}>
-                <option value="AG">Assemblée générale</option>
-                <option value="REUNION">Réunion</option>
-                <option value="FORMATION">Formation</option>
-                <option value="ATELIER">Atelier</option>
+                {TYPES_EVENEMENT.map((v) => (
+                  <option key={v} value={v}>{t(`modal.types.${v}` as never)}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="label">Date</label>
+              <label className="label">{t('modal.date')}</label>
               <input type="date" className="input" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="label">Lieu</label>
-            <input type="text" className="input" placeholder="Lieu de l'événement" value={form.lieu} onChange={(e) => setForm((f) => ({ ...f, lieu: e.target.value }))} />
+            <label className="label">{t('modal.lieu')}</label>
+            <input type="text" className="input" placeholder={t('modal.lieuPlaceholder')} value={form.lieu} onChange={(e) => setForm((f) => ({ ...f, lieu: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <label className="label">Capacité</label>
+            <label className="label">{t('modal.capacite')}</label>
             <input type="number" className="input" min={1} value={form.capacite} onChange={(e) => setForm((f) => ({ ...f, capacite: Number(e.target.value) }))} />
           </div>
           <div className="space-y-1">
-            <label className="label">Description</label>
-            <textarea className="input min-h-[80px] resize-none" placeholder="Description de l'événement" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+            <label className="label">{t('modal.description')}</label>
+            <textarea className="input min-h-[80px] resize-none" placeholder={t('modal.descriptionPlaceholder')} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
           </div>
         </div>
       </Modal>

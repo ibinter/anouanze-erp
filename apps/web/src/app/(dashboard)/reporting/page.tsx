@@ -200,15 +200,15 @@ export default function ReportingPage() {
 
       {tab === 'exports' && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {EXPORTS.map((ex) => (
-            <div key={ex.label} className="card space-y-3">
+          {EXPORT_KEYS.map((ex) => (
+            <div key={ex.key} className="card space-y-3">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-neutral-100 text-neutral-600">
                   <ex.icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-semibold text-neutral-800 text-sm">{ex.label}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5">{ex.description}</p>
+                  <p className="font-semibold text-neutral-800 text-sm">{t(`exports.${ex.key}` as never)}</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">{t(`exports.${ex.key}Desc` as never)}</p>
                 </div>
               </div>
               <div className="flex gap-2">

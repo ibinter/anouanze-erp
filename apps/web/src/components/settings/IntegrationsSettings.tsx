@@ -36,53 +36,41 @@ export function IntegrationsSettings() {
                 <p className="font-semibold text-neutral-800">{p.nom}</p>
                 {p.webhook ? (
                   <>
-                    <span className="badge badge-success">Webhook exposé</span>
+                    <span className="badge badge-success">{t('webhookExpose')}</span>
                     <p className="mt-1 truncate font-mono text-[10px] text-neutral-400">{p.webhook}</p>
                   </>
                 ) : (
-                  <span className="badge badge-neutral">Non câblé</span>
+                  <span className="badge badge-neutral">{t('nonCable')}</span>
                 )}
               </div>
             </div>
           ))}
         </div>
         <BientotDisponible
-          titre="Connexion et déconnexion depuis l'interface"
-          raison="Les identifiants marchands sont fournis à l'API par variables d'environnement : aucun endpoint ne permet de connecter ou déconnecter un fournisseur depuis l'application. Le statut affiché ci-dessus reflète uniquement les webhooks réellement exposés par le module Paiements."
+          titre={t('paiementsBientotTitre')}
+          raison={t('paiementsBientotRaison')}
         />
       </Section>
 
-      <Section
-        titre="Intelligence artificielle (SARA)"
-        description="Fonctions d'assistance disponibles dans l'ERP."
-      >
+      <Section titre={t('iaTitre')} description={t('iaDesc')}>
         <div>
           {FONCTIONS_IA.map((f) => (
-            <LigneOption key={f.endpoint} titre={f.titre} description={f.endpoint}>
-              <span className="badge badge-success">Disponible</span>
+            <LigneOption key={f.endpoint} titre={t(`fonctionsIa.${f.cle}`)} description={f.endpoint}>
+              <span className="badge badge-success">{t('disponible')}</span>
             </LigneOption>
           ))}
         </div>
         <div className="pt-1">
-          <Link href="/ia" className="btn-secondary inline-flex">Ouvrir l'espace IA</Link>
+          <Link href="/ia" className="btn-secondary inline-flex">{t('ouvrirIa')}</Link>
         </div>
-        <BientotDisponible
-          titre="Choix du modèle et clé API personnalisée"
-          raison="Le fournisseur et la clé du modèle sont configurés au niveau du serveur ; aucun réglage par organisation n'est exposé."
-        />
+        <BientotDisponible titre={t('iaBientotTitre')} raison={t('iaBientotRaison')} />
       </Section>
 
-      <Section titre="API et webhooks" description="Accès programmatique à vos données.">
-        <LigneOption
-          titre="Documentation OpenAPI"
-          description="L'API expose une documentation Swagger générée automatiquement."
-        >
-          <span className="badge badge-success">Disponible</span>
+      <Section titre={t('apiTitre')} description={t('apiDesc')}>
+        <LigneOption titre={t('openapiTitre')} description={t('openapiDesc')}>
+          <span className="badge badge-success">{t('disponible')}</span>
         </LigneOption>
-        <BientotDisponible
-          titre="Clés d'API et webhooks sortants"
-          raison="L'authentification se fait exclusivement par jeton JWT de session : il n'existe ni modèle de clé d'API, ni enregistrement de webhook sortant dans le schéma de données."
-        />
+        <BientotDisponible titre={t('apiBientotTitre')} raison={t('apiBientotRaison')} />
       </Section>
     </div>
   );
