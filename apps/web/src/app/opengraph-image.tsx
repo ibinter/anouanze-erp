@@ -12,6 +12,16 @@ export const alt = `${SITE_NAME} — L'ERP des associations et ONG d'Afrique`;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+/**
+ * Générée à la demande, pas au build.
+ *
+ * `next/og` échoue au prérendu statique dans ce projet (« Invalid URL » lors du
+ * chargement de sa police par défaut, en sortie `standalone`). L'image est donc
+ * produite au premier appel puis mise en cache par le CDN / le navigateur —
+ * elle n'est demandée que par les robots d'aperçu social, le coût est nul.
+ */
+export const dynamic = 'force-dynamic';
+
 export default function OpenGraphImage() {
   return new ImageResponse(
     (

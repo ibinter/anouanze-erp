@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -110,12 +111,22 @@ export class UtilisateursController {
     return this.service.update(id, dto);
   }
 
-  @ApiOperation({ summary: 'Changer le mot de passe' })
+  @ApiOperation({ summary: 'Changer son propre mot de passe' })
+  // On ne peut changer QUE son propre mot de passe. La connaissance de l'ancien
+  // mot de passe ne suffit pas : sans ce contrôle, quiconque l'obtient (fuite,
+  // mot de passe partagé, poste laissé ouvert) pourrait s'approprier le compte
+  // d'un tiers depuis le sien. Un administrateur passe par la réinitialisation.
   @Post(':id/changer-mot-de-passe')
   changerMotDePasse(
     @Param('id') id: string,
     @Body() dto: ChangerMotDePasseDto,
+    @CurrentUser() user: UtilisateurToken,
   ) {
+    if (id !== user.id) {
+      throw new ForbiddenException(
+        'Vous ne pouvez changer que votre propre mot de passe',
+      );
+    }
     return this.service.changerMotDePasse(id, dto);
   }
 
