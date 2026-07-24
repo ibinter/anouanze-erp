@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Tabs } from '@/components/ui/Tabs';
@@ -32,14 +33,20 @@ interface CadreLogique {
   effets?: string[];
 }
 
-const TABS = [
-  { id: 'cadre', label: 'Cadre Logique' },
-  { id: 'indicateurs', label: 'Indicateurs' },
-  { id: 'collecte', label: 'Collecte' },
-  { id: 'rapport', label: 'Rapport' },
-];
+/** Identifiants d'onglets — valeurs métier, les libellés viennent de l'i18n. */
+const TAB_IDS = ['cadre', 'indicateurs', 'collecte', 'rapport'] as const;
+
+/** Colonnes du cadre logique : clé de donnée + couleur (le libellé est traduit). */
+const CADRE_COLONNES = [
+  { key: 'intrants', color: 'border-t-blue-500' },
+  { key: 'activites', color: 'border-t-accent-400' },
+  { key: 'extrants', color: 'border-t-primary-600' },
+  { key: 'effets', color: 'border-t-emerald-500' },
+] as const;
 
 export default function MealPage() {
+  const t = useTranslations('activites.meal');
+  const locale = useLocale();
   const [projetId, setProjetId] = useState('');
   const [tab, setTab] = useState('cadre');
   const [modalOpen, setModalOpen] = useState(false);
@@ -84,9 +91,9 @@ export default function MealPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-indicateurs', projetId] });
       setModalOpen(false);
-      toast.success('Indicateur mis à jour');
+      toast.success(t('toasts.indicateurMaj'));
     },
-    onError: () => toast.error('Erreur lors de la mise à jour'),
+    onError: () => toast.error(t('toasts.erreurMaj')),
   });
 
   const collecteMutation = useMutation({
@@ -95,9 +102,9 @@ export default function MealPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meal-collectes', projetId, collecteForm.indicateurId] });
       setCollecteForm({ indicateurId: '', valeur: '', date: new Date().toISOString().split('T')[0], agent: '' });
-      toast.success('Collecte enregistrée');
+      toast.success(t('toasts.collecteOk'));
     },
-    onError: () => toast.error('Erreur lors de l\'enregistrement'),
+    onError: () => toast.error(t('toasts.erreurCollecte')),
   });
 
   const { data: collectes = [], isLoading: collectesLoading } = useQuery<Collecte[]>({
@@ -132,7 +139,7 @@ export default function MealPage() {
 
   function handleCollecte() {
     if (!collecteForm.indicateurId || !collecteForm.valeur) {
-      toast.error('Sélectionnez un indicateur et saisissez une valeur');
+      toast.error(t('toasts.champsRequis'));
       return;
     }
     collecteMutation.mutate({
@@ -147,11 +154,11 @@ export default function MealPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-800">SERA / MEAL</h1>
-          <p className="text-sm text-neutral-500 mt-1">Suivi-Évaluation, Redevabilité et Apprentissage</p>
+          <h1 className="text-2xl font-bold text-neutral-800">{t('titre')}</h1>
+          <p className="text-sm text-neutral-500 mt-1">{t('sousTitre')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="label text-sm">Projet :</label>
+          <label className="label text-sm">{t('projet')}</label>
           {projetsLoading ? (
             <Loader2 className="w-4 h-4 animate-spin text-neutral-400" />
           ) : (
@@ -160,7 +167,7 @@ export default function MealPage() {
               onChange={(e) => setProjetId(e.target.value)}
               className="input w-64"
             >
-              {projets.length === 0 && <option value="">Aucun projet</option>}
+              {projets.length === 0 && <option value="">{t('aucunProjet')}</option>}
               {projets.map((p) => (
                 <option key={p.id} value={p.id}>{p.nom}</option>
               ))}
@@ -169,28 +176,27 @@ export default function MealPage() {
         </div>
       </div>
 
-      <Tabs tabs={TABS} activeTab={tab} onChange={setTab} />
+      <Tabs
+        tabs={TAB_IDS.map((id) => ({ id, label: t(`onglets.${id}`) }))}
+        activeTab={tab}
+        onChange={setTab}
+      />
 
       {tab === 'cadre' && (
         cadreLoading ? (
           <div className="flex items-center justify-center py-16 text-neutral-400 gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
-            Chargement du cadre logique...
+            {t('cadre.chargement')}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {([
-              { key: 'intrants', label: 'Intrants', color: 'border-t-blue-500' },
-              { key: 'activites', label: 'Activités', color: 'border-t-accent-400' },
-              { key: 'extrants', label: 'Extrants', color: 'border-t-primary-600' },
-              { key: 'effets', label: 'Effets / Impact', color: 'border-t-emerald-500' },
-            ] as const).map((col) => {
+            {CADRE_COLONNES.map((col) => {
               const items = (cadre as any)[col.key] ?? [];
               return (
                 <div key={col.key} className={`card border-t-4 ${col.color} space-y-3`}>
-                  <h3 className="font-semibold text-neutral-800">{col.label}</h3>
+                  <h3 className="font-semibold text-neutral-800">{t(`cadre.${col.key}`)}</h3>
                   {items.length === 0 ? (
-                    <p className="text-xs text-neutral-400 italic">Non renseigné</p>
+                    <p className="text-xs text-neutral-400 italic">{t('cadre.nonRenseigne')}</p>
                   ) : (
                     <ul className="space-y-2">
                       {items.map((item: string, i: number) => (
@@ -212,19 +218,19 @@ export default function MealPage() {
         indLoading ? (
           <div className="flex items-center justify-center py-16 text-neutral-400 gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
-            Chargement des indicateurs...
+            {t('indicateurs.chargement')}
           </div>
         ) : indicateurs.length === 0 ? (
           <div className="card p-12 text-center text-neutral-400 text-sm">
-            Aucun indicateur MEAL défini pour ce projet.
+            {t('indicateurs.vide')}
           </div>
         ) : (
           <div className="card overflow-hidden p-0">
             <table className="w-full text-sm">
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  {['Indicateur', 'Unité', 'Cible', 'Réalisé', 'Taux', 'Action'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">{h}</th>
+                  {(['colIndicateur', 'colUnite', 'colCible', 'colRealise', 'colTaux', 'colAction'] as const).map((k) => (
+                    <th key={k} className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">{t(`indicateurs.${k}`)}</th>
                   ))}
                 </tr>
               </thead>
@@ -237,8 +243,8 @@ export default function MealPage() {
                     <tr key={ind.id} className="hover:bg-neutral-50">
                       <td className="px-4 py-3 font-medium text-neutral-800">{ind.nom}</td>
                       <td className="px-4 py-3 text-neutral-500">{ind.unite ?? '—'}</td>
-                      <td className="px-4 py-3 text-neutral-700">{cible.toLocaleString('fr-FR')}</td>
-                      <td className="px-4 py-3 text-neutral-700">{realise.toLocaleString('fr-FR')}</td>
+                      <td className="px-4 py-3 text-neutral-700">{cible.toLocaleString(locale)}</td>
+                      <td className="px-4 py-3 text-neutral-700">{realise.toLocaleString(locale)}</td>
                       <td className="px-4 py-3 w-48">
                         <ProgressBar value={taux} couleur="auto" />
                       </td>
@@ -248,7 +254,7 @@ export default function MealPage() {
                           className="flex items-center gap-1 text-xs text-primary-600 hover:underline"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          Mettre à jour
+                          {t('indicateurs.mettreAJour')}
                         </button>
                       </td>
                     </tr>
@@ -265,34 +271,34 @@ export default function MealPage() {
           <div className="card space-y-4">
             <div className="flex items-center gap-2">
               <Plus className="w-4 h-4 text-primary-600" />
-              <h2 className="font-semibold text-neutral-800">Nouvelle saisie terrain</h2>
+              <h2 className="font-semibold text-neutral-800">{t('collecte.nouvelleSaisie')}</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="label">Indicateur</label>
+                <label className="label">{t('collecte.indicateur')}</label>
                 <select
                   className="input w-full"
                   value={collecteForm.indicateurId}
                   onChange={(e) => setCollecteForm({ ...collecteForm, indicateurId: e.target.value })}
                 >
-                  <option value="">Sélectionner...</option>
+                  <option value="">{t('collecte.selectionner')}</option>
                   {indicateurs.map((ind) => (
                     <option key={ind.id} value={ind.id}>{ind.nom}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="label">Valeur collectée</label>
+                <label className="label">{t('collecte.valeur')}</label>
                 <input
                   type="number"
                   className="input w-full"
                   value={collecteForm.valeur}
                   onChange={(e) => setCollecteForm({ ...collecteForm, valeur: e.target.value })}
-                  placeholder="Ex: 18"
+                  placeholder={t('collecte.valeurPlaceholder')}
                 />
               </div>
               <div>
-                <label className="label">Date de collecte</label>
+                <label className="label">{t('collecte.date')}</label>
                 <input
                   type="date"
                   className="input w-full"
@@ -301,13 +307,13 @@ export default function MealPage() {
                 />
               </div>
               <div>
-                <label className="label">Agent collecteur</label>
+                <label className="label">{t('collecte.agent')}</label>
                 <input
                   type="text"
                   className="input w-full"
                   value={collecteForm.agent}
                   onChange={(e) => setCollecteForm({ ...collecteForm, agent: e.target.value })}
-                  placeholder="Nom de l'agent"
+                  placeholder={t('collecte.agentPlaceholder')}
                 />
               </div>
             </div>
@@ -317,7 +323,7 @@ export default function MealPage() {
                 onClick={handleCollecte}
                 disabled={collecteMutation.isPending}
               >
-                {collecteMutation.isPending ? 'Enregistrement...' : 'Enregistrer la collecte'}
+                {collecteMutation.isPending ? t('collecte.enregistrement') : t('collecte.enregistrer')}
               </button>
             </div>
           </div>
@@ -325,20 +331,20 @@ export default function MealPage() {
           <div className="card overflow-hidden p-0">
             <div className="px-4 py-3 border-b border-neutral-100 flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-neutral-500" />
-              <span className="font-semibold text-sm text-neutral-800">Historique des collectes</span>
+              <span className="font-semibold text-sm text-neutral-800">{t('collecte.historique')}</span>
             </div>
             {collectesLoading ? (
               <div className="py-8 flex justify-center text-neutral-400">
                 <Loader2 className="w-5 h-5 animate-spin" />
               </div>
             ) : collectes.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-neutral-400 text-center">Aucune collecte enregistrée</p>
+              <p className="px-4 py-6 text-sm text-neutral-400 text-center">{t('collecte.vide')}</p>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
-                    {['Indicateur', 'Valeur', 'Date', 'Agent'].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">{h}</th>
+                    {(['colIndicateur', 'colValeur', 'colDate', 'colAgent'] as const).map((k) => (
+                      <th key={k} className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">{t(`collecte.${k}`)}</th>
                     ))}
                   </tr>
                 </thead>
@@ -346,8 +352,8 @@ export default function MealPage() {
                   {collectes.map((c) => (
                     <tr key={c.id} className="hover:bg-neutral-50">
                       <td className="px-4 py-3 text-neutral-700">{c.indicateur?.nom ?? '—'}</td>
-                      <td className="px-4 py-3 font-medium text-neutral-800">{c.valeur?.toLocaleString('fr-FR') ?? '—'}</td>
-                      <td className="px-4 py-3 text-neutral-500">{c.dateCollecte ? new Date(c.dateCollecte).toLocaleDateString('fr-FR') : '—'}</td>
+                      <td className="px-4 py-3 font-medium text-neutral-800">{c.valeur?.toLocaleString(locale) ?? '—'}</td>
+                      <td className="px-4 py-3 text-neutral-500">{c.dateCollecte ? new Date(c.dateCollecte).toLocaleDateString(locale) : '—'}</td>
                       <td className="px-4 py-3 text-neutral-600">{c.agent ?? '—'}</td>
                     </tr>
                   ))}
@@ -368,7 +374,9 @@ export default function MealPage() {
             <>
               <div className="card space-y-4">
                 <h2 className="font-semibold text-neutral-800">
-                  Rapport MEAL — {projets.find((p) => p.id === projetId)?.nom ?? 'Projet'}
+                  {t('rapport.titre', {
+                    projet: projets.find((p) => p.id === projetId)?.nom ?? t('rapport.projetParDefaut'),
+                  })}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {indicateurs.slice(0, 4).map((ind) => {
@@ -388,7 +396,7 @@ export default function MealPage() {
 
               {indicateurs.length > 0 && (
                 <div className="card">
-                  <h3 className="font-semibold text-neutral-800 mb-4">Taux d&apos;atteinte par indicateur</h3>
+                  <h3 className="font-semibold text-neutral-800 mb-4">{t('rapport.tauxAtteinte')}</h3>
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart
                       data={indicateurs.map((ind) => ({
@@ -402,7 +410,7 @@ export default function MealPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(v) => [`${v}%`, 'Taux']} />
+                      <Tooltip formatter={(v) => [`${v}%`, t('rapport.taux')]} />
                       <Bar dataKey="taux" fill="#146C43" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -416,30 +424,30 @@ export default function MealPage() {
       <Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title={`Mettre à jour : ${selectedIndicateur?.nom}`}
+        title={t('modal.titre', { indicateur: selectedIndicateur?.nom ?? '' })}
         size="sm"
         footer={
           <>
-            <button onClick={() => setModalOpen(false)} className="btn-secondary">Annuler</button>
+            <button onClick={() => setModalOpen(false)} className="btn-secondary">{t('modal.annuler')}</button>
             <button onClick={handleUpdate} disabled={updateMutation.isPending} className="btn-primary">
-              {updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+              {updateMutation.isPending ? t('modal.enregistrement') : t('modal.enregistrer')}
             </button>
           </>
         }
       >
         <div className="space-y-4">
           <div>
-            <label className="label">Nouvelle valeur réalisée</label>
+            <label className="label">{t('modal.valeur')}</label>
             <input
               type="number"
               className="input w-full"
-              placeholder={`Cible : ${selectedIndicateur?.valeurCible ?? ''}`}
+              placeholder={t('modal.ciblePlaceholder', { cible: String(selectedIndicateur?.valeurCible ?? '') })}
               value={updateForm.valeur}
               onChange={(e) => setUpdateForm({ ...updateForm, valeur: e.target.value })}
             />
           </div>
           <div>
-            <label className="label">Date de collecte</label>
+            <label className="label">{t('modal.date')}</label>
             <input
               type="date"
               className="input w-full"
@@ -448,11 +456,11 @@ export default function MealPage() {
             />
           </div>
           <div>
-            <label className="label">Commentaire (optionnel)</label>
+            <label className="label">{t('modal.commentaire')}</label>
             <textarea
               className="input w-full resize-none"
               rows={3}
-              placeholder="Observations terrain..."
+              placeholder={t('modal.commentairePlaceholder')}
               value={updateForm.commentaire}
               onChange={(e) => setUpdateForm({ ...updateForm, commentaire: e.target.value })}
             />
