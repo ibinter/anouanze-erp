@@ -11,7 +11,10 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatMontant, formatDate, toNum } from '@/lib/utils';
 
-const TAB_IDS = ['employes', 'paie', 'conges', 'volontaires'] as const;
+const TAB_IDS = ['mesConges', 'employes', 'paie', 'conges', 'volontaires'] as const;
+
+/** Types de congé — valeurs métier envoyées à l'API, libellés traduits. */
+const TYPES_CONGE = ['ANNUEL', 'MALADIE', 'MATERNITE', 'PATERNITE', 'SANS_SOLDE', 'EXCEPTIONNEL'] as const;
 
 interface Employe {
   id: string;
@@ -495,9 +498,155 @@ function VolontairesTab() {
   );
 }
 
+/**
+ * Self-service : dépôt et suivi de ses propres congés.
+ * L'employé est déduit du jeton côté API (route `/rh/mes-conges`, sans `:id`),
+ * il ne peut donc déposer que pour lui-même.
+ */
+function MesCongesTab() {
+  const t = useTranslations('activites.rh');
+  const queryClient = useQueryClient();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ type: 'ANNUEL', dateDebut: '', dateFin: '', motif: '' });
+  const [error, setError] = useState('');
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['rh-mes-conges'],
+    queryFn: async () => {
+      const { data } = await api.get('/rh/mes-conges');
+      return data;
+    },
+    retry: false,
+  });
+
+  const mutation = useMutation({
+    mutationFn: (f: typeof form) => api.post('/rh/mes-conges', f),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rh-mes-conges'] });
+      setModalOpen(false);
+      setForm({ type: 'ANNUEL', dateDebut: '', dateFin: '', motif: '' });
+      setError('');
+    },
+    onError: (err: any) => setError(err?.message ?? ''),
+  });
+
+  const conges: any[] = data?.data ?? data ?? [];
+
+  // L'utilisateur connecté n'est rattaché à aucune fiche employé.
+  if (isError) {
+    return (
+      <div className="card p-8 text-center text-sm text-neutral-500">
+        {t('mesConges.nonRattache')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="font-semibold text-neutral-800">{t('mesConges.titre')}</h2>
+          <p className="text-sm text-neutral-500">{t('mesConges.sousTitre')}</p>
+        </div>
+        <button className="btn-primary flex items-center gap-2" onClick={() => setModalOpen(true)}>
+          <Plus className="w-4 h-4" />
+          {t('mesConges.nouvelle')}
+        </button>
+      </div>
+
+      <div className="card overflow-x-auto">
+        <table className="w-full text-sm min-w-[620px]">
+          <thead>
+            <tr className="bg-neutral-50 border-b border-neutral-100">
+              {(['colType', 'colDebut', 'colFin', 'colJours', 'colStatut', 'colMotif'] as const).map((k) => (
+                <th key={k} className="text-left px-4 py-3 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                  {t(`mesConges.${k}`)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400">{t('mesConges.chargement')}</td></tr>
+            )}
+            {!isLoading && conges.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-neutral-400">{t('mesConges.vide')}</td></tr>
+            )}
+            {conges.map((c) => (
+              <tr key={c.id} className="border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+                <td className="px-4 py-3 text-neutral-800">{t(`mesConges.types.${c.type}` as never)}</td>
+                <td className="px-4 py-3 text-neutral-600 whitespace-nowrap">{formatDate(c.dateDebut)}</td>
+                <td className="px-4 py-3 text-neutral-600 whitespace-nowrap">{formatDate(c.dateFin)}</td>
+                <td className="px-4 py-3 text-neutral-700">{c.nombreJours ?? '—'}</td>
+                <td className="px-4 py-3">
+                  {c.statut === 'APPROUVE' ? <span className="badge badge-success">{t('conges.approuve')}</span>
+                    : c.statut === 'REJETE' ? <span className="badge badge-error">{t('conges.rejete')}</span>
+                    : <span className="badge badge-warning">{t('conges.enAttente')}</span>}
+                </td>
+                <td className="px-4 py-3 text-neutral-500">{c.motif ?? '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        title={t('mesConges.modal.titre')}
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => { setModalOpen(false); setError(''); }}>
+              {t('mesConges.modal.annuler')}
+            </button>
+            <button
+              className="btn-primary"
+              disabled={mutation.isPending || !form.dateDebut || !form.dateFin}
+              onClick={() => mutation.mutate(form)}
+            >
+              {mutation.isPending ? t('mesConges.modal.envoi') : t('mesConges.modal.envoyer')}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+          <div>
+            <label className="label">{t('mesConges.modal.type')}</label>
+            <select className="input w-full" value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
+              {TYPES_CONGE.map((v) => (
+                <option key={v} value={v}>{t(`mesConges.types.${v}` as never)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">{t('mesConges.modal.dateDebut')}</label>
+              <input type="date" className="input w-full" value={form.dateDebut}
+                onChange={(e) => setForm((p) => ({ ...p, dateDebut: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">{t('mesConges.modal.dateFin')}</label>
+              <input type="date" className="input w-full" value={form.dateFin}
+                onChange={(e) => setForm((p) => ({ ...p, dateFin: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="label">{t('mesConges.modal.motif')}</label>
+            <textarea className="input w-full resize-none" rows={3}
+              placeholder={t('mesConges.modal.motifPlaceholder')}
+              value={form.motif}
+              onChange={(e) => setForm((p) => ({ ...p, motif: e.target.value }))} />
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
 export default function RHPage() {
   const t = useTranslations('activites.rh');
-  const [activeTab, setActiveTab] = useState('employes');
+  const [activeTab, setActiveTab] = useState('mesConges');
   const tabs = TAB_IDS.map((id) => ({ id, label: t(`onglets.${id}` as never) }));
 
   const { data: statsData } = useQuery({
@@ -573,6 +722,7 @@ export default function RHPage() {
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="mt-4">
+        {activeTab === 'mesConges' && <MesCongesTab />}
         {activeTab === 'employes' && <EmployesTab />}
         {activeTab === 'paie' && <PaieTab employes={employes} />}
         {activeTab === 'conges' && <CongesTab employes={employes} />}

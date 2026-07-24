@@ -34,10 +34,22 @@ async function fetchToken(force = false): Promise<string | null> {
   return _sessionPromise;
 }
 
-// Injecter le token JWT avant chaque requête
+/**
+ * Langue active, lue depuis le cookie posé par le sélecteur de langue.
+ * Sert à demander à l'API des messages d'erreur dans la bonne langue
+ * (l'API traduit ses exceptions selon l'en-tête Accept-Language).
+ */
+function localeCourante(): string {
+  if (typeof document === 'undefined') return 'fr';
+  const m = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/);
+  return m?.[1] === 'en' ? 'en' : 'fr';
+}
+
+// Injecter le token JWT et la langue avant chaque requête
 api.interceptors.request.use(async (config) => {
   const token = await fetchToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers['Accept-Language'] = localeCourante();
   return config;
 });
 

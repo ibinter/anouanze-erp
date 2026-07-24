@@ -144,12 +144,46 @@
         "masseSalariale": "Masse salariale"
       },
       "onglets": {
+        "mesConges": "Mes congés",
         "employes": "Employés",
         "paie": "Paie",
         "conges": "Congés",
         "volontaires": "Volontaires"
       },
       "erreur": "Erreur",
+      "mesConges": {
+        "titre": "Mes congés",
+        "sousTitre": "Déposez vos demandes et suivez leur validation",
+        "nouvelle": "Nouvelle demande",
+        "nonRattache": "Aucune fiche employé n'est rattachée à votre compte. Contactez le service RH.",
+        "chargement": "Chargement…",
+        "vide": "Aucune demande enregistrée.",
+        "colType": "Type",
+        "colDebut": "Début",
+        "colFin": "Fin",
+        "colJours": "Jours",
+        "colStatut": "Statut",
+        "colMotif": "Motif",
+        "types": {
+          "ANNUEL": "Congé annuel",
+          "MALADIE": "Maladie",
+          "MATERNITE": "Maternité",
+          "PATERNITE": "Paternité",
+          "SANS_SOLDE": "Sans solde",
+          "EXCEPTIONNEL": "Exceptionnel"
+        },
+        "modal": {
+          "titre": "Nouvelle demande de congé",
+          "type": "Type de congé",
+          "dateDebut": "Date de début *",
+          "dateFin": "Date de fin *",
+          "motif": "Motif",
+          "motifPlaceholder": "Précisez le motif de votre demande…",
+          "annuler": "Annuler",
+          "envoyer": "Envoyer la demande",
+          "envoi": "Envoi…"
+        }
+      },
       "employes": {
         "nouveau": "Nouvel employé",
         "colMatricule": "Matricule",

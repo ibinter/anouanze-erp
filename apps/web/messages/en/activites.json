@@ -144,12 +144,46 @@
         "masseSalariale": "Payroll cost"
       },
       "onglets": {
+        "mesConges": "My leave",
         "employes": "Employees",
         "paie": "Payroll",
         "conges": "Leave",
         "volontaires": "Volunteers"
       },
       "erreur": "Error",
+      "mesConges": {
+        "titre": "My leave",
+        "sousTitre": "Submit your requests and track their approval",
+        "nouvelle": "New request",
+        "nonRattache": "No employee record is linked to your account. Please contact HR.",
+        "chargement": "Loading…",
+        "vide": "No request recorded.",
+        "colType": "Type",
+        "colDebut": "Start",
+        "colFin": "End",
+        "colJours": "Days",
+        "colStatut": "Status",
+        "colMotif": "Reason",
+        "types": {
+          "ANNUEL": "Annual leave",
+          "MALADIE": "Sick leave",
+          "MATERNITE": "Maternity leave",
+          "PATERNITE": "Paternity leave",
+          "SANS_SOLDE": "Unpaid leave",
+          "EXCEPTIONNEL": "Special leave"
+        },
+        "modal": {
+          "titre": "New leave request",
+          "type": "Leave type",
+          "dateDebut": "Start date *",
+          "dateFin": "End date *",
+          "motif": "Reason",
+          "motifPlaceholder": "Describe the reason for your request…",
+          "annuler": "Cancel",
+          "envoyer": "Submit request",
+          "envoi": "Submitting…"
+        }
+      },
       "employes": {
         "nouveau": "New employee",
         "colMatricule": "Employee ID",

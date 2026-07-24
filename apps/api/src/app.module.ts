@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
 import { DecimalSerializerInterceptor } from './common/interceptors/decimal-serializer.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -101,6 +102,8 @@ import { NotificationsModule } from './common/notifications/notifications.module
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_INTERCEPTOR, useClass: DecimalSerializerInterceptor },
+    // Traduit les messages d'erreur selon l'en-tête Accept-Language
+    { provide: APP_FILTER, useClass: HttpExceptionFilter },
     Reflector,
     OrganisationGuard,
   ],
