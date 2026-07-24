@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import LanguageSwitcher from '@/components/landing/LanguageSwitcher';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface SearchResult {
@@ -223,6 +224,12 @@ export function Header({ onHamburgerClick }: HeaderProps) {
 
       {/* Actions droite */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Langue — sans lui, un utilisateur connecté ne pourrait pas basculer
+            FR/EN : le sélecteur n'existait que sur la landing. */}
+        <div className="hidden sm:block">
+          <LanguageSwitcher />
+        </div>
+
         {/* Thème clair / sombre / système */}
         <ThemeToggle />
 

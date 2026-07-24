@@ -8,11 +8,12 @@ import {
   AlertTriangle, Lightbulb, ShieldCheck, Users, ClipboardCheck, Target,
   CheckCircle2, X,
 } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import {
   GUIDE_MODULES, CATEGORIES_GUIDE,
   FAQ_ITEMS, CATEGORIES_FAQ,
   CAS_PRATIQUES,
-  rechercherAide,
+  rechercherAide, getFaqItems, libelleCategorieFaq,
   type CategorieFaq,
   type ResultatRecherche,
 } from '@/lib/help';
@@ -26,6 +27,8 @@ const ONGLETS: { id: Onglet; label: string; icon: typeof BookOpen; compte: numbe
 ];
 
 export default function AidePage() {
+  const locale = useLocale();
+  const faqItems = useMemo(() => getFaqItems(locale), [locale]);
   const [search, setSearch] = useState('');
   const [onglet, setOnglet] = useState<Onglet>('guide');
   const [catGuide, setCatGuide] = useState<string>('Toutes');
@@ -35,8 +38,8 @@ export default function AidePage() {
   const [casOuvert, setCasOuvert] = useState<string | null>(null);
 
   const resultats: ResultatRecherche[] = useMemo(
-    () => (search.trim().length >= 2 ? rechercherAide(search) : []),
-    [search],
+    () => (search.trim().length >= 2 ? rechercherAide(search, locale) : []),
+    [search, locale],
   );
 
   const modulesFiltres = useMemo(
@@ -45,8 +48,8 @@ export default function AidePage() {
   );
 
   const faqFiltrees = useMemo(
-    () => FAQ_ITEMS.filter((f) => catFaq === 'Toutes' || f.categorie === catFaq),
-    [catFaq],
+    () => faqItems.filter((f) => catFaq === 'Toutes' || f.categorie === catFaq),
+    [catFaq, faqItems],
   );
 
   const ouvrirResultat = (r: ResultatRecherche) => {
@@ -337,14 +340,15 @@ export default function AidePage() {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
-                {c}
+                {c === 'Toutes' ? (locale === 'en' ? 'All' : 'Toutes') : libelleCategorieFaq(c, locale)}
               </button>
             ))}
           </div>
 
           <p className="text-xs text-neutral-400">
-            {faqFiltrees.length} question{faqFiltrees.length > 1 ? 's' : ''} affichée
-            {faqFiltrees.length > 1 ? 's' : ''}
+            {locale === 'en'
+              ? `${faqFiltrees.length} question${faqFiltrees.length > 1 ? 's' : ''} shown`
+              : `${faqFiltrees.length} question${faqFiltrees.length > 1 ? 's' : ''} affichée${faqFiltrees.length > 1 ? 's' : ''}`}
           </p>
 
           <div className="card divide-y divide-neutral-100">
@@ -359,7 +363,9 @@ export default function AidePage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-neutral-800">{f.question}</p>
                       {catFaq === 'Toutes' && (
-                        <p className="text-[11px] text-neutral-400 mt-0.5">{f.categorie}</p>
+                        <p className="text-[11px] text-neutral-400 mt-0.5">
+                          {libelleCategorieFaq(f.categorie, locale)}
+                        </p>
                       )}
                     </div>
                     {ouverte

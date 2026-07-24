@@ -3,10 +3,22 @@ export * from './guide';
 export * from './faq';
 export * from './cas-pratiques';
 export * from './academie';
+export * from './faq-categories';
 
 import { GUIDE_MODULES } from './guide';
 import { FAQ_ITEMS } from './faq';
+import { FAQ_ITEMS_EN } from './faq.en';
 import { CAS_PRATIQUES } from './cas-pratiques';
+
+/**
+ * FAQ dans la langue demandée.
+ * Le guide, les cas pratiques et l'académie ne sont pas encore traduits :
+ * ils restent en français quelle que soit la langue (repli assumé et visible,
+ * plutôt qu'un contenu vide).
+ */
+export function getFaqItems(locale?: string) {
+  return locale === 'en' ? FAQ_ITEMS_EN : FAQ_ITEMS;
+}
 
 export type TypeResultat = 'guide' | 'faq' | 'cas';
 
@@ -24,10 +36,15 @@ const normaliser = (valeur: string): string =>
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
 
-/** Recherche plein texte simple sur le guide, la FAQ et les cas pratiques. */
-export function rechercherAide(requete: string): ResultatRecherche[] {
+/**
+ * Recherche plein texte simple sur le guide, la FAQ et les cas pratiques.
+ * La FAQ est cherchée dans la langue active ; guide et cas pratiques restent
+ * en français tant qu'ils ne sont pas traduits.
+ */
+export function rechercherAide(requete: string, locale?: string): ResultatRecherche[] {
   const terme = normaliser(requete.trim());
   if (terme.length < 2) return [];
+  const faqItems = getFaqItems(locale);
 
   const resultats: ResultatRecherche[] = [];
 
@@ -49,7 +66,7 @@ export function rechercherAide(requete: string): ResultatRecherche[] {
     }
   }
 
-  for (const faq of FAQ_ITEMS) {
+  for (const faq of faqItems) {
     const corpus = normaliser(`${faq.question} ${faq.reponse} ${faq.motsCles.join(' ')}`);
     if (corpus.includes(terme)) {
       resultats.push({ type: 'faq', id: faq.id, titre: faq.question, extrait: faq.reponse, categorie: faq.categorie });
